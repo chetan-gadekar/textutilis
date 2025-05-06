@@ -1,42 +1,488 @@
-.App {
+/* Add at the end of the file */
+
+/* Dashboard Welcome Section */
+.dashboard-welcome {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-welcome h2 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.auth-buttons, .action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.auth-buttons .btn, .action-buttons .btn {
+  flex: 1;
+  max-width: 200px;
+}
+
+/* Admin Dashboard Stats */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-align: center;
+  transition: transform 0.3s ease;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.stat-card:hover {
+  transform: translateY(-5px);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4a69bd;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #555;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Forms */
+.form {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+textarea.form-control {
+  min-height: 100px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  background: #4a69bd;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background: #3c5fab;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+.btn-delete {
+  background-color: #e74c3c;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+}
+
+/* Actions Section */
+.actions {
+  margin-bottom: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .auth-buttons, .action-buttons {
+    flex-direction: column;
+  }
+  
+  .auth-buttons .btn, .action-buttons .btn {
+    max-width: 100%;
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Alerts */
+.alert {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.alert p {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+.alert-info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border-color: #bee5eb;
+}
+
+/* Ratings Cards */
+.ratings-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.rating-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.rating-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rating-header {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.rating-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.rating-stars {
+  margin-bottom: 0.5rem;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: #ddd;
+  margin-right: 2px;
+}
+
+.star.filled {
+  color: #ffc107;
+}
+
+.rating-value {
+  font-weight: bold;
+  color: #555;
+  margin-left: 0.5rem;
+}
+
+.rating-body {
+  flex: 1;
+}
+
+.rating-comment {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.rating-details {
+  display: flex;
+  justify-content: space-between;
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.rating-user, .rating-date {
+  display: inline-block;
+}
+
+.rating-actions {
+  text-align: right;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+/* Enhanced Store Owner Dashboard Styles */
+.store-rating-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.rating-average {
+  flex: 1;
+  min-width: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  text-align: center;
 }
 
-.App-link {
-  color: #61dafb;
+.rating-value-large {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #4a69bd;
+  line-height: 1;
+  margin: 0.5rem 0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.rating-stars-large {
+  margin: 0.5rem 0;
+}
+
+.rating-stars-large svg {
+  font-size: 2rem;
+  margin-right: 5px;
+}
+
+.rating-count {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.rating-distribution {
+  flex: 2;
+  min-width: 300px;
+}
+
+.distribution-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.star-label {
+  width: 60px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 15px;
+  background-color: #f1f1f1;
+  border-radius: 10px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.count-label {
+  width: 30px;
+  text-align: right;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.rating-users-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.rating-users-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.user-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-name {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.user-rating {
+  display: flex;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .store-rating-summary {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
-.blank{
-  color: red;
+/* Enhanced Store Item Styles */
+.user-rating-section {
+  margin: 1rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.user-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  margin-right: 5px;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.quick-rating-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.quick-rating-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.quick-rating-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.quick-rating-form .form-group-buttons {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Responsive adjustments for store items */
+@media (max-width: 768px) {
+  .store {
+    flex-direction: column;
+  }
+  
+  .store > div:last-child {
+    margin-top: 1rem;
+    text-align: left;
+  }
 }
