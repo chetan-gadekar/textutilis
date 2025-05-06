@@ -1,3 +1,7 @@
+Admin
+email- chetan@gmail.com
+pass-Chetan@14
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
