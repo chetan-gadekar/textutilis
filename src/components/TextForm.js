@@ -36,6 +36,7 @@ export default function TextForm(props) {
         let text=document.getElementById('mybox');
         text.select();
         navigator.clipboard.writeText(text.value)
+        document.getSelection().removeAllRanges()
         props.showAlert("Text copied" , "success");
     }
 
@@ -57,25 +58,24 @@ export default function TextForm(props) {
 
     <>
         <div className='container' style={{color: props.mode==='light'?'black':'white'}}>
-        <h1>{props.heading}</h1>
+        <h1 className='mb-3'>{props.heading}</h1>
         <div className="mb-3">
-        <label htmlFor="mybox" className="form-label">Enter your text</label>
-        <textarea className="form-control" value={text} style={{backgroundColor: props.mode==='light'?'white':'grey',color: props.mode==='light'?'black':'white'}} onChange={handleonchange} id="mybox" rows="10"></textarea>
+        <textarea className="form-control" value={text} style={{backgroundColor: props.mode==='light'?'white':'#13466e',color: props.mode==='light'?'black':'white'}} onChange={handleonchange} id="mybox" rows="10"></textarea>
         </div>
-        <button className="btn btn-primary mx-2" onClick={handleupclick}>convert to uppercase</button>
-        <button className="btn btn-danger mx-2" onClick={handlelowclick}>convert to lowercase</button>
-        <button className="btn btn-danger mx-2" onClick={Clear}>Clear</button>
-        <button className="btn btn-danger mx-2" onClick={reverstext}>Reverse the text</button>
-        <button className="btn btn-danger mx-2" onClick={copytext}>Copy Text</button>
-        <button className="btn btn-danger mx-2" onClick={handleextraspace}>Remove extra spaces</button>
+        <button disabled={text.length===0} className="btn btn-primary mx-2  my-1" onClick={handleupclick}>convert to uppercase</button>
+        <button disabled={text.length===0} className="btn btn-danger mx-2 my-1" onClick={handlelowclick}>convert to lowercase</button>
+        <button disabled={text.length===0} className="btn btn-danger mx-2 my-1" onClick={Clear}>Clear</button>
+        <button disabled={text.length===0} className="btn btn-danger mx-2 my-1" onClick={reverstext}>Reverse the text</button>
+        <button disabled={text.length===0} className="btn btn-danger mx-2 my-1" onClick={copytext}>Copy Text</button>
+        <button disabled={text.length===0} className="btn btn-danger mx-2 my-1" onClick={handleextraspace}>Remove extra spaces</button>
         </div>
 
         <div className="container my-5 " style={{color: props.mode==='light'?'black':'white'}}>
             <h2>Your text summary</h2>
-            <p>{text.split(" ").length} Words and {text.length} character</p>
-            <p> {0.0008 *text.split(" ").length} Minutes required to  read the words </p>
+            <p>{text.split(" ").filter((element)=>{return element.length!==0}).length} Words and {text.length} character</p>
+            <p> {0.0008 *text.split(" ").filter((element)=>{return element.length!==0}).length} Minutes required to  read the words </p>
             <h2>Preview</h2>
-            <p>{text.length>0?text:"Enter the to preview here!"}</p>
+            <p>{text.length>0?text:"Nothing to preview!"}</p>
         </div>
     </>
     
