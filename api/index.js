@@ -43,12 +43,16 @@ app.use('/api/upload', uploadRoutes);
 app.use(express.static(path.join(__dirname, 'build')));
 
 // Serve React app for all other routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// });
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
+
+app.get("/", (req, res) => {
+  res.send("Backend running on Vercel 🚀");
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
