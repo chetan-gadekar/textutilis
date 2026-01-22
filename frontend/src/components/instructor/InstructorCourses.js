@@ -46,10 +46,6 @@ const InstructorCourses = () => {
         // but the Review page logic relies on its own dropdown state.
     };
 
-    const handleViewTeachingPoints = (courseId) => {
-        navigate('/instructor/teaching-points');
-    };
-
     if (loading) {
         return (
             <MainLayout>

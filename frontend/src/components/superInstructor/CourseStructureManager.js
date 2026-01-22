@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -31,7 +31,7 @@ const CourseStructureManager = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCourseData = async () => {
+  const fetchCourseData = useCallback(async () => {
     try {
       setLoading(true);
       const [courseResponse, modulesResponse] = await Promise.all([
@@ -61,7 +61,7 @@ const CourseStructureManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
 
   const {
     moduleDialogOpen,
@@ -93,7 +93,7 @@ const CourseStructureManager = () => {
 
   useEffect(() => {
     fetchCourseData();
-  }, [courseId]);
+  }, [fetchCourseData]);
 
   const getContentIcon = (contentType) => {
     switch (contentType) {

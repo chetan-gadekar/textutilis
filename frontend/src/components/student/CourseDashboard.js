@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -22,17 +22,9 @@ const CourseDashboard = () => {
   const [selectedContent, setSelectedContent] = useState(null);
   const [currentProgress, setCurrentProgress] = useState(null);
 
-  useEffect(() => {
-    fetchCourseStructure();
-  }, [courseId]);
 
-  useEffect(() => {
-    if (selectedContent) {
-      fetchContentProgress();
-    }
-  }, [selectedContent]);
 
-  const fetchCourseStructure = async () => {
+  const fetchCourseStructure = useCallback(async () => {
     try {
       setLoading(true);
       const response = await courseService.getStudentCourseStructure(courseId);
@@ -48,9 +40,9 @@ const CourseDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
 
-  const fetchContentProgress = async () => {
+  const fetchContentProgress = useCallback(async () => {
     if (!selectedContent) return;
 
     try {
@@ -59,7 +51,17 @@ const CourseDashboard = () => {
     } catch (err) {
       console.error('Failed to fetch progress:', err);
     }
-  };
+  }, [selectedContent]);
+
+  useEffect(() => {
+    fetchCourseStructure();
+  }, [fetchCourseStructure]);
+
+  useEffect(() => {
+    if (selectedContent) {
+      fetchContentProgress();
+    }
+  }, [selectedContent, fetchContentProgress]);
 
   const handleModuleToggle = (moduleId) => {
     setExpandedModules((prev) => ({

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -29,12 +29,7 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedContent, setSelectedContent] = useState(null);
-
-  useEffect(() => {
-    fetchCourseData();
-  }, [courseId]);
-
-  const fetchCourseData = async () => {
+  const fetchCourseData = useCallback(async () => {
     try {
       setLoading(true);
       const [contentResponse, progressResponse] = await Promise.all([
@@ -53,7 +48,11 @@ const CourseDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
+
+  useEffect(() => {
+    fetchCourseData();
+  }, [fetchCourseData]);
 
   const handleContentClick = async (contentItem) => {
     setSelectedContent(contentItem);
@@ -125,112 +124,112 @@ const CourseDetail = () => {
     return (
       <MainLayout>
         <Box>
-        <Button onClick={() => setSelectedContent(null)} sx={{ mb: 2 }}>
-          ← Back to Course Content
-        </Button>
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h5" gutterBottom>
-            {selectedContent.title}
-          </Typography>
-          <VideoPlayer
-            videoId={selectedContent.contentData}
-            onProgress={(position) => {
-              const isCompleted = position > 0.95; // Consider 95% as completed
-              handleProgressUpdate(
-                selectedContent._id,
-                position * 100,
-                isCompleted
-              );
-            }}
-          />
-        </Paper>
-      </Box>
-    </MainLayout>
+          <Button onClick={() => setSelectedContent(null)} sx={{ mb: 2 }}>
+            ← Back to Course Content
+          </Button>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h5" gutterBottom>
+              {selectedContent.title}
+            </Typography>
+            <VideoPlayer
+              videoId={selectedContent.contentData}
+              onProgress={(position) => {
+                const isCompleted = position > 0.95; // Consider 95% as completed
+                handleProgressUpdate(
+                  selectedContent._id,
+                  position * 100,
+                  isCompleted
+                );
+              }}
+            />
+          </Paper>
+        </Box>
+      </MainLayout>
     );
   }
 
   return (
     <MainLayout>
       <Box>
-      <Button onClick={() => navigate('/student/courses')} sx={{ mb: 2 }}>
-        ← Back to My Courses
-      </Button>
+        <Button onClick={() => navigate('/student/courses')} sx={{ mb: 2 }}>
+          ← Back to My Courses
+        </Button>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Course Progress
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {calculateOverallProgress()}%
-          </Typography>
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Course Progress
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {calculateOverallProgress()}%
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={calculateOverallProgress()}
+            sx={{ height: 8, borderRadius: 4 }}
+          />
         </Box>
-        <LinearProgress
-          variant="determinate"
-          value={calculateOverallProgress()}
-          sx={{ height: 8, borderRadius: 4 }}
-        />
-      </Box>
 
-      <Paper>
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6">Course Content</Typography>
-        </Box>
-        <List>
-          {content.length === 0 ? (
-            <ListItem>
-              <ListItemText primary="No content available" />
-            </ListItem>
-          ) : (
-            content.map((item, index) => {
-              const prog = getContentProgress(item._id);
-              return (
-                <ListItem
-                  key={item._id}
-                  button
-                  onClick={() => handleContentClick(item)}
-                  sx={{
-                    borderBottom: index < content.length - 1 ? 1 : 0,
-                    borderColor: 'divider',
-                  }}
-                >
-                  <Box sx={{ mr: 2 }}>{getContentIcon(item.contentType)}</Box>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {item.title}
-                        {prog.isCompleted && (
-                          <Chip label="Completed" color="success" size="small" />
-                        )}
-                      </Box>
-                    }
-                    secondary={
-                      item.contentType === 'video'
-                        ? `Video • ${item.duration || 0}s`
-                        : item.contentType === 'ppt'
-                        ? 'Presentation'
-                        : 'Text Content'
-                    }
-                  />
-                  {item.contentType === 'video' && prog.videoPosition > 0 && (
-                    <Chip
-                      label={`${Math.round(prog.videoPosition)}% watched`}
-                      size="small"
-                      variant="outlined"
+        <Paper>
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="h6">Course Content</Typography>
+          </Box>
+          <List>
+            {content.length === 0 ? (
+              <ListItem>
+                <ListItemText primary="No content available" />
+              </ListItem>
+            ) : (
+              content.map((item, index) => {
+                const prog = getContentProgress(item._id);
+                return (
+                  <ListItem
+                    key={item._id}
+                    button
+                    onClick={() => handleContentClick(item)}
+                    sx={{
+                      borderBottom: index < content.length - 1 ? 1 : 0,
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Box sx={{ mr: 2 }}>{getContentIcon(item.contentType)}</Box>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {item.title}
+                          {prog.isCompleted && (
+                            <Chip label="Completed" color="success" size="small" />
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        item.contentType === 'video'
+                          ? `Video • ${item.duration || 0}s`
+                          : item.contentType === 'ppt'
+                            ? 'Presentation'
+                            : 'Text Content'
+                      }
                     />
-                  )}
-                </ListItem>
-              );
-            })
-          )}
-        </List>
-      </Paper>
+                    {item.contentType === 'video' && prog.videoPosition > 0 && (
+                      <Chip
+                        label={`${Math.round(prog.videoPosition)}% watched`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </ListItem>
+                );
+              })
+            )}
+          </List>
+        </Paper>
       </Box>
     </MainLayout>
   );

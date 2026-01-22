@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Box,
@@ -23,12 +23,7 @@ const StudentManagement = () => {
   const [assignedCourses, setAssignedCourses] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchStudents();
-    fetchCourses();
-  }, [filter]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -43,9 +38,9 @@ const StudentManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const response = await adminService.getAllCourses();
       setCourses(response.data || []);
@@ -53,7 +48,12 @@ const StudentManagement = () => {
       console.error('Failed to fetch courses:', err);
       setError('Failed to load courses. Please try again.');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStudents();
+    fetchCourses();
+  }, [fetchStudents, fetchCourses]);
 
   const handleToggleStatus = async (studentId) => {
     try {

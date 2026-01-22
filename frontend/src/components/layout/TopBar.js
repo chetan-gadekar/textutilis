@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../../hooks/useAuth';
 
 const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle }) => {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Typography,
   Card,
@@ -23,8 +22,6 @@ import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
 
 const AssignmentView = () => {
-  const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
@@ -65,7 +62,6 @@ const AssignmentView = () => {
         allAssignments.push(...courseAssignments);
       });
 
-      setCourses(extractedCourses);
       setAssignments(allAssignments);
 
       // Map submissions by assignment ID

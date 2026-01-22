@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Box,
@@ -57,11 +57,7 @@ const TeachingPointsView = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [dialogPoints, setDialogPoints] = useState([]);
 
-  useEffect(() => {
-    fetchTeachingPoints();
-  }, []);
-
-  const fetchTeachingPoints = async () => {
+  const fetchTeachingPoints = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -76,7 +72,11 @@ const TeachingPointsView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [instructorFilter]);
+
+  useEffect(() => {
+    fetchTeachingPoints();
+  }, [fetchTeachingPoints]);
 
   const handleFilterChange = (e) => {
     setInstructorFilter(e.target.value);

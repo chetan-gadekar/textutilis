@@ -14,7 +14,6 @@ import {
   PlusCircle,
   ShieldCheck
 } from "lucide-react";
-import logo from "../../assets/profile.jpeg";
 import profile from "../../assets/logo.jpeg";
 import { useAuth } from '../../hooks/useAuth';
 import './Sidebar.css';
@@ -37,9 +36,7 @@ export default function Sidebar({ open: expanded, onToggle }) {
       <nav className="sidebar-nav">
         <div className="sidebar-header">
           <img
-            // src={logo}
-            // className={`sidebar-logo ${expanded ? "w-32" : "w-0"}`}
-            // alt="Logo"
+            alt="Logo"
           />
           <button
             onClick={setExpanded}
