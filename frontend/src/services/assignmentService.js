@@ -6,6 +6,10 @@ const assignmentService = {
     const response = await api.post(`/super-instructor/courses/${courseId}/assignments`, assignmentData);
     return response.data;
   },
+  getAllAssignments: async (params = {}) => {
+    const response = await api.get('/super-instructor/assignments', { params });
+    return response.data;
+  },
   getAssignments: async (courseId) => {
     const response = await api.get(`/super-instructor/courses/${courseId}/assignments`);
     return response.data;
@@ -23,9 +27,21 @@ const assignmentService = {
     const response = await api.get(`/instructor/assignments/${assignmentId}/submissions`);
     return response.data;
   },
+  getAllSubmissions: async (params = {}) => {
+    const response = await api.get('/instructor/submissions', { params });
+    return response.data;
+  },
+  getStudents: async (params = {}) => {
+    const response = await api.get('/instructor/students', { params });
+    return response.data;
+  },
   // Student - Assignments
   getStudentAssignments: async (courseId) => {
     const response = await api.get(`/student/courses/${courseId}/assignments`);
+    return response.data;
+  },
+  getMyAssignments: async (params = {}) => {
+    const response = await api.get('/student/my-assignments', { params });
     return response.data;
   },
   getMySubmissions: async () => {

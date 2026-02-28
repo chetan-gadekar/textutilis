@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Box,
   Button,
   Alert,
   CircularProgress,
+  TextField,
+  Stack,
+  TablePagination,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import adminService from '../../services/adminService';
@@ -18,6 +21,13 @@ const FacultyManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  // Search and Pagination State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Faculty Create/Edit State
   const [openDialog, setOpenDialog] = useState(false);
@@ -37,21 +47,47 @@ const FacultyManagement = () => {
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
 
+  // Debounce search term
   useEffect(() => {
-    fetchFaculty();
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(0); // Reset to first page on search
+    }, 500);
 
-  const fetchFaculty = async () => {
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchFaculty = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await adminService.getAllFaculty();
+      const params = {
+        page: page + 1,
+        limit: rowsPerPage,
+        name: debouncedSearch,
+      };
+
+      const response = await adminService.getAllFaculty(params);
       setFaculty(response.data || []);
+      setTotalRecords(response.total || 0);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to fetch faculty');
     } finally {
       setLoading(false);
     }
+  }, [page, rowsPerPage, debouncedSearch]);
+
+  useEffect(() => {
+    fetchFaculty();
+  }, [fetchFaculty]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   const handleOpenDialog = (facultyMember = null) => {
@@ -180,7 +216,7 @@ const FacultyManagement = () => {
     }
   };
 
-  if (loading) {
+  if (loading && faculty.length === 0) {
     return (
       <MainLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -193,13 +229,25 @@ const FacultyManagement = () => {
   return (
     <MainLayout>
       <Box>
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h4" component="h1">
-            Faculty Management
-          </Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
-            Add Faculty
-          </Button>
+        <Box sx={{ mb: 4 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+            <Typography variant="h4" component="h1">
+              Faculty Management
+            </Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <TextField
+                label="Search by Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                sx={{ width: 300 }}
+                placeholder="Type to search..."
+              />
+              <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+                Add Faculty
+              </Button>
+            </Stack>
+          </Stack>
         </Box>
 
         {error && (
@@ -220,6 +268,16 @@ const FacultyManagement = () => {
           onDelete={handleDelete}
           onAssignCourses={handleOpenAssignDialog}
           onToggleStatus={handleToggleStatus}
+        />
+
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={totalRecords}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
         />
 
         <FacultyFormDialog

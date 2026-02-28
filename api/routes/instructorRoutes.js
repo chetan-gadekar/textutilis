@@ -11,5 +11,7 @@ router.use(authorize('instructor', 'super_instructor'));
 router.put('/teaching-points/today', validateTeachingPoint, instructorController.updateTodayTeachingPoints);
 router.get('/teaching-points/today', instructorController.getTodayTeachingPoints);
 router.get('/assignments/:assignmentId/submissions', instructorController.getSubmissions);
+router.get('/submissions', instructorController.getAllSubmissions);
+router.get('/students', instructorController.getStudents);
 
 module.exports = router;

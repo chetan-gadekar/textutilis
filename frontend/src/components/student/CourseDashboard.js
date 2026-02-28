@@ -12,6 +12,8 @@ import CourseSidebar from './courseDashboard/CourseSidebar';
 import ContentViewer from './courseDashboard/ContentViewer';
 import RatingSection from './courseDashboard/RatingSection';
 
+const DRAWER_WIDTH = 320;
+
 const CourseDashboard = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -21,8 +23,6 @@ const CourseDashboard = () => {
   const [expandedModules, setExpandedModules] = useState({});
   const [selectedContent, setSelectedContent] = useState(null);
   const [currentProgress, setCurrentProgress] = useState(null);
-
-
 
   const fetchCourseStructure = useCallback(async () => {
     try {
@@ -55,6 +55,16 @@ const CourseDashboard = () => {
 
   useEffect(() => {
     fetchCourseStructure();
+
+    // Disable right-click globally on the course page
+    const handleGlobalContextMenu = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener('contextmenu', handleGlobalContextMenu);
+
+    return () => {
+      window.removeEventListener('contextmenu', handleGlobalContextMenu);
+    };
   }, [fetchCourseStructure]);
 
   useEffect(() => {
@@ -127,6 +137,8 @@ const CourseDashboard = () => {
   }
 
   const { course, modules } = courseStructure;
+  const drawerWidth = 320;
+  const mainSidebarWidth = 80; // Width of the main navigation sidebar
 
   return (
     <MainLayout
@@ -134,8 +146,19 @@ const CourseDashboard = () => {
       onBack={() => navigate('/student/courses')}
       showProgress={true}
       progress={course?.progress || 0}
+      initialCollapsed={true}
     >
-      <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', mt: -3 }}>
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 64,
+          left: mainSidebarWidth, // Start after main sidebar
+          right: 0,
+          bottom: 0,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Fixed Sidebar */}
         <CourseSidebar
           course={course}
           modules={modules}
@@ -143,16 +166,26 @@ const CourseDashboard = () => {
           selectedContent={selectedContent}
           onModuleToggle={handleModuleToggle}
           onContentClick={handleContentClick}
+          drawerWidth={drawerWidth}
         />
 
+        {/* Main Content Area - positioned to the right of sidebar */}
         <Box
           component="main"
+          onContextMenu={(e) => e.preventDefault()}
           sx={{
-            flexGrow: 1,
-            p: 3,
+            position: 'absolute',
+            left: `${drawerWidth}px`, // Start after course sidebar
+            top: 0,
+            right: 0,
+            bottom: 0,
             overflow: 'auto',
-            bgcolor: 'white',
-            ml: 0,
+            bgcolor: '#f5f5f5',
+            p: 3,
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            msUserSelect: 'none',
+            mozUserSelect: 'none',
           }}
         >
           <ContentViewer

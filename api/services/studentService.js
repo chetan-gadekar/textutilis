@@ -5,15 +5,32 @@ const Performance = require('../schemas/Performance');
 
 // Get all students
 const getAllStudents = async (filters = {}) => {
+  const { page = 1, limit = 10, name, isActive } = filters;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
   const query = { role: 'student' };
-  if (filters.isActive !== undefined) {
-    query.isActive = filters.isActive;
+
+  if (isActive !== undefined) {
+    query.isActive = isActive;
   }
 
+  if (name) {
+    query.name = { $regex: name, $options: 'i' };
+  }
+
+  const total = await User.countDocuments(query);
   const students = await User.find(query)
     .select('-password')
-    .sort({ createdAt: -1 });
-  return students;
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  return {
+    students,
+    total,
+    pages: Math.ceil(total / limit),
+    currentPage: parseInt(page)
+  };
 };
 
 // Get student by ID

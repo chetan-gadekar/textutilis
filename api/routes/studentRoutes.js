@@ -18,6 +18,7 @@ router.get('/content/:contentId/progress', studentController.getVideoProgress);
 router.post('/content/progress', studentController.saveVideoProgress);
 
 router.get('/submissions', studentController.getMySubmissions);
+router.get('/my-assignments', studentController.getMyAssignments);
 router.post('/assignments/:assignmentId/submit', studentController.submitAssignment);
 
 router.get('/profile', studentController.getMyProfile);

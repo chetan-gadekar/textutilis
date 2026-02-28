@@ -13,8 +13,11 @@ import {
   MenuItem,
   Alert,
   CircularProgress,
+  Typography,
 } from '@mui/material';
 import videoService from '../../../services/videoService';
+import FileUpload from '../../common/FileUpload';
+import VideoUpload from '../../common/VideoUpload';
 
 const ContentDialog = ({
   open,
@@ -80,6 +83,22 @@ const ContentDialog = ({
 
           {formData.contentType === 'video' && (
             <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Cloudinary Video Upload (Testing)
+              </Typography>
+              <VideoUpload
+                label="Upload Video to Cloudinary"
+                onUploadSuccess={(url, fileName, duration) => {
+                  onFormChange({
+                    ...formData,
+                    contentData: url,
+                    duration: Math.round(duration) || formData.duration
+                  });
+                }}
+              />
+
+              {/* Old Cloudflare Upload - Commented out for now */}
+              {/* 
               <input
                 type="file"
                 accept="video/*"
@@ -87,21 +106,36 @@ const ContentDialog = ({
                 style={{ marginBottom: '16px' }}
               />
               {uploadingVideo && <CircularProgress size={24} />}
-              {formData.contentData && !uploadingVideo && (
-                <Alert severity="success">Video uploaded: {formData.contentData}</Alert>
+              */}
+
+              {formData.contentData && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  Content Data: {formData.contentData.substring(0, 50)}...
+                </Alert>
               )}
             </Box>
           )}
 
           {formData.contentType === 'ppt' && (
-            <TextField
-              label="PPT File URL"
-              fullWidth
-              value={formData.contentData}
-              onChange={(e) => onFormChange({ ...formData, contentData: e.target.value })}
-              placeholder="Enter PPT file URL or Cloudflare Stream UID"
-              required
-            />
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                PPT/Presentation File
+              </Typography>
+              <FileUpload
+                label="Upload PPT Material"
+                accept=".ppt,.pptx,.pdf"
+                onUploadSuccess={(url) => onFormChange({ ...formData, contentData: url })}
+              />
+              {formData.contentData && (
+                <TextField
+                  label="PPT File URL"
+                  fullWidth
+                  value={formData.contentData}
+                  onChange={(e) => onFormChange({ ...formData, contentData: e.target.value })}
+                  sx={{ mt: 2 }}
+                />
+              )}
+            </Box>
           )}
 
           {formData.contentType === 'text' && (

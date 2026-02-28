@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
-  Card,
-  CardContent,
   Box,
   Button,
   Alert,
@@ -14,74 +12,95 @@ import {
   DialogActions,
   TextField,
   LinearProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Stack,
+  MenuItem,
+  Collapse,
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import assignmentService from '../../services/assignmentService';
-import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
+import FileUpload from '../common/FileUpload';
 
 const AssignmentView = () => {
   const [assignments, setAssignments] = useState([]);
-  const [submissions, setSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filter State
+  const [showFilters, setShowFilters] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [status, setStatus] = useState('all');
+
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Dialog State
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [fileUrl, setFileUrl] = useState('');
   const [fileName, setFileName] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [coursesResponse, submissionsResponse] = await Promise.all([
-        courseService.getStudentCourses(),
-        assignmentService.getMySubmissions(),
-      ]);
+      const params = {
+        page: page + 1,
+        limit: rowsPerPage,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        status: status !== 'all' ? status : undefined,
+      };
 
-      const coursesData = coursesResponse.data || [];
-      const extractedCourses = coursesData.map((enrollment) => enrollment.courseId);
-
-      // Fetch assignments for all courses
-      const assignmentPromises = extractedCourses.map((course) =>
-        assignmentService.getStudentAssignments(course._id).catch(() => ({ data: [] }))
-      );
-      const assignmentResponses = await Promise.all(assignmentPromises);
-
-      const allAssignments = [];
-      assignmentResponses.forEach((response, index) => {
-        const courseAssignments = (response.data || []).map((assignment) => ({
-          ...assignment,
-          course: extractedCourses[index],
-        }));
-        allAssignments.push(...courseAssignments);
-      });
-
-      setAssignments(allAssignments);
-
-      // Map submissions by assignment ID
-      const submissionsMap = {};
-      (submissionsResponse.data || []).forEach((submission) => {
-        submissionsMap[submission.assignmentId?._id] = submission;
-      });
-      setSubmissions(submissionsMap);
-
+      const response = await assignmentService.getMyAssignments(params);
+      setAssignments(response.assignments || []);
+      setTotalRecords(response.total || 0);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to fetch assignments');
+      setAssignments([]);
     } finally {
       setLoading(false);
     }
+  }, [page, rowsPerPage, startDate, endDate, status]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleClearFilters = () => {
+    setStartDate('');
+    setEndDate('');
+    setStatus('all');
+    setPage(0);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   const handleOpenDialog = (assignment) => {
     setSelectedAssignment(assignment);
-    const existingSubmission = submissions[assignment._id];
+    const existingSubmission = assignment.submission;
     if (existingSubmission) {
       setFileUrl(existingSubmission.fileUrl);
       setFileName(existingSubmission.fileName);
@@ -99,15 +118,7 @@ const AssignmentView = () => {
     setFileName('');
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // In a real app, you would upload the file to a storage service first
-      // For now, we'll use a placeholder URL
-      setFileName(file.name);
-      setFileUrl(URL.createObjectURL(file));
-    }
-  };
+
 
   const handleSubmit = async () => {
     if (!fileUrl || !fileName) {
@@ -118,11 +129,9 @@ const AssignmentView = () => {
     try {
       setUploading(true);
       setError(null);
-      // In production, upload file first, then submit the URL
-      // For now, we'll submit with the placeholder URL
       await assignmentService.submitAssignment(selectedAssignment._id, fileUrl, fileName);
       handleCloseDialog();
-      fetchData();
+      fetchData(); // Refresh list to update status
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to submit assignment');
     } finally {
@@ -130,22 +139,69 @@ const AssignmentView = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <CircularProgress />
-        </Box>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
-      <Box>
-        <Typography variant="h4" component="h1" gutterBottom>
-          My Assignments
-        </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1">
+            My Assignments
+          </Typography>
+          <Button
+            startIcon={showFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outlined"
+          >
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </Button>
+        </Box>
+
+        <Collapse in={showFilters}>
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+              <TextField
+                label="Start Date (Due)"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPage(0);
+                }}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+              <TextField
+                label="End Date (Due)"
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPage(0);
+                }}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+              <TextField
+                select
+                label="Status"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setPage(0);
+                }}
+                fullWidth
+              >
+                <MenuItem value="all">All Statuses</MenuItem>
+                <MenuItem value="submitted">Submitted</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+              </TextField>
+            </Stack>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button onClick={handleClearFilters} color="primary">
+                Clear Filters
+              </Button>
+            </Box>
+          </Paper>
+        </Collapse>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -153,82 +209,110 @@ const AssignmentView = () => {
           </Alert>
         )}
 
-        {assignments.length === 0 ? (
-          <Alert severity="info">No assignments available.</Alert>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : assignments.length === 0 ? (
+          <Alert severity="info">No assignments found matching your criteria.</Alert>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {assignments.map((assignment) => {
-              const submission = submissions[assignment._id];
-              return (
-                <Card key={assignment._id}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                      <Box>
-                        <Typography variant="h6">{assignment.title}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Course: {assignment.course?.title || 'Unknown'}
+          <Paper>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Assignment</TableCell>
+                    <TableCell>Course</TableCell>
+                    <TableCell>Due Date</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Assignment File</TableCell>
+                    <TableCell>My Submission</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {assignments.map((assignment) => (
+                    <TableRow key={assignment._id}>
+                      <TableCell>
+                        <Typography variant="body1" fontWeight="bold">
+                          {assignment.title}
                         </Typography>
-                      </Box>
-                      {submission && (
-                        <Chip
-                          label={submission.status === 'reviewed' ? 'Reviewed' : 'Submitted'}
-                          color={submission.status === 'reviewed' ? 'success' : 'warning'}
-                          size="small"
-                        />
-                      )}
-                    </Box>
-                    <Typography variant="body2" paragraph>
-                      {assignment.description || 'No description available'}
-                    </Typography>
-
-
-                    {assignment.dueDate && (
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
-                      </Typography>
-                    )}
-
-                    {assignment.attachment && assignment.attachment.fileUrl && (
-                      <Box sx={{ mt: 2, mb: 2 }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          href={assignment.attachment.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          startIcon={<DownloadIcon />}
-                        >
-                          Download Assignment Material: {assignment.attachment.fileName || 'Attachment'}
-                        </Button>
-                      </Box>
-                    )}
-
-                    {submission && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Submitted: {new Date(submission.submittedAt).toLocaleString()}
-                        </Typography>
-                        {submission.fileName && (
-                          <Typography variant="body2" color="text.secondary">
-                            File: {submission.fileName}
+                        {assignment.description && (
+                          <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 200, display: 'block' }}>
+                            {assignment.description}
                           </Typography>
                         )}
-                      </Box>
-                    )}
-                    <Box sx={{ mt: 2 }}>
-                      <Button
-                        variant="contained"
-                        startIcon={<UploadIcon />}
-                        onClick={() => handleOpenDialog(assignment)}
-                      >
-                        {submission ? 'Update Submission' : 'Submit Assignment'}
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </Box>
+                      </TableCell>
+                      <TableCell>
+                        {assignment.course?.title || 'Unknown'}
+                      </TableCell>
+                      <TableCell>
+                        {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No Due Date'}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={assignment.status === 'submitted' ? 'Submitted' : 'Pending'}
+                          color={assignment.status === 'submitted' ? 'success' : 'warning'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {assignment.attachment && assignment.attachment.fileUrl ? (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            href={assignment.attachment.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            startIcon={<DownloadIcon />}
+                          >
+                            Download
+                          </Button>
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">None</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {assignment.submission ? (
+                          <Box>
+                            <Typography variant="caption" display="block">
+                              {new Date(assignment.submission.submittedAt).toLocaleDateString()}
+                            </Typography>
+                            {assignment.submission.fileName && (
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                {assignment.submission.fileName}
+                              </Typography>
+                            )}
+                          </Box>
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">-</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<UploadIcon />}
+                          onClick={() => handleOpenDialog(assignment)}
+                        >
+                          {assignment.submission ? 'Update' : 'Submit'}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={totalRecords}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Paper>
         )}
 
         <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -236,32 +320,32 @@ const AssignmentView = () => {
             {selectedAssignment?.title || 'Submit Assignment'}
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <input
-                type="file"
+            <Box sx={{ pt: 2 }}>
+              <FileUpload
+                label="Select Assignment File"
                 accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileChange}
-                style={{ marginBottom: '16px' }}
+                onUploadSuccess={(url, name) => {
+                  setFileUrl(url);
+                  setFileName(name);
+                }}
               />
-              {fileName && (
-                <TextField
-                  label="File Name"
-                  value={fileName}
-                  InputProps={{ readOnly: true }}
-                  fullWidth
-                />
+              {fileName && !uploading && (
+                <Typography variant="body2" sx={{ mt: 1, color: 'success.main' }}>
+                  Ready to submit: {fileName}
+                </Typography>
               )}
-              {uploading && <LinearProgress />}
+              {uploading && <LinearProgress sx={{ mt: 2 }} />}
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleCloseDialog} disabled={uploading}>Cancel</Button>
             <Button
               onClick={handleSubmit}
               variant="contained"
               disabled={!fileUrl || uploading}
+              startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
             >
-              {uploading ? 'Submitting...' : 'Submit'}
+              {uploading ? 'Submitting...' : 'Confirm Submission'}
             </Button>
           </DialogActions>
         </Dialog>

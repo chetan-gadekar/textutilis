@@ -36,7 +36,7 @@ export default function Sidebar({ open: expanded, onToggle }) {
       <nav className="sidebar-nav">
         <div className="sidebar-header">
           <img
-            alt="Logo"
+            alt=""
           />
           <button
             onClick={setExpanded}
@@ -112,7 +112,7 @@ const getMenuItems = (isAdmin, isSuperInstructor, isInstructor, isStudent) => {
       { text: 'My Courses', icon: <BookOpen size={20} />, path: '/student/courses' },
       { text: 'Assignments', icon: <FileText size={20} />, path: '/student/assignments' },
       { text: 'My Profile', icon: <UserCircle size={20} />, path: '/student/profile' },
-      { text: 'Career Services', icon: <Briefcase size={20} />, path: '/career-services' },
+      // { text: 'Career Services', icon: <Briefcase size={20} />, path: '/career-services' },
     ];
   }
   if (isAdmin) {
@@ -137,6 +137,7 @@ const getMenuItems = (isAdmin, isSuperInstructor, isInstructor, isStudent) => {
       { text: 'Overview', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
       { text: 'My Courses', icon: <BookOpen size={20} />, path: '/instructor/courses' },
       { text: 'Review Assignments', icon: <FileText size={20} />, path: '/instructor/assignments' },
+      { text: 'Teaching Points', icon: <FileText size={20} />, path: '/instructor/teaching-points' },
     ];
   }
   return [];

@@ -24,8 +24,18 @@ import {
   Avatar
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import adminService from '../../services/adminService';
 import MainLayout from '../layout/MainLayout';
+import {
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Collapse
+} from '@mui/material';
 
 /* =========================================================
    🔐 SAFE TEXT HELPER (Same as Instructor View)
@@ -50,36 +60,86 @@ const TeachingPointsView = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [instructorFilter, setInstructorFilter] = useState('');
+
+  // UI State
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Instructors for dropdown
+  const [instructors, setInstructors] = useState([]);
+
+  // Filters State
+  const [selectedInstructorId, setSelectedInstructorId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Dialog State
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [dialogPoints, setDialogPoints] = useState([]);
 
+  // Fetch instructors on mount
+  useEffect(() => {
+    const fetchInstructors = async () => {
+      try {
+        const response = await adminService.getAllFaculty();
+        setInstructors(response.data || []);
+      } catch (err) {
+        console.error('Failed to fetch instructors:', err);
+      }
+    };
+    fetchInstructors();
+  }, []);
+
   const fetchTeachingPoints = useCallback(async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (instructorFilter) {
-        params.instructorId = instructorFilter;
-      }
+      const params = {
+        page: page + 1,
+        limit: rowsPerPage,
+        instructorId: selectedInstructorId,
+        startDate,
+        endDate
+      };
+
       const response = await adminService.getAllTeachingPoints(params);
       setRecords(response.data || []);
+      setTotalRecords(response.total || 0);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to fetch teaching points');
     } finally {
       setLoading(false);
     }
-  }, [instructorFilter]);
+  }, [page, rowsPerPage, selectedInstructorId, startDate, endDate]);
 
   useEffect(() => {
     fetchTeachingPoints();
   }, [fetchTeachingPoints]);
 
-  const handleFilterChange = (e) => {
-    setInstructorFilter(e.target.value);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleApplyFilters = () => {
+    setPage(0);
+    fetchTeachingPoints();
+  };
+
+  const handleClearFilters = () => {
+    setSelectedInstructorId('');
+    setStartDate('');
+    setEndDate('');
+    setPage(0);
   };
 
   const handleViewDetails = (record) => {
@@ -102,7 +162,7 @@ const TeachingPointsView = () => {
     setOpenDialog(true);
   };
 
-  if (loading) {
+  if (loading && records.length === 0) {
     return (
       <MainLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -116,23 +176,68 @@ const TeachingPointsView = () => {
     <MainLayout>
       <Box>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Teaching Points - All Instructors
-          </Typography>
-          <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
-              label="Filter by Instructor ID"
-              value={instructorFilter}
-              onChange={handleFilterChange}
-              size="small"
-            />
-            <Button variant="contained" onClick={fetchTeachingPoints}>
-              Apply Filter
-            </Button>
-            <Button variant="outlined" onClick={() => { setInstructorFilter(''); fetchTeachingPoints(); }}>
-              Clear Filter
-            </Button>
-          </Box>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h4" component="h1" gutterBottom>
+              Teaching Points - All Instructors
+            </Typography>
+            <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
+              <IconButton
+                onClick={() => setShowFilters(!showFilters)}
+                color={showFilters ? "primary" : "default"}
+                sx={{ bgcolor: showFilters ? 'action.hover' : 'transparent' }}
+              >
+                {showFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+              </IconButton>
+            </Tooltip>
+          </Stack>
+
+          <Collapse in={showFilters}>
+            <Paper variant="outlined" sx={{ p: 2, mt: 2, bgcolor: '#fbfbfb' }}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                <FormControl size="small" sx={{ flexGrow: 1, minWidth: 200 }}>
+                  <InputLabel>Select Instructor</InputLabel>
+                  <Select
+                    value={selectedInstructorId}
+                    label="Select Instructor"
+                    onChange={(e) => setSelectedInstructorId(e.target.value)}
+                  >
+                    <MenuItem value="">
+                      <em>All Instructors</em>
+                    </MenuItem>
+                    {instructors.map((instructor) => (
+                      <MenuItem key={instructor._id} value={instructor._id}>
+                        {instructor.name} ({instructor.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Stack>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                <Button variant="outlined" size="small" onClick={handleClearFilters}>
+                  Clear Filters
+                </Button>
+                <Button variant="contained" size="small" onClick={handleApplyFilters}>
+                  Apply Filters
+                </Button>
+              </Box>
+            </Paper>
+          </Collapse>
         </Box>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -149,7 +254,13 @@ const TeachingPointsView = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {records.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                    <CircularProgress size={24} />
+                  </TableCell>
+                </TableRow>
+              ) : records.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                     No records found
@@ -197,6 +308,15 @@ const TeachingPointsView = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={totalRecords}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </TableContainer>
 
         {/* Details Dialog */}

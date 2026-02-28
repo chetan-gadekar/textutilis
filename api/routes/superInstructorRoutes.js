@@ -25,6 +25,7 @@ router.put('/content/:id', validateContent, superInstructorController.updateCont
 router.delete('/content/:id', superInstructorController.deleteContent);
 
 // Assignment routes
+router.get('/assignments', superInstructorController.getAllAssignments);
 router.post('/courses/:courseId/assignments', validateAssignment, superInstructorController.createAssignment);
 router.get('/courses/:courseId/assignments', superInstructorController.getAssignments);
 router.put('/assignments/:id', validateAssignment, superInstructorController.updateAssignment);

@@ -6,16 +6,24 @@ const User = require('../schemas/User');
 // @access  Private/Admin
 const getAllStudents = async (req, res, next) => {
   try {
-    const { isActive } = req.query;
-    const filters = {};
+    const { isActive, page, limit, name } = req.query;
+    const filters = {
+      page,
+      limit,
+      name
+    };
+
     if (isActive !== undefined) {
       filters.isActive = isActive === 'true';
     }
 
-    const students = await studentService.getAllStudents(filters);
+    const { students, total, pages, currentPage } = await studentService.getAllStudents(filters);
     res.json({
       success: true,
       count: students.length,
+      total,
+      pages,
+      currentPage,
       data: students,
     });
   } catch (error) {
@@ -44,16 +52,31 @@ const toggleStudentStatus = async (req, res, next) => {
 // @access  Private/Admin
 const getAllFaculty = async (req, res, next) => {
   try {
-    const faculty = await User.find({
+    const { page = 1, limit = 10, name } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = {
       role: { $in: ['instructor', 'super_instructor'] },
-    })
+    };
+
+    if (name) {
+      query.name = { $regex: name, $options: 'i' };
+    }
+
+    const total = await User.countDocuments(query);
+    const faculty = await User.find(query)
       .select('-password')
       .populate('assignedCourses', 'title')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
 
     res.json({
       success: true,
       count: faculty.length,
+      total,
+      pages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
       data: faculty,
     });
   } catch (error) {
@@ -187,17 +210,23 @@ const deleteFaculty = async (req, res, next) => {
 const getAllTeachingPoints = async (req, res, next) => {
   try {
     const teachingPointService = require('../services/teachingPointService');
-    const { instructorId, startDate, endDate } = req.query;
+    const { instructorId, name, startDate, endDate, page, limit } = req.query;
 
-    const filters = {};
-    if (instructorId) filters.instructorId = instructorId;
-    if (startDate) filters.startDate = startDate;
-    if (endDate) filters.endDate = endDate;
+    const filters = {
+      instructorId,
+      name: name,
+      startDate,
+      endDate,
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10
+    };
 
-    const teachingPoints = await teachingPointService.getAllTeachingPoints(filters);
+    const { teachingPoints, pagination } = await teachingPointService.getAllTeachingPoints(filters);
+
     res.json({
       success: true,
       count: teachingPoints.length,
+      pagination,
       data: teachingPoints,
     });
   } catch (error) {

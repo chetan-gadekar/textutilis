@@ -19,8 +19,8 @@ const adminService = {
     return response.data;
   },
   // Faculty
-  getAllFaculty: async () => {
-    const response = await api.get('/admin/faculty');
+  getAllFaculty: async (params = {}) => {
+    const response = await api.get('/admin/faculty', { params });
     return response.data;
   },
   createFaculty: async (facultyData) => {

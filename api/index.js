@@ -15,6 +15,7 @@ const instructorRoutes = require('./routes/instructorRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const videoUploadRoutes = require('./routes/videoUploadRoutes');
 
 // Connect to database
 connectDB();
@@ -37,6 +38,7 @@ app.use('/api/super-instructor', superInstructorRoutes);
 app.use('/api/instructor', instructorRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/upload/video', videoUploadRoutes);
 app.use('/api/upload', uploadRoutes);
 
 // Serve React app static files

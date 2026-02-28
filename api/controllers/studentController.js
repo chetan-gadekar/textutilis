@@ -47,7 +47,7 @@ const getCourseStructure = async (req, res, next) => {
 const getCourseContent = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    
+
     // Verify enrollment
     const enrollment = await Enrollment.findOne({
       studentId: req.user.id,
@@ -125,36 +125,36 @@ const saveVideoProgress = async (req, res, next) => {
       isCompleted,
     };
     const progress = await studentService.saveVideoProgress(progressData);
-    
+
     // Update enrollment progress
     const TopicContent = require('../schemas/TopicContent');
     const Module = require('../schemas/Module');
     const Topic = require('../schemas/Topic');
-    
+
     // Get all content for course
     const modules = await Module.find({ courseId });
     const moduleIds = modules.map(m => m._id);
     const topics = await Topic.find({ moduleId: { $in: moduleIds } });
     const topicIds = topics.map(t => t._id);
     const allContent = await TopicContent.find({ topicId: { $in: topicIds } });
-    
+
     // Calculate overall progress
     const allProgress = await Progress.find({
       studentId: req.user.id,
       courseId,
       contentId: { $in: allContent.map(c => c._id) },
     });
-    
+
     const completedCount = allProgress.filter(p => p.isCompleted).length;
     const overallProgress = allContent.length > 0
       ? Math.round((completedCount / allContent.length) * 100)
       : 0;
-    
+
     await Enrollment.findOneAndUpdate(
       { studentId: req.user.id, courseId },
       { progress: overallProgress }
     );
-    
+
     res.json({
       success: true,
       data: progress,
@@ -193,7 +193,7 @@ const getCourseProgress = async (req, res, next) => {
 const getAssignments = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    
+
     // Verify enrollment
     const enrollment = await Enrollment.findOne({
       studentId: req.user.id,
@@ -217,21 +217,31 @@ const getAssignments = async (req, res, next) => {
   }
 };
 
-// @desc    Get my submissions
-// @route   GET /api/student/submissions
+// @desc    Get my assignments with status and filters
+// @route   GET /api/student/my-assignments
 // @access  Private/Student
-const getMySubmissions = async (req, res, next) => {
+const getMyAssignments = async (req, res, next) => {
   try {
-    const submissions = await assignmentService.getSubmissionsByStudent(req.user.id);
+    const { page, limit, startDate, endDate, status } = req.query;
+    const filters = {
+      page,
+      limit,
+      startDate,
+      endDate,
+      status,
+    };
+
+    const result = await assignmentService.getStudentAssignmentsWithStatus(req.user.id, filters);
     res.json({
       success: true,
-      count: submissions.length,
-      data: submissions,
+      ...result,
     });
   } catch (error) {
     next(error);
   }
 };
+
+
 
 // @desc    Submit assignment
 // @route   POST /api/student/assignments/:assignmentId/submit
@@ -276,6 +286,23 @@ const getMyProfile = async (req, res, next) => {
   }
 };
 
+
+// @desc    Get my submissions
+// @route   GET /api/student/submissions
+// @access  Private/Student
+const getMySubmissions = async (req, res, next) => {
+  try {
+    const submissions = await assignmentService.getSubmissionsByStudent(req.user.id);
+    res.json({
+      success: true,
+      count: submissions.length,
+      data: submissions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getMyCourses,
   getCourseStructure,
@@ -285,7 +312,8 @@ module.exports = {
   saveVideoProgress,
   getCourseProgress,
   getAssignments,
-  getMySubmissions,
   submitAssignment,
   getMyProfile,
+  getMyAssignments,
+  getMySubmissions,
 };

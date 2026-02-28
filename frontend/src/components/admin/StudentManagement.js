@@ -5,7 +5,20 @@ import {
   Button,
   Alert,
   CircularProgress,
+  TextField,
+  Stack,
+  TablePagination,
+  IconButton,
+  Tooltip,
+  Collapse,
+  Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import adminService from '../../services/adminService';
 import MainLayout from '../layout/MainLayout';
 import AssignCoursesDialog from './student/AssignCoursesDialog';
@@ -23,22 +36,46 @@ const StudentManagement = () => {
   const [assignedCourses, setAssignedCourses] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
 
+  // Search and Pagination State
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(0); // Reset to first page on search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
-      const params = {};
+      const params = {
+        page: page + 1,
+        limit: rowsPerPage,
+        name: debouncedSearch,
+      };
+
       if (filter === 'active') params.isActive = true;
       if (filter === 'inactive') params.isActive = false;
 
       const response = await adminService.getAllStudents(params);
       setStudents(response.data || []);
+      setTotalRecords(response.total || 0);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to fetch students');
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, page, rowsPerPage, debouncedSearch]);
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -52,8 +89,26 @@ const StudentManagement = () => {
 
   useEffect(() => {
     fetchStudents();
+  }, [fetchStudents]);
+
+  useEffect(() => {
     fetchCourses();
-  }, [fetchStudents, fetchCourses]);
+  }, [fetchCourses]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilter('all');
+    setPage(0);
+  };
 
   const handleToggleStatus = async (studentId) => {
     try {
@@ -114,7 +169,7 @@ const StudentManagement = () => {
     }
   };
 
-  if (loading) {
+  if (loading && students.length === 0) {
     return (
       <MainLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -128,26 +183,57 @@ const StudentManagement = () => {
     <MainLayout>
       <Box>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Student Management
-          </Typography>
-          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-            <Button variant={filter === 'all' ? 'contained' : 'outlined'} onClick={() => setFilter('all')}>
-              All Students
-            </Button>
-            <Button
-              variant={filter === 'active' ? 'contained' : 'outlined'}
-              onClick={() => setFilter('active')}
-            >
-              Active
-            </Button>
-            <Button
-              variant={filter === 'inactive' ? 'contained' : 'outlined'}
-              onClick={() => setFilter('inactive')}
-            >
-              Inactive
-            </Button>
-          </Box>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h4" component="h1" gutterBottom>
+              Student Management
+            </Typography>
+            <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
+              <IconButton
+                onClick={() => setShowFilters(!showFilters)}
+                color={showFilters ? "primary" : "default"}
+                sx={{ bgcolor: showFilters ? 'action.hover' : 'transparent' }}
+              >
+                {showFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+              </IconButton>
+            </Tooltip>
+          </Stack>
+
+          <Collapse in={showFilters}>
+            <Paper variant="outlined" sx={{ p: 2, mt: 2, bgcolor: '#fbfbfb' }}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+                <TextField
+                  label="Search by Name"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="small"
+                  sx={{ flexGrow: 1, minWidth: 200 }}
+                  placeholder="Type to search..."
+                />
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={filter}
+                    label="Status"
+                    onChange={(e) => setFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">All Students</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleClearFilters}
+                >
+                  Clear Filters
+                </Button>
+              </Box>
+            </Paper>
+          </Collapse>
         </Box>
 
         {error && (
@@ -166,6 +252,16 @@ const StudentManagement = () => {
           students={students}
           onAssignCourses={handleOpenAssignDialog}
           onToggleStatus={handleToggleStatus}
+        />
+
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={totalRecords}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
         />
 
         <AssignCoursesDialog

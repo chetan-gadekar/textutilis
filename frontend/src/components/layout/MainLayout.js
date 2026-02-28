@@ -3,11 +3,25 @@ import { Box, CssBaseline } from '@mui/material';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 
-const MainLayout = ({ children, courseTitle, onBack, showProgress, progress }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, initialCollapsed = false }) => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(() => {
+    if (initialCollapsed) return false;
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  React.useEffect(() => {
+    if (initialCollapsed) {
+      setSidebarOpen(false);
+    }
+  }, [initialCollapsed]);
 
   const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen);
+    setSidebarOpen(prev => {
+      const newState = !prev;
+      localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+      return newState;
+    });
   };
 
   return (

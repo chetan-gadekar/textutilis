@@ -17,7 +17,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import EditIcon from '@mui/icons-material/Edit';
 
-const AssignmentTable = ({ assignments, onDelete }) => {
+const AssignmentTable = ({ assignments, onDelete, onEdit }) => {
   return (
     <TableContainer component={Paper} sx={{ borderRadius: 1, boxShadow: 1 }}>
       <Table>
@@ -81,7 +81,11 @@ const AssignmentTable = ({ assignments, onDelete }) => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Edit">
-                      <IconButton size="small" color="primary">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onEdit(assignment)}
+                      >
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

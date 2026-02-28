@@ -10,7 +10,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
 } from '@mui/material';
+import FileUpload from '../../common/FileUpload';
 
 const AssignmentFormDialog = ({
   open,
@@ -24,12 +26,15 @@ const AssignmentFormDialog = ({
   onDescriptionChange,
   dueDate,
   onDueDateChange,
+  attachment,
+  onAttachmentChange,
   onSubmit,
   submitting,
+  editing,
 }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Create New Assignment</DialogTitle>
+      <DialogTitle>{editing ? 'Edit Assignment' : 'Create New Assignment'}</DialogTitle>
       <form onSubmit={onSubmit}>
         <DialogContent>
           <FormControl fullWidth sx={{ mb: 3, mt: 1 }}>
@@ -39,6 +44,7 @@ const AssignmentFormDialog = ({
               onChange={onCourseChange}
               label="Select Course *"
               required
+              disabled={editing} // Usually course shouldn't be changed during edit
             >
               {courses.map((course) => (
                 <MenuItem key={course._id} value={course._id}>
@@ -78,12 +84,27 @@ const AssignmentFormDialog = ({
               shrink: true,
             }}
             required
+            sx={{ mb: 3 }}
           />
+
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Assignment Attachment (Optional)
+          </Typography>
+          <FileUpload
+            label="Upload Assignment Document (PDF, DOC, etc.)"
+            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+            onUploadSuccess={onAttachmentChange}
+          />
+          {attachment && (
+            <Typography variant="caption" color="success.main">
+              File uploaded: {attachment.fileName}
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={submitting}>
-            {submitting ? 'Creating...' : 'Create'}
+            {submitting ? (editing ? 'Updating...' : 'Creating...') : (editing ? 'Update' : 'Create')}
           </Button>
         </DialogActions>
       </form>

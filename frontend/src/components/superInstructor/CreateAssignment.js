@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Box,
   Alert,
   CircularProgress,
   Button,
+  TextField,
+  Stack,
+  IconButton,
+  Tooltip,
+  Collapse,
+  Paper,
+  TablePagination,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import courseService from '../../services/courseService';
 import assignmentService from '../../services/assignmentService';
 import MainLayout from '../layout/MainLayout';
@@ -25,10 +34,31 @@ const CreateAssignment = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [attachment, setAttachment] = useState(null);
+  const [editAssignment, setEditAssignment] = useState(null);
+
+  // Search and Pagination State
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(0); // Reset to first page on search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchCourses();
-    fetchAllAssignments();
   }, []);
 
   const fetchCourses = async () => {
@@ -44,42 +74,85 @@ const CreateAssignment = () => {
     }
   };
 
-  const fetchAllAssignments = async () => {
+  const fetchAllAssignments = useCallback(async () => {
     try {
-      const response = await courseService.getCourses();
-      const allCourses = response.data || [];
+      setLoading(true);
+      const params = {
+        page: page + 1,
+        limit: rowsPerPage,
+        title: debouncedSearch,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      };
 
-      const allAssignments = [];
-      for (const course of allCourses) {
-        try {
-          const res = await assignmentService.getAssignments(course._id);
-          const assignmentsWithCourse = (res.data || []).map((a) => ({
-            ...a,
-            courseName: course.title,
-            courseId: course._id,
-            visibility: 'Visible',
-          }));
-          allAssignments.push(...assignmentsWithCourse);
-        } catch (e) {
-          console.error(`Failed to fetch assignments for course ${course._id}`);
-        }
-      }
-      setAssignments(allAssignments);
+      const response = await assignmentService.getAllAssignments(params);
+      const assignmentsWithCourse = (response.data || []).map((a) => ({
+        ...a,
+        courseName: a.courseId?.title || 'Unknown Course',
+        courseId: a.courseId?._id || a.courseId,
+        visibility: 'Visible',
+      }));
+
+      setAssignments(assignmentsWithCourse);
+      setTotalRecords(response.total || 0);
+      setError(null);
     } catch (err) {
       console.error('Failed to fetch assignments:', err);
+      setError('Failed to fetch assignments');
+    } finally {
+      setLoading(false);
     }
+  }, [page, rowsPerPage, debouncedSearch, startDate, endDate]);
+
+  useEffect(() => {
+    fetchAllAssignments();
+  }, [fetchAllAssignments]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStartDate('');
+    setEndDate('');
+    setPage(0);
   };
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
   };
 
+  const handleEditClick = (assignment) => {
+    setEditAssignment(assignment);
+    setTitle(assignment.title);
+    setDescription(assignment.description);
+    setSelectedCourse(assignment.courseId?._id || assignment.courseId);
+
+    // Format date for datetime-local input
+    if (assignment.dueDate) {
+      const date = new Date(assignment.dueDate);
+      const formattedDate = date.toISOString().slice(0, 16);
+      setDueDate(formattedDate);
+    }
+
+    setAttachment(assignment.attachment);
+    setOpenDialog(true);
+  };
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setEditAssignment(null);
     setTitle('');
     setDescription('');
     setDueDate('');
     setSelectedCourse('');
+    setAttachment(null);
     setError(null);
   };
 
@@ -95,21 +168,27 @@ const CreateAssignment = () => {
       setSubmitting(true);
       setError(null);
 
-      let attachment = null;
-
-      await assignmentService.createAssignment(selectedCourse, {
+      const assignmentData = {
         title,
         description,
         dueDate,
         attachment,
-      });
+        courseId: selectedCourse,
+      };
 
-      setSuccess('Assignment created successfully!');
+      if (editAssignment) {
+        await assignmentService.updateAssignment(editAssignment._id, assignmentData);
+        setSuccess('Assignment updated successfully!');
+      } else {
+        await assignmentService.createAssignment(selectedCourse, assignmentData);
+        setSuccess('Assignment created successfully!');
+      }
+
       handleCloseDialog();
       fetchAllAssignments();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to create assignment');
+      setError(err.message || `Failed to ${editAssignment ? 'update' : 'create'} assignment`);
     } finally {
       setSubmitting(false);
     }
@@ -130,7 +209,7 @@ const CreateAssignment = () => {
     }
   };
 
-  if (loading) {
+  if (loading && assignments.length === 0) {
     return (
       <MainLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -143,18 +222,69 @@ const CreateAssignment = () => {
   return (
     <MainLayout>
       <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            Assignment Management
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
-            sx={{ bgcolor: '#1976d2' }}
-          >
-            CREATE ASSIGNMENT
-          </Button>
+        <Box sx={{ mb: 4 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h4" component="h1" gutterBottom>
+              Assignment Management
+            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
+                <IconButton
+                  onClick={() => setShowFilters(!showFilters)}
+                  color={showFilters ? "primary" : "default"}
+                  sx={{ bgcolor: showFilters ? 'action.hover' : 'transparent' }}
+                >
+                  {showFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleOpenDialog}
+                sx={{ bgcolor: '#1976d2' }}
+              >
+                CREATE ASSIGNMENT
+              </Button>
+            </Stack>
+          </Stack>
+
+          <Collapse in={showFilters}>
+            <Paper variant="outlined" sx={{ p: 2, mt: 2, bgcolor: '#fbfbfb' }}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+                <TextField
+                  label="Search by Title"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="small"
+                  sx={{ flexGrow: 1, minWidth: 200 }}
+                  placeholder="Type to search..."
+                />
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 150 }}
+                />
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 150 }}
+                />
+              </Stack>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button variant="outlined" size="small" onClick={handleClearFilters}>
+                  Clear Filters
+                </Button>
+              </Box>
+            </Paper>
+          </Collapse>
         </Box>
 
         {error && (
@@ -169,7 +299,21 @@ const CreateAssignment = () => {
           </Alert>
         )}
 
-        <AssignmentTable assignments={assignments} onDelete={handleDeleteAssignment} />
+        <AssignmentTable
+          assignments={assignments}
+          onDelete={handleDeleteAssignment}
+          onEdit={handleEditClick}
+        />
+
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={totalRecords}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
 
         <AssignmentFormDialog
           open={openDialog}
@@ -183,8 +327,11 @@ const CreateAssignment = () => {
           onDescriptionChange={(e) => setDescription(e.target.value)}
           dueDate={dueDate}
           onDueDateChange={(e) => setDueDate(e.target.value)}
+          attachment={attachment}
+          onAttachmentChange={(url, name) => setAttachment({ fileUrl: url, fileName: name })}
           onSubmit={handleSubmit}
           submitting={submitting}
+          editing={!!editAssignment}
         />
       </Box>
     </MainLayout>

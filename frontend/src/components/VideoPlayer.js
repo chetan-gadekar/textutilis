@@ -11,7 +11,17 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
 
   useEffect(() => {
     if (videoId) {
-      fetchVideoDetails(videoId);
+      if (videoId.startsWith('http')) {
+        // Direct URL (e.g., Cloudinary)
+        setVideo({
+          playback: { hls: videoId, direct: videoId },
+          status: { state: 'ready' },
+          isDirectUrl: true
+        });
+        setLoading(false);
+      } else {
+        fetchVideoDetails(videoId);
+      }
     }
   }, [videoId]);
 
@@ -19,10 +29,11 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    // Set initial position if provided
-    if (initialPosition > 0 && videoElement.readyState >= 2) {
-      videoElement.currentTime = initialPosition * videoElement.duration;
-    }
+    const handleLoadedMetadata = () => {
+      if (initialPosition > 0 && videoElement.duration) {
+        videoElement.currentTime = initialPosition * videoElement.duration;
+      }
+    };
 
     // Handle progress updates
     const handleTimeUpdate = () => {
@@ -32,6 +43,9 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
       }
     };
 
+    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+
     // Update progress every 5 seconds
     progressIntervalRef.current = setInterval(() => {
       if (videoElement.duration && onProgress) {
@@ -40,9 +54,8 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
       }
     }, 5000);
 
-    videoElement.addEventListener('timeupdate', handleTimeUpdate);
-    
     return () => {
+      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
       videoElement.removeEventListener('timeupdate', handleTimeUpdate);
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
@@ -81,7 +94,7 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
   }
 
   const isReady = video.status?.state === 'ready';
-  const playbackUrl = video.playback?.hls || video.playback?.dash;
+  const playbackUrl = video.isDirectUrl ? video.playback.direct : (video.playback?.hls || video.playback?.dash);
 
   return (
     <Box>
@@ -106,14 +119,8 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
               display: 'block',
             }}
             poster={video.thumbnail || undefined}
-            onLoadedMetadata={() => {
-              // Set initial position when metadata is loaded
-              if (videoRef.current && initialPosition > 0) {
-                videoRef.current.currentTime = initialPosition * videoRef.current.duration;
-              }
-            }}
           >
-            <source src={playbackUrl} type="application/x-mpegURL" />
+            <source src={playbackUrl} type={video.isDirectUrl ? "video/mp4" : "application/x-mpegURL"} />
             Your browser does not support the video tag.
           </video>
         </Box>

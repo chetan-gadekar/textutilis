@@ -277,6 +277,34 @@ const createAssignment = async (req, res, next) => {
   }
 };
 
+// @desc    Get all assignments with pagination and filters
+// @route   GET /api/super-instructor/assignments
+// @access  Private/SuperInstructor
+const getAllAssignments = async (req, res, next) => {
+  try {
+    const { page, limit, title, startDate, endDate } = req.query;
+    const filters = {
+      page,
+      limit,
+      title,
+      startDate,
+      endDate,
+    };
+
+    const { assignments, total, pages, currentPage } = await assignmentService.getAllAssignments(filters);
+    res.json({
+      success: true,
+      count: assignments.length,
+      total,
+      pages,
+      currentPage,
+      data: assignments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get assignments for course
 // @route   GET /api/super-instructor/courses/:courseId/assignments
 // @access  Private/SuperInstructor
@@ -369,6 +397,7 @@ module.exports = {
   updateContent,
   deleteContent,
   createAssignment,
+  getAllAssignments,
   getAssignments,
   updateAssignment,
   deleteAssignment,
