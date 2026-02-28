@@ -4,6 +4,7 @@
     top: 64px;
     height: calc(100vh - 64px);
     z-index: 1000;
+    font-family: 'Poppins', sans-serif;
 }
 
 .sidebar-nav {

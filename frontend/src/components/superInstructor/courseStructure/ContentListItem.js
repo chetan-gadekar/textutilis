@@ -10,6 +10,15 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+const CONTENT_BOX_SX = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1,
+  mr: 2
+};
+
+const CHIP_SX = { mr: 1 };
+
 const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
   return (
     <ListItem
@@ -25,7 +34,7 @@ const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
         </Box>
       }
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
+      <Box sx={CONTENT_BOX_SX}>
         {getContentIcon(content.contentType)}
         <ListItemText
           primary={content.title}
@@ -34,7 +43,7 @@ const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
               <Chip
                 label={content.contentType.toUpperCase()}
                 size="small"
-                sx={{ mr: 1 }}
+                sx={CHIP_SX}
               />
               {content.contentType === 'video' && content.duration && (
                 <Typography variant="caption" color="text.secondary">

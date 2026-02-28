@@ -9,12 +9,26 @@ import {
   ListItemText,
   LinearProgress,
   Collapse,
+  ListItemIcon,
+  Avatar,
   Divider,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import {
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Sensors as SensorsIcon, // For "System Design Live" style icon
+  PlayCircleOutline as PlayIcon,
+  ArticleOutlined as ArticleIcon,
+  QuizOutlined as QuizIcon,
+  CheckCircle as CheckCircleIcon,
+  RadioButtonUnchecked as UncheckedIcon,
+  Lock as LockIcon,
+  FolderOpen as FolderIcon,
+  Topic as TopicIcon,
+  PictureAsPdf as PdfIcon,
+  Slideshow as PptIcon,
+} from '@mui/icons-material';
+import { alpha, useTheme } from '@mui/material/styles';
 
 const CourseSidebar = ({
   course,
@@ -25,6 +39,8 @@ const CourseSidebar = ({
   onContentClick,
   drawerWidth = 320,
 }) => {
+  const theme = useTheme();
+
   return (
     <Drawer
       variant="permanent"
@@ -34,187 +50,183 @@ const CourseSidebar = ({
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          top: 64, // Below the app bar
-          left: 80, // Start after the main sidebar (main sidebar is ~80px when collapsed)
+          top: 64, // Keep spacing below app bar
+          left: 80, // Keep offset for main sidebar
           height: 'calc(100% - 64px)',
-          borderRight: '1px solid #e0e0e0',
-          bgcolor: '#fafafa',
-          zIndex: 1100, // Above main sidebar (z-index: 1000)
+          borderRight: '1px solid',
+          borderColor: 'divider',
+          bgcolor: '#ffffff',
+          fontFamily: "'Poppins', sans-serif !important",
+          zIndex: 1100, // Keep z-index for layered sidebars
         },
+        '& .MuiTypography-root, & *': {
+          fontFamily: "'Poppins', sans-serif !important",
+        }
       }}
     >
-      {/* Course Header */}
-      <Box sx={{ p: 2.5, bgcolor: 'white', borderBottom: '1px solid #e0e0e0' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
-          {course.title}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            {course.progress}%
-          </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={course.progress}
-            sx={{
-              flexGrow: 1,
-              height: 6,
-              borderRadius: 3,
-              bgcolor: '#e0e0e0',
-              '& .MuiLinearProgress-bar': {
-                bgcolor: '#4caf50',
-                borderRadius: 3,
-              },
-            }}
-          />
-        </Box>
-      </Box>
+      {/* Course Header - Removed as per user code */}
 
-      {/* Module List */}
-      <List sx={{ overflow: 'auto', flexGrow: 1, p: 0 }}>
-        {modules.map((module, moduleIndex) => (
+      {/* Modules List */}
+      <List sx={{
+        overflowY: 'auto',
+        flexGrow: 1,
+        py: 0,
+        '&::-webkit-scrollbar': {
+          width: '4px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#e0e0e0',
+          borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: '#bdbdbd',
+        },
+      }}>
+        {modules.map((module, index) => (
           <React.Fragment key={module._id}>
-            {/* Module Header */}
-            <ListItem disablePadding>
+            <ListItem disablePadding sx={{
+              display: 'block'
+            }}>
               <ListItemButton
                 onClick={() => onModuleToggle(module._id)}
                 sx={{
-                  py: 1.5,
-                  px: 2,
-                  bgcolor: expandedModules[module._id] ? '#e3f2fd' : 'white',
-                  borderLeft: expandedModules[module._id] ? '4px solid #1976d2' : '4px solid transparent',
+                  py: 2,
+                  bgcolor: '#fff', // White background
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
                   '&:hover': {
-                    bgcolor: expandedModules[module._id] ? '#e3f2fd' : '#f5f5f5',
+                    bgcolor: '#fafafa',
                   },
                 }}
               >
-                <ListItemText
-                  primary={
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        fontWeight: 700,
-                        color: expandedModules[module._id] ? '#1976d2' : '#424242',
-                        fontSize: '0.9rem',
-                      }}
-                    >
-                      Module {moduleIndex + 1}: {module.title}
-                    </Typography>
-                  }
-                  secondary={
-                    module.progress > 0 && (
-                      <LinearProgress
-                        variant="determinate"
-                        value={module.progress}
-                        sx={{
-                          mt: 1,
-                          height: 4,
-                          borderRadius: 2,
-                          bgcolor: '#e0e0e0',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: '#4caf50',
-                          },
-                        }}
-                      />
-                    )
-                  }
-                />
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="subtitle1" fontWeight={600} color="#616161" sx={{ fontSize: '1.2rem', fontFamily: 'Poppins' }}>
+                    Module {(index + 1).toString().padStart(2, '0')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {module.title}
+                  </Typography>
+                </Box>
                 {expandedModules[module._id] ? (
-                  <ExpandLessIcon sx={{ color: '#1976d2' }} />
+                  <ExpandLessIcon color="action" />
                 ) : (
-                  <ExpandMoreIcon sx={{ color: '#757575' }} />
+                  <ExpandMoreIcon color="action" />
                 )}
               </ListItemButton>
             </ListItem>
 
-            {/* Topics and Content */}
             <Collapse in={expandedModules[module._id]} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding sx={{ bgcolor: 'white' }}>
-                {module.topics.map((topic) => (
-                  <React.Fragment key={topic._id}>
-                    {/* Topic Title */}
-                    <ListItem sx={{ pl: 4, py: 1, bgcolor: '#f9f9f9' }}>
-                      <Typography
-                        variant="body2"
+              <List component="div" disablePadding sx={{ bgcolor: '#fff', position: 'relative', py: 2 }}>
+
+                {/* 
+                    Flatten topics to render a continuous timeline. 
+                    This allows checking index === 0 and index === length - 1 for the line logic.
+                */}
+                {module.topics.flatMap(chat => chat.content).map((content, index, array) => {
+                  const isSelected = selectedContent?._id === content._id;
+                  const isFirst = index === 0;
+                  const isLast = index === array.length - 1;
+
+                  return (
+                    <Box key={content._id} sx={{ position: 'relative' }}>
+                      <ListItemButton
+                        selected={isSelected}
+                        onClick={() => onContentClick(content)}
                         sx={{
-                          fontWeight: 600,
-                          color: '#616161',
-                          fontSize: '0.85rem',
+                          pl: 7,
+                          pr: 2,
+                          py: 1.5,
+                          position: 'relative',
+                          alignItems: 'flex-start',
+                          '&:hover': { bgcolor: 'transparent' },
+                          '&.Mui-selected': { bgcolor: 'transparent' }
                         }}
                       >
-                        {topic.title}
-                      </Typography>
-                    </ListItem>
-
-                    {/* Content Items */}
-                    {topic.content.map((content) => {
-                      const isSelected = selectedContent?._id === content._id;
-                      const isCompleted = content.progress?.isCompleted;
-
-                      return (
-                        <ListItem key={content._id} disablePadding>
-                          <ListItemButton
-                            selected={isSelected}
-                            onClick={() => onContentClick(content)}
+                        {/* Per-item Timeline Line */}
+                        {!isFirst && (
+                          <Box
                             sx={{
-                              pl: 6,
-                              py: 1.25,
-                              '&.Mui-selected': {
-                                bgcolor: '#e8f5e9',
-                                borderLeft: '3px solid #4caf50',
-                                '&:hover': {
-                                  bgcolor: '#e8f5e9',
-                                },
-                              },
-                              '&:hover': {
-                                bgcolor: '#f5f5f5',
-                              },
+                              position: 'absolute',
+                              left: 28,
+                              top: 0,
+                              height: '30px', // Reach down to icon center
+                              borderLeft: '2px dashed #e0e0e0', // Slightly thicker and lighter
+                              zIndex: 1
                             }}
-                          >
-                            <Box sx={{ mr: 1.5 }}>
-                              {isCompleted ? (
-                                <CheckCircleIcon sx={{ fontSize: 18, color: '#4caf50' }} />
-                              ) : (
-                                <RadioButtonUncheckedIcon sx={{ fontSize: 18, color: '#bdbdbd' }} />
-                              )}
-                            </Box>
-                            <ListItemText
-                              primary={
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    fontWeight: isSelected ? 600 : 400,
-                                    color: isSelected ? '#2e7d32' : '#424242',
-                                    fontSize: '0.875rem',
-                                  }}
-                                >
-                                  {content.title}
-                                </Typography>
-                              }
-                              secondary={
-                                <Typography
-                                  variant="caption"
-                                  sx={{
-                                    color: '#9e9e9e',
-                                    fontSize: '0.75rem',
-                                    textTransform: 'uppercase',
-                                  }}
-                                >
-                                  {content.contentType === 'video' && content.duration
-                                    ? `${Math.round(content.duration / 60)} min`
-                                    : content.contentType}
-                                </Typography>
-                              }
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
+                          />
+                        )}
+                        {!isLast && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              left: 28,
+                              top: '30px', // Start from icon center
+                              bottom: 0,
+                              borderLeft: '2px dashed #e0e0e0',
+                              zIndex: 1
+                            }}
+                          />
+                        )}
+
+                        {/* Timeline Node (Icon) */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: 14,
+                            top: 16,
+                            zIndex: 2,
+                            width: 28,
+                            height: 28,
+                            borderRadius: '50%',
+                            bgcolor: '#ffebee',
+                            border: '1px solid #ffcdd2',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#e57373',
+                          }}
+                        >
+                          <SensorsIcon sx={{ fontSize: 16 }} />
+                        </Box>
+
+                        <ListItemText
+                          primary={
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: isSelected ? 600 : 400,
+                                color: '#616161', // Dark Grey
+                                fontSize: '1.1rem',
+                                mb: 0.5,
+                                lineHeight: 1.3,
+                                fontFamily: 'Poppins'
+                              }}
+                            >
+                              {content.title}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.9rem', fontFamily: 'Poppins' }}>
+                              {content.createdAt ? new Date(content.createdAt).toLocaleString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }).replace(',', '') : 'Date not available'}
+                            </Typography>
+                          }
+                        />
+                      </ListItemButton>
+                    </Box>
+                  );
+                })}
               </List>
             </Collapse>
-
-            {moduleIndex < modules.length - 1 && <Divider />}
           </React.Fragment>
         ))}
       </List>

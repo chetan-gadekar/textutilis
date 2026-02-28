@@ -3,25 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import {
   Typography,
   Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  LinearProgress,
   Box,
   Alert,
   CircularProgress,
-  Chip,
+  Container,
+  Tab,
+  Tabs,
+  InputBase,
+  Paper,
+  IconButton
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Search as SearchIcon, FilterList as FilterListIcon } from '@mui/icons-material';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
+import CourseCard from './CourseCard';
 
 const CourseView = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tabValue, setTabValue] = useState(0); // 0: All, 1: In Progress, 2: Completed
 
   useEffect(() => {
     fetchCourses();
@@ -49,18 +51,25 @@ const CourseView = () => {
     }
   };
 
-  const handleViewCourse = (courseId) => {
+  const handleStartContinue = (courseId) => {
     navigate(`/student/courses/${courseId}`);
   };
 
-  const handleStartLearning = (courseId) => {
-    navigate(`/student/courses/${courseId}`);
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
   };
+
+  const filteredCourses = courses.filter(course => {
+    if (tabValue === 0) return true;
+    if (tabValue === 1) return (course.enrollment?.progress > 0 && course.enrollment?.progress < 100);
+    if (tabValue === 2) return course.enrollment?.progress === 100;
+    return true;
+  });
 
   if (loading) {
     return (
       <MainLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
           <CircularProgress />
         </Box>
       </MainLayout>
@@ -69,82 +78,79 @@ const CourseView = () => {
 
   return (
     <MainLayout>
-      <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        My Courses
-      </Typography>
+      <Container maxWidth="xl">
+        {/* Header Section */}
+        <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'center' }, gap: 2 }}>
+          <Box>
+            <Typography variant="h6" component="h1" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+              My Courses
+            </Typography>
+          </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Paper
+              elevation={0}
+              sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 250, border: '1px solid #e0e0e0', borderRadius: '10px' }}
+            >
+              <IconButton sx={{ p: '10px' }} aria-label="search">
+                <SearchIcon />
+              </IconButton>
+              <InputBase
+                sx={{ ml: 1, flex: 1 }}
+                placeholder="Search courses..."
+              />
+            </Paper>
 
-      {courses.length === 0 ? (
-        <Alert severity="info">You are not enrolled in any courses yet.</Alert>
-      ) : (
-        <Grid container spacing={3}>
-          {courses.map((course) => (
-            <Grid item xs={12} md={6} key={course._id}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                    <Typography variant="h5" component="h2">
-                      {course.title}
-                    </Typography>
-                    {course.isVisible && (
-                      <Chip label="Active" color="success" size="small" />
-                    )}
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {course.description || 'No description available'}
-                  </Typography>
-                  {course.enrollment && (
-                    <Box sx={{ mt: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Progress
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {course.enrollment.progress}%
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={course.enrollment.progress}
-                        sx={{ height: 8, borderRadius: 4 }}
-                      />
-                    </Box>
-                  )}
-                </CardContent>
-                <CardActions>
-                  {course.enrollment?.progress > 0 ? (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="error"
-                      onClick={() => handleViewCourse(course._id)}
-                      endIcon={<PlayArrowIcon />}
-                    >
-                      Continue Learning
-                    </Button>
-                  ) : (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleStartLearning(course._id)}
-                    >
-                      Start Learning
-                    </Button>
-                  )}
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-      </Box>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              aria-label="course status tabs"
+              sx={{
+                '& .MuiTabs-indicator': { borderRadius: '2px' },
+                display: { xs: 'none', md: 'flex' }
+              }}
+            >
+              <Tab label="All" />
+              <Tab label="In Progress" />
+              <Tab label="Completed" />
+            </Tabs>
+          </Box>
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: '8px' }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {filteredCourses.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8, bgcolor: 'white', borderRadius: '16px', border: '1px dashed #e0e0e0' }}>
+            <Box
+              component="img"
+              src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png"
+              sx={{ width: 120, height: 120, opacity: 0.5, mb: 2 }}
+            />
+            <Typography variant="h6" color="text.secondary">
+              No courses found in this category.
+            </Typography>
+            <Typography variant="body2" color="text.disabled">
+              Try checking other tabs or browse new courses.
+            </Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {filteredCourses.map((course) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={course._id}>
+                <CourseCard
+                  course={course}
+                  onStart={handleStartContinue}
+                  onContinue={handleStartContinue}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
     </MainLayout>
   );
 };

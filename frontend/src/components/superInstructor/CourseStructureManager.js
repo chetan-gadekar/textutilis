@@ -23,6 +23,19 @@ import topicService from '../../services/topicService';
 import topicContentService from '../../services/topicContentService';
 import { useCourseStructure } from '../../hooks/useCourseStructure';
 
+const getContentIcon = (contentType) => {
+  switch (contentType) {
+    case 'video':
+      return <PlayArrowIcon fontSize="small" />;
+    case 'ppt':
+      return <PictureAsPdfIcon fontSize="small" />;
+    case 'text':
+      return <DescriptionIcon fontSize="small" />;
+    default:
+      return <DescriptionIcon fontSize="small" />;
+  }
+};
+
 const CourseStructureManager = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -30,6 +43,7 @@ const CourseStructureManager = () => {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedModule, setExpandedModule] = useState(false);
 
   const fetchCourseData = useCallback(async () => {
     try {
@@ -63,6 +77,10 @@ const CourseStructureManager = () => {
     }
   }, [courseId]);
 
+  const handleAccordionChange = useCallback((moduleId) => (event, isExpanded) => {
+    setExpandedModule(isExpanded ? moduleId : false);
+  }, []);
+
   const {
     moduleDialogOpen,
     topicDialogOpen,
@@ -95,19 +113,6 @@ const CourseStructureManager = () => {
     fetchCourseData();
   }, [fetchCourseData]);
 
-  const getContentIcon = (contentType) => {
-    switch (contentType) {
-      case 'video':
-        return <PlayArrowIcon fontSize="small" />;
-      case 'ppt':
-        return <PictureAsPdfIcon fontSize="small" />;
-      case 'text':
-        return <DescriptionIcon fontSize="small" />;
-      default:
-        return <DescriptionIcon fontSize="small" />;
-    }
-  };
-
   if (loading) {
     return (
       <MainLayout>
@@ -126,20 +131,10 @@ const CourseStructureManager = () => {
             <Button onClick={() => navigate('/super-instructor/courses')} sx={{ mb: 1 }}>
               ← Back to Courses
             </Button>
-            <Typography variant="h4" component="h1">
-              {course?.title || 'Course Structure'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Manage modules, topics, and content
+            <Typography variant="h5" component="h1" fontWeight={700}>
+              Course Builder
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenModuleDialog(null, modules.length)}
-          >
-            Add Module
-          </Button>
         </Box>
 
         {error && (
@@ -148,41 +143,57 @@ const CourseStructureManager = () => {
           </Alert>
         )}
 
-        {modules.length === 0 ? (
-          <Paper sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No modules yet
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Create your first module to start organizing course content
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenModuleDialog(null, modules.length)}
-            >
-              Create First Module
-            </Button>
-          </Paper>
-        ) : (
-          <Box>
-            {modules.map((module) => (
-              <ModuleAccordion
-                key={module._id}
-                module={module}
-                onEditModule={(m) => handleOpenModuleDialog(m, modules.length)}
-                onDeleteModule={handleDeleteModule}
-                onAddTopic={handleOpenTopicDialog}
-                onEditTopic={handleOpenTopicDialog}
-                onDeleteTopic={handleDeleteTopic}
-                onAddContent={handleOpenContentDialog}
-                onEditContent={handleOpenContentDialog}
-                onDeleteContent={handleDeleteContent}
-                getContentIcon={getContentIcon}
-              />
-            ))}
-          </Box>
-        )}
+        <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fff', minHeight: '60vh' }}>
+          {modules.length === 0 ? (
+            <Box sx={{ p: 8, textAlign: 'center' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Start building your course
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Add your first topic to get started
+              </Typography>
+            </Box>
+          ) : (
+            <Box>
+              {modules.map((module, index) => (
+                <ModuleAccordion
+                  key={module._id}
+                  module={module}
+                  index={index}
+                  expanded={expandedModule === module._id}
+                  onChange={handleAccordionChange(module._id)}
+                  onEditModule={(m) => handleOpenModuleDialog(m, modules.length)}
+                  onDeleteModule={handleDeleteModule}
+                  onAddTopic={handleOpenTopicDialog}
+                  onEditTopic={handleOpenTopicDialog}
+                  onDeleteTopic={handleDeleteTopic}
+                  onAddContent={handleOpenContentDialog}
+                  onEditContent={handleOpenContentDialog}
+                  onDeleteContent={handleDeleteContent}
+                  getContentIcon={getContentIcon}
+                />
+              ))}
+            </Box>
+          )}
+        </Paper>
+
+        <Box sx={{ mt: 3 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenModuleDialog(null, modules.length)}
+            sx={{
+              bgcolor: '#0288d1', // Specific blue from image
+              '&:hover': { bgcolor: '#01579b' },
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1
+            }}
+          >
+            Add new topic
+          </Button>
+        </Box>
 
         <ModuleDialog
           open={moduleDialogOpen}
