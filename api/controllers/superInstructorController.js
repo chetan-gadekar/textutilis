@@ -4,8 +4,8 @@ const assignmentService = require('../services/assignmentService');
 
 // Helper to check if user has access to course (Owner or Assigned)
 const checkAccess = (course, user) => {
-  // Admin bypass
-  if (user.role === 'admin') return true;
+  // Admin and Super Instructor bypass
+  if (user.role === 'admin' || user.role === 'super_instructor') return true;
 
   // Owner check
   if (course.instructor && course.instructor._id.toString() === user.id) return true;
@@ -43,10 +43,17 @@ const createCourse = async (req, res, next) => {
 // @access  Private/SuperInstructor
 const getCourses = async (req, res, next) => {
   try {
-    const filters = {
-      instructor: req.user.id,
-      assignedCourses: req.user.assignedCourses || []
-    };
+    let filters = {};
+
+    // If the user is just an instructor, limit to their courses
+    // If they are a super_instructor or admin, fetch everything
+    if (req.user.role === 'instructor') {
+      filters = {
+        instructor: req.user.id,
+        assignedCourses: req.user.assignedCourses || []
+      };
+    }
+
     const courses = await courseService.getAllCourses(filters);
     res.json({
       success: true,
@@ -91,8 +98,8 @@ const updateCourse = async (req, res, next) => {
     const { id } = req.params;
     const course = await courseService.getCourseById(id);
 
-    // Verify ownership
-    if (course.instructor._id.toString() !== req.user.id) {
+    // Verify ownership or admin/super_instructor access
+    if (!checkAccess(course, req.user)) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this course',
@@ -117,8 +124,8 @@ const deleteCourse = async (req, res, next) => {
     const { id } = req.params;
     const course = await courseService.getCourseById(id);
 
-    // Verify ownership
-    if (course.instructor._id.toString() !== req.user.id) {
+    // Verify ownership or admin/super_instructor access
+    if (!checkAccess(course, req.user)) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this course',
