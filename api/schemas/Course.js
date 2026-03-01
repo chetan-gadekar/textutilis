@@ -19,6 +19,10 @@ const courseSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  bannerImage: {
+    type: String,
+    trim: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

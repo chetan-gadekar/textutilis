@@ -11,7 +11,7 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import VideoPlayer from '../../VideoPlayer';
 import ProtectedPDFViewer from './ProtectedPDFViewer';
 
-const ContentViewer = ({ content, currentProgress, onProgressUpdate }) => {
+const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) => {
   const containerRef = React.useRef(null);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -47,20 +47,39 @@ const ContentViewer = ({ content, currentProgress, onProgressUpdate }) => {
       <Box
         sx={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '60vh',
           bgcolor: 'white',
           borderRadius: 2,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          p: 4,
+          textAlign: 'center'
         }}
       >
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h5" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
-            Welcome to Your Course
+        {course?.bannerImage && (
+          <Box
+            component="img"
+            src={course.bannerImage}
+            alt={course.title}
+            sx={{
+              width: '100%',
+              maxWidth: 600,
+              height: 300,
+              borderRadius: 2,
+              objectFit: 'cover',
+              mb: 4,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+          />
+        )}
+        <Box>
+          <Typography variant="h4" color="text.primary" sx={{ mb: 1, fontWeight: 700 }}>
+            Welcome to {course?.title || 'Your Course'}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Select a lecture from the sidebar to start learning
+          <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+            Select a lecture from the sidebar to start your learning journey
           </Typography>
         </Box>
       </Box>

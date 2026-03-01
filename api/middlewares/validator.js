@@ -30,6 +30,7 @@ const validateLogin = [
 const validateCourse = [
   body('title').trim().notEmpty().withMessage('Course title is required'),
   body('description').optional().trim(),
+  body('bannerImage').optional().trim(),
   handleValidationErrors,
 ];
 

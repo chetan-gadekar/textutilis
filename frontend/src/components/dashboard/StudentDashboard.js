@@ -134,7 +134,9 @@ const StudentDashboard = () => {
                               alignItems: 'center',
                               justifyContent: 'center',
                               bgcolor: '#f5f5f5',
-                              backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              backgroundImage: course.bannerImage ? `url(${course.bannerImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
                               position: 'relative',
                             }}
                           >

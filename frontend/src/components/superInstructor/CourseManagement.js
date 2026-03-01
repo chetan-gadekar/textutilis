@@ -30,6 +30,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
+import FileUpload from '../common/FileUpload';
 
 const CourseManagement = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const CourseManagement = () => {
     title: '',
     description: '',
     isVisible: true,
+    bannerImage: '',
   });
 
   useEffect(() => {
@@ -68,6 +70,7 @@ const CourseManagement = () => {
         title: course.title,
         description: course.description || '',
         isVisible: course.isVisible,
+        bannerImage: course.bannerImage || '',
       });
     } else {
       setEditingCourse(null);
@@ -75,6 +78,7 @@ const CourseManagement = () => {
         title: '',
         description: '',
         isVisible: true,
+        bannerImage: '',
       });
     }
     setOpenDialog(true);
@@ -87,6 +91,7 @@ const CourseManagement = () => {
       title: '',
       description: '',
       isVisible: true,
+      bannerImage: '',
     });
   };
 
@@ -130,143 +135,184 @@ const CourseManagement = () => {
     <MainLayout>
       <Box>
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1">
-          Course Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Create Course
-        </Button>
-      </Box>
+          <Typography variant="h4" component="h1">
+            Course Management
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Create Course
+          </Button>
+        </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Visibility</TableCell>
-              <TableCell>Created At</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {courses.length === 0 ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No courses found. Create your first course!
-                </TableCell>
+                <TableCell>Banner</TableCell>
+                <TableCell>Title</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>Visibility</TableCell>
+                <TableCell>Created At</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ) : (
-              courses.map((course) => (
-                <TableRow key={course._id}>
-                  <TableCell>{course.title}</TableCell>
-                  <TableCell>
-                    {course.description ? (
-                      course.description.length > 50
-                        ? `${course.description.substring(0, 50)}...`
-                        : course.description
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={course.isVisible ? 'Visible' : 'Hidden'}
-                      color={course.isVisible ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Date(course.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      color="primary"
-                      onClick={() => navigate(`/super-instructor/courses/${course._id}/structure`)}
-                      size="small"
-                      title="Manage Course Structure"
-                    >
-                      <ContentCopyIcon />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      onClick={() => window.location.href = `/super-instructor/courses/${course._id}/assignments`}
-                      size="small"
-                      title="Manage Assignments"
-                    >
-                      <AssignmentIcon />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleOpenDialog(course)}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(course._id)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+            </TableHead>
+            <TableBody>
+              {courses.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    No courses found. Create your first course!
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                courses.map((course) => (
+                  <TableRow key={course._id}>
+                    <TableCell>
+                      {course.bannerImage ? (
+                        <Box
+                          component="img"
+                          src={course.bannerImage}
+                          alt={course.title}
+                          sx={{ width: 60, height: 40, borderRadius: 1, objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 60,
+                            height: 40,
+                            borderRadius: 1,
+                            bgcolor: 'grey.200',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>{course.title}</TableCell>
+                    <TableCell>
+                      {course.description ? (
+                        course.description.length > 50
+                          ? `${course.description.substring(0, 50)}...`
+                          : course.description
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={course.isVisible ? 'Visible' : 'Hidden'}
+                        color={course.isVisible ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {new Date(course.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        color="primary"
+                        onClick={() => navigate(`/super-instructor/courses/${course._id}/structure`)}
+                        size="small"
+                        title="Manage Course Structure"
+                      >
+                        <ContentCopyIcon />
+                      </IconButton>
+                      <IconButton
+                        color="primary"
+                        onClick={() => window.location.href = `/super-instructor/courses/${course._id}/assignments`}
+                        size="small"
+                        title="Manage Assignments"
+                      >
+                        <AssignmentIcon />
+                      </IconButton>
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleOpenDialog(course)}
+                        size="small"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDelete(course._id)}
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingCourse ? 'Edit Course' : 'Create Course'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Title"
-              fullWidth
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-            <TextField
-              label="Description"
-              fullWidth
-              multiline
-              rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.isVisible}
-                  onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
+        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {editingCourse ? 'Edit Course' : 'Create Course'}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Title"
+                fullWidth
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+              <TextField
+                label="Description"
+                fullWidth
+                multiline
+                rows={4}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isVisible}
+                    onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
+                  />
+                }
+                label="Course Visible to Students"
+              />
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Course Banner Image
+                </Typography>
+                {formData.bannerImage && (
+                  <Box
+                    component="img"
+                    src={formData.bannerImage}
+                    alt="Banner Preview"
+                    sx={{ width: '100%', height: 120, borderRadius: 2, objectFit: 'cover', mb: 2 }}
+                  />
+                )}
+                <FileUpload
+                  label={formData.bannerImage ? "Replace Banner Image" : "Upload Banner Image"}
+                  accept="image/*"
+                  onUploadSuccess={(url) => setFormData({ ...formData, bannerImage: url })}
                 />
-              }
-              label="Course Visible to Students"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingCourse ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained">
+              {editingCourse ? 'Update' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </MainLayout>
   );

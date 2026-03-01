@@ -163,7 +163,7 @@ const TeachingPointsUpdate = () => {
             Teaching Points Management
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ bgcolor: '#1976d2' }}>
-            + ADD TODAYS TOPIC
+             ADD TODAYS TOPIC
           </Button>
         </Box>
 

@@ -221,12 +221,14 @@ const getAllTeachingPoints = async (req, res, next) => {
       limit: parseInt(limit) || 10
     };
 
-    const { teachingPoints, pagination } = await teachingPointService.getAllTeachingPoints(filters);
+    const { teachingPoints, total, pages, currentPage } = await teachingPointService.getAllTeachingPoints(filters);
 
     res.json({
       success: true,
       count: teachingPoints.length,
-      pagination,
+      total,
+      pages,
+      currentPage,
       data: teachingPoints,
     });
   } catch (error) {

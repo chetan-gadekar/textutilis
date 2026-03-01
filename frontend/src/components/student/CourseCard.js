@@ -57,7 +57,9 @@ const CourseCard = ({ course, onStart, onContinue }) => {
             <Box
                 sx={{
                     height: 140,
-                    background: bgGradient,
+                    background: course.bannerImage ? `url(${course.bannerImage})` : bgGradient,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                     position: 'relative',
                     p: 3,
                     display: 'flex',

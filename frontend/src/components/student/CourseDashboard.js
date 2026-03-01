@@ -23,16 +23,14 @@ const CourseDashboard = () => {
   const [expandedModules, setExpandedModules] = useState({});
   const [selectedContent, setSelectedContent] = useState(null);
   const [currentProgress, setCurrentProgress] = useState(null);
+  const [contentLoading, setContentLoading] = useState(false);
+  const [loadingModules, setLoadingModules] = useState({});
 
   const fetchCourseStructure = useCallback(async () => {
     try {
       setLoading(true);
       const response = await courseService.getStudentCourseStructure(courseId);
       setCourseStructure(response.data);
-
-      if (response.data?.modules?.length > 0) {
-        setExpandedModules({ [response.data.modules[0]._id]: true });
-      }
 
       setError(null);
     } catch (err) {
@@ -81,13 +79,17 @@ const CourseDashboard = () => {
   };
 
   const handleContentClick = async (content) => {
-    setSelectedContent(content);
-
     try {
-      const response = await studentService.getVideoProgress(content._id);
-      setCurrentProgress(response.data);
+      setContentLoading(true);
+      // Fetch full content details (including contentData/description) on demand
+      const response = await courseService.getStudentContent(content._id);
+      setSelectedContent(response.data.content);
+      setCurrentProgress(response.data.progress);
     } catch (err) {
-      console.error('Failed to fetch progress:', err);
+      console.error('Failed to fetch content details:', err);
+      setError('Failed to load lecture content');
+    } finally {
+      setContentLoading(false);
     }
   };
 
@@ -114,7 +116,9 @@ const CourseDashboard = () => {
         isCompleted
       );
 
-      fetchCourseStructure();
+      // Refresh structure to show updated progress in sidebar
+      const response = await courseService.getStudentCourseStructure(courseId);
+      setCourseStructure(response.data);
     } catch (err) {
       console.error('Failed to save progress:', err);
     }
@@ -163,6 +167,7 @@ const CourseDashboard = () => {
           course={course}
           modules={modules}
           expandedModules={expandedModules}
+          loadingModules={loadingModules}
           selectedContent={selectedContent}
           onModuleToggle={handleModuleToggle}
           onContentClick={handleContentClick}
@@ -188,12 +193,19 @@ const CourseDashboard = () => {
             mozUserSelect: 'none',
           }}
         >
-          <ContentViewer
-            content={selectedContent}
-            currentProgress={currentProgress}
-            onProgressUpdate={handleProgressUpdate}
-          />
-          {selectedContent && <RatingSection />}
+          {contentLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <ContentViewer
+              content={selectedContent}
+              course={course}
+              currentProgress={currentProgress}
+              onProgressUpdate={handleProgressUpdate}
+            />
+          )}
+          {selectedContent && !contentLoading && <RatingSection />}
         </Box>
       </Box>
     </MainLayout>
