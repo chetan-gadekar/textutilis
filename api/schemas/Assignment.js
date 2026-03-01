@@ -18,10 +18,10 @@ const assignmentSchema = new mongoose.Schema({
   dueDate: {
     type: Date,
   },
-  attachment: {
+  attachments: [{
     fileUrl: String,
     fileName: String,
-  },
+  }],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

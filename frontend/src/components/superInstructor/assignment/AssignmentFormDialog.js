@@ -11,8 +11,19 @@ import {
   Select,
   MenuItem,
   Typography,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Paper,
+  Divider,
+  Box,
 } from '@mui/material';
 import FileUpload from '../../common/FileUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AttachmentIcon from '@mui/icons-material/Attachment';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const AssignmentFormDialog = ({
   open,
@@ -26,8 +37,9 @@ const AssignmentFormDialog = ({
   onDescriptionChange,
   dueDate,
   onDueDateChange,
-  attachment,
-  onAttachmentChange,
+  attachments = [],
+  onAddAttachment,
+  onRemoveAttachment,
   onSubmit,
   submitting,
   editing,
@@ -87,19 +99,49 @@ const AssignmentFormDialog = ({
             sx={{ mb: 3 }}
           />
 
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Assignment Attachment (Optional)
-          </Typography>
-          <FileUpload
-            label="Upload Assignment Document (PDF, DOC, etc.)"
-            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
-            onUploadSuccess={onAttachmentChange}
-          />
-          {attachment && (
-            <Typography variant="caption" color="success.main">
-              File uploaded: {attachment.fileName}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+              Assignment Attachments (PDF, DOC, EXCEL, CSV, etc.)
             </Typography>
-          )}
+
+            <FileUpload
+              label="Select Files"
+              accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.csv"
+              multiple
+              onUploadSuccess={(url, name) => onAddAttachment(url, name)}
+            />
+
+            {attachments.length > 0 && (
+              <Paper variant="outlined" sx={{ mt: 2, bgcolor: '#fbfbfb' }}>
+                <List dense>
+                  {attachments.map((file, index) => (
+                    <React.Fragment key={index}>
+                      {index > 0 && <Divider />}
+                      <ListItem
+                        secondaryAction={
+                          <IconButton edge="end" aria-label="delete" onClick={() => onRemoveAttachment(index)} color="error">
+                            <DeleteIcon />
+                          </IconButton>
+                        }
+                      >
+                        <ListItemIcon sx={{ minWidth: 40 }}>
+                          <AttachmentIcon color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={file.fileName}
+                          primaryTypographyProps={{ variant: 'body2', noWrap: true }}
+                        />
+                      </ListItem>
+                    </React.Fragment>
+                  ))}
+                </List>
+              </Paper>
+            )}
+
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              You can upload multiple files including documents, spreadsheets (Excel/CSV), and presentations.
+            </Typography>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>

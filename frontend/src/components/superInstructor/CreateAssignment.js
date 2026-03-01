@@ -34,7 +34,7 @@ const CreateAssignment = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [attachment, setAttachment] = useState(null);
+  const [attachments, setAttachments] = useState([]);
   const [editAssignment, setEditAssignment] = useState(null);
 
   // Search and Pagination State
@@ -141,7 +141,7 @@ const CreateAssignment = () => {
       setDueDate(formattedDate);
     }
 
-    setAttachment(assignment.attachment);
+    setAttachments(assignment.attachments || []);
     setOpenDialog(true);
   };
 
@@ -152,7 +152,7 @@ const CreateAssignment = () => {
     setDescription('');
     setDueDate('');
     setSelectedCourse('');
-    setAttachment(null);
+    setAttachments([]);
     setError(null);
   };
 
@@ -172,7 +172,7 @@ const CreateAssignment = () => {
         title,
         description,
         dueDate,
-        attachment,
+        attachments,
         courseId: selectedCourse,
       };
 
@@ -207,6 +207,14 @@ const CreateAssignment = () => {
     } catch (err) {
       setError(err.message || 'Failed to delete assignment');
     }
+  };
+
+  const handleAddAttachment = (fileUrl, fileName) => {
+    setAttachments(prev => [...prev, { fileUrl, fileName }]);
+  };
+
+  const handleRemoveAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading && assignments.length === 0) {
@@ -327,8 +335,9 @@ const CreateAssignment = () => {
           onDescriptionChange={(e) => setDescription(e.target.value)}
           dueDate={dueDate}
           onDueDateChange={(e) => setDueDate(e.target.value)}
-          attachment={attachment}
-          onAttachmentChange={(url, name) => setAttachment({ fileUrl: url, fileName: name })}
+          attachments={attachments}
+          onAddAttachment={handleAddAttachment}
+          onRemoveAttachment={handleRemoveAttachment}
           onSubmit={handleSubmit}
           submitting={submitting}
           editing={!!editAssignment}

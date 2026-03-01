@@ -226,7 +226,7 @@ const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
       title: assignment.title,
       description: assignment.description,
       dueDate: assignment.dueDate,
-      attachment: assignment.attachment,
+      attachments: assignment.attachments || [],
       course: assignment.courseId,
       status: status,
       submission: submission || null

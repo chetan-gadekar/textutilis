@@ -257,17 +257,23 @@ const AssignmentView = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        {assignment.attachment && assignment.attachment.fileUrl ? (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            href={assignment.attachment.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            startIcon={<DownloadIcon />}
-                          >
-                            Download
-                          </Button>
+                        {assignment.attachments && assignment.attachments.length > 0 ? (
+                          <Stack spacing={1}>
+                            {assignment.attachments.map((file, index) => (
+                              <Button
+                                key={index}
+                                variant="outlined"
+                                size="small"
+                                href={file.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                startIcon={<DownloadIcon />}
+                                sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
+                              >
+                                {file.fileName || `File ${index + 1}`}
+                              </Button>
+                            ))}
+                          </Stack>
                         ) : (
                           <Typography variant="caption" color="text.secondary">None</Typography>
                         )}
