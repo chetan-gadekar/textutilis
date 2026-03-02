@@ -15,6 +15,9 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
+import DescriptionIcon from '@mui/icons-material/Description';
+import CloseIcon from '@mui/icons-material/Close';
+import SaveIcon from '@mui/icons-material/Save';
 import videoService from '../../../services/videoService';
 import FileUpload from '../../common/FileUpload';
 import VideoUpload from '../../common/VideoUpload';
@@ -47,12 +50,39 @@ const ContentDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        {content?._id ? 'Edit Content' : 'Create Content'} - {topic?.title}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3, p: 1 }
+      }}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{
+            bgcolor: 'action.hover',
+            p: 1.5,
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <DescriptionIcon color="primary" />
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight="bold">
+              {content?._id ? 'Edit Content' : 'Create Content'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {topic?.title ? `Adding to ${topic.title}` : 'Add content to this topic'}
+            </Typography>
+          </Box>
+        </Box>
       </DialogTitle>
-      <DialogContent>
-        <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <DialogContent sx={{ mt: 1 }}>
+        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <FormControl fullWidth>
             <InputLabel>Content Type</InputLabel>
             <Select
@@ -169,10 +199,30 @@ const ContentDialog = ({
           />
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={onSave} variant="contained" disabled={uploadingVideo}>
-          {content?._id ? 'Update' : 'Create'}
+      <DialogActions sx={{ p: 3, pt: 1, justifyContent: 'flex-end', gap: 1 }}>
+        <Button
+          onClick={onClose}
+          startIcon={<CloseIcon />}
+          sx={{ color: 'text.secondary', textTransform: 'none', fontWeight: 500, px: 2 }}
+        >
+          CANCEL
+        </Button>
+        <Button
+          onClick={onSave}
+          variant="contained"
+          color="primary"
+          disabled={uploadingVideo}
+          startIcon={uploadingVideo ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          sx={{
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 3,
+            borderRadius: 2,
+            boxShadow: 2,
+            '&:hover': { boxShadow: 4 },
+          }}
+        >
+          {content?._id ? 'Update Content' : 'Create Content'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -9,6 +9,7 @@ import {
   Button,
   List,
   Stack,
+  Tooltip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
@@ -20,16 +21,20 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import TopicCard from './TopicCard';
 
 const ACTION_BUTTON_SX = {
-  borderColor: '#1976d2',
-  color: '#1976d2',
   textTransform: 'none',
   fontWeight: 600,
-  bgcolor: '#fff',
-  '&:hover': { bgcolor: '#f0f7ff' }
+  bgcolor: 'background.paper',
+  borderColor: 'divider',
+  color: 'text.secondary',
+  '&:hover': {
+    borderColor: 'primary.main',
+    color: 'primary.main',
+    bgcolor: 'action.hover'
+  }
 };
 
 const ADD_ICON_BOX = (
-  <Box sx={{ bgcolor: '#1976d2', color: '#fff', borderRadius: '4px', p: '2px', display: 'flex' }}>
+  <Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: 1, p: 0.5, display: 'flex' }}>
     <AddIcon sx={{ fontSize: 14 }} />
   </Box>
 );
@@ -57,18 +62,22 @@ const ModuleAccordion = ({
       sx={{
         mb: 2,
         borderRadius: '8px !important',
-        border: '1px solid #e0e0e0',
+        border: '1px solid',
+        borderColor: 'divider',
         boxShadow: 'none',
-        bgcolor: '#f8f9fa',
+        bgcolor: 'background.paper',
+        overflow: 'hidden',
         '&:before': { display: 'none' },
-        '&.Mui-expanded': { margin: '0 0 16px 0' }
+        '&.Mui-expanded': { margin: '0 0 16px 0', borderColor: 'primary.main' }
       }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ color: '#1976d2' }} />}
+        expandIcon={<ExpandMoreIcon color="primary" />}
         sx={{
-          bgcolor: '#f8f9fa',
+          bgcolor: 'grey.50',
           minHeight: 56,
+          borderBottom: expanded ? '1px solid' : 'none',
+          borderColor: 'divider',
           '& .MuiAccordionSummary-content': {
             alignItems: 'center',
             my: 1
@@ -76,28 +85,32 @@ const ModuleAccordion = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-          <DragIndicatorIcon sx={{ color: 'text.disabled', cursor: 'grab' }} />
-          <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#333' }}>
+          <DragIndicatorIcon sx={{ color: 'action.active', cursor: 'grab' }} />
+          <Typography variant="subtitle1" fontWeight={600} color="text.primary">
             {index + 1}. {module.title}
           </Typography>
 
           <Box sx={{ flexGrow: 1 }} />
 
           <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', gap: 0.5 }}>
-            <IconButton
-              size="small"
-              onClick={() => onEditModule(module)}
-              sx={{ color: 'text.secondary' }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => onDeleteModule(module._id)}
-              sx={{ color: 'text.secondary' }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title="Edit Module">
+              <IconButton
+                size="small"
+                onClick={() => onEditModule(module)}
+                sx={{ color: 'text.secondary' }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete Module">
+              <IconButton
+                size="small"
+                onClick={() => onDeleteModule(module._id)}
+                sx={{ color: 'text.secondary' }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
       </AccordionSummary>

@@ -120,6 +120,10 @@ const authSlice = createSlice({
       // Logout
       .addCase(logout.pending, (state) => {
         state.loading = true;
+        // Optimistically log the user out to prevent UI flicker when navigating to login
+        state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
       })
       .addCase(logout.fulfilled, (state) => {
         state.loading = false;

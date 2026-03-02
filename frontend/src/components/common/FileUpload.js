@@ -6,7 +6,8 @@ import {
     LinearProgress,
     Paper,
     IconButton,
-    Alert
+    Alert,
+    Tooltip
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
@@ -132,9 +133,11 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
                                 </Typography>
                             </Box>
                             {!uploading && !success && (
-                                <IconButton size="small" onClick={() => removeSelectedFile(index)} color="error">
-                                    <CloseIcon />
-                                </IconButton>
+                                <Tooltip title="Remove File">
+                                    <IconButton size="small" onClick={() => removeSelectedFile(index)} color="error">
+                                        <CloseIcon />
+                                    </IconButton>
+                                </Tooltip>
                             )}
                         </Paper>
                     ))}
@@ -144,7 +147,7 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
                     {!uploading && !success && (
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
                             <Button size="small" variant="contained" onClick={handleUpload}>
-                                Upload {files.length > 1 ? `All (${files.length})` : ''}
+                                Upload {files.length > 1 ? `All(${files.length})` : ''}
                             </Button>
                         </Box>
                     )}

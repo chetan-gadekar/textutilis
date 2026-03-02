@@ -4,9 +4,8 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Button,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Plus } from 'lucide-react';
 import teachingPointService from '../../services/teachingPointService';
 import MainLayout from '../layout/MainLayout';
 import TeachingPointFormDialog from './teachingPoints/TeachingPointFormDialog';
@@ -157,26 +156,61 @@ const TeachingPointsUpdate = () => {
 
   return (
     <MainLayout>
-      <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            Teaching Points Management
-          </Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ bgcolor: '#1976d2' }}>
-             ADD TODAYS TOPIC
-          </Button>
-        </Box>
+      <div className="font-poppins h-full">
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-medium text-gray-800">Teaching Points Management</h1>
+            <p className="text-gray-500 mt-1 font-light">Organize and track daily topics</p>
+          </div>
+          <button
+            onClick={() => handleOpenDialog()}
+            className="bg-theme hover:bg-theme-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 shadow-sm hover:shadow flex items-center gap-2"
+          >
+            <Plus size={20} strokeWidth={2} />
+            Add Today's Topic
+          </button>
+        </div>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
+          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
+              <span className="sr-only">Close</span>
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         )}
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
-            {success}
-          </Alert>
+          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">{success}</p>
+              </div>
+            </div>
+            <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-500">
+              <span className="sr-only">Close</span>
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         )}
 
         <TeachingPointTable
@@ -197,7 +231,7 @@ const TeachingPointsUpdate = () => {
           onSubmit={handleSubmit}
           loading={loading}
         />
-      </Box>
+      </div>
     </MainLayout>
   );
 };

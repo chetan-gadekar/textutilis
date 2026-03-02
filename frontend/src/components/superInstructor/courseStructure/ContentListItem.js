@@ -6,6 +6,7 @@ import {
   IconButton,
   Chip,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -23,14 +24,23 @@ const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
   return (
     <ListItem
       key={content._id}
+      sx={{
+        '&:hover': { bgcolor: 'action.hover' },
+        borderRadius: 1,
+        mb: 0.5
+      }}
       secondaryAction={
-        <Box>
-          <IconButton size="small" onClick={onEdit}>
-            <EditIcon />
-          </IconButton>
-          <IconButton size="small" onClick={onDelete}>
-            <DeleteIcon />
-          </IconButton>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title="Edit Content">
+            <IconButton size="small" onClick={onEdit} sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete Content">
+            <IconButton size="small" onClick={onDelete} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       }
     >
@@ -38,12 +48,15 @@ const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
         {getContentIcon(content.contentType)}
         <ListItemText
           primary={content.title}
+          primaryTypographyProps={{ variant: 'body2', fontWeight: 500, color: 'text.primary' }}
           secondary={
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
               <Chip
                 label={content.contentType.toUpperCase()}
                 size="small"
-                sx={CHIP_SX}
+                variant="outlined"
+                color="primary"
+                sx={{ mr: 1, height: 20, fontSize: '0.7rem' }}
               />
               {content.contentType === 'video' && content.duration && (
                 <Typography variant="caption" color="text.secondary">
@@ -54,7 +67,7 @@ const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
           }
         />
       </Box>
-    </ListItem>
+    </ListItem >
   );
 };
 

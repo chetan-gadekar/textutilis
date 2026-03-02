@@ -6,7 +6,8 @@ import {
     LinearProgress,
     Paper,
     IconButton,
-    Alert
+    Alert,
+    Tooltip
 } from '@mui/material';
 import MovieIcon from '@mui/icons-material/Movie';
 import CloseIcon from '@mui/icons-material/Close';
@@ -117,9 +118,11 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
                         </Button>
                     )}
                     {!uploading && (
-                        <IconButton size="small" onClick={reset}>
-                            <CloseIcon />
-                        </IconButton>
+                        <Tooltip title="Remove Video">
+                            <IconButton size="small" onClick={reset}>
+                                <CloseIcon />
+                            </IconButton>
+                        </Tooltip>
                     )}
                 </Paper>
             )}

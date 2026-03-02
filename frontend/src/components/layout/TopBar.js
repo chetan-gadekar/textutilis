@@ -127,13 +127,15 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle }
         {/* Left Section: Logo or Back Button */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {onBack && (
-            <IconButton
-              edge="start"
-              onClick={onBack}
-              sx={{ mr: 2, color: 'text.primary' }}
-            >
-              ←
-            </IconButton>
+            <Tooltip title="Back">
+              <IconButton
+                edge="start"
+                onClick={onBack}
+                sx={{ mr: 2, color: 'text.primary' }}
+              >
+                ←
+              </IconButton>
+            </Tooltip>
           )}
 
           {courseTitle ? (

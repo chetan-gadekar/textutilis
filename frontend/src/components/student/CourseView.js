@@ -11,7 +11,8 @@ import {
   Tabs,
   InputBase,
   Paper,
-  IconButton
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { Search as SearchIcon, FilterList as FilterListIcon } from '@mui/icons-material';
 import courseService from '../../services/courseService';
@@ -92,9 +93,11 @@ const CourseView = () => {
               elevation={0}
               sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 250, border: '1px solid #e0e0e0', borderRadius: '10px' }}
             >
-              <IconButton sx={{ p: '10px' }} aria-label="search">
-                <SearchIcon />
-              </IconButton>
+              <Tooltip title="Search">
+                <IconButton sx={{ p: '10px' }} aria-label="search">
+                  <SearchIcon />
+                </IconButton>
+              </Tooltip>
               <InputBase
                 sx={{ ml: 1, flex: 1 }}
                 placeholder="Search courses..."

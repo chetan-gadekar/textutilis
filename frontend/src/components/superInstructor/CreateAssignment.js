@@ -13,9 +13,7 @@ import {
   Paper,
   TablePagination,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import FilterListOffIcon from '@mui/icons-material/FilterListOff';
+import { Plus, Filter, FilterX } from 'lucide-react';
 import courseService from '../../services/courseService';
 import assignmentService from '../../services/assignmentService';
 import MainLayout from '../layout/MainLayout';
@@ -229,98 +227,146 @@ const CreateAssignment = () => {
 
   return (
     <MainLayout>
-      <Box>
-        <Box sx={{ mb: 4 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h4" component="h1" gutterBottom>
-              Assignment Management
-            </Typography>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
-                <IconButton
-                  onClick={() => setShowFilters(!showFilters)}
-                  color={showFilters ? "primary" : "default"}
-                  sx={{ bgcolor: showFilters ? 'action.hover' : 'transparent' }}
-                >
-                  {showFilters ? <FilterListOffIcon /> : <FilterListIcon />}
-                </IconButton>
-              </Tooltip>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleOpenDialog}
-                sx={{ bgcolor: '#1976d2' }}
+      <div className="font-poppins h-full">
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-medium text-gray-800">Assignment Management</h1>
+            <p className="text-gray-500 mt-1 font-light">Create, monitor, and organize assignments</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"} placement="top">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2.5 rounded-xl transition-colors ${showFilters ? 'bg-theme/10 text-theme' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'}`}
               >
-                CREATE ASSIGNMENT
-              </Button>
-            </Stack>
-          </Stack>
+                {showFilters ? <FilterX size={20} strokeWidth={2} /> : <Filter size={20} strokeWidth={2} />}
+              </button>
+            </Tooltip>
+            <button
+              onClick={handleOpenDialog}
+              className="bg-theme hover:bg-theme-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 shadow-sm hover:shadow flex items-center gap-2"
+            >
+              <Plus size={20} strokeWidth={2} />
+              Create Assignment
+            </button>
+          </div>
+        </div>
 
-          <Collapse in={showFilters}>
-            <Paper variant="outlined" sx={{ p: 2, mt: 2, bgcolor: '#fbfbfb' }}>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
-                <TextField
-                  label="Search by Title"
+        <Collapse in={showFilters}>
+          <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm mt-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex-grow w-full">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Search Assignments</label>
+                <input
+                  type="text"
+                  placeholder="Search by Title..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  size="small"
-                  sx={{ flexGrow: 1, minWidth: 200 }}
-                  placeholder="Type to search..."
+                  className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-all"
                 />
-                <TextField
-                  label="Start Date"
+              </div>
+              <div className="w-full md:w-auto">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
+                <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ minWidth: 150 }}
+                  className="w-full md:w-40 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-all text-gray-700"
                 />
-                <TextField
-                  label="End Date"
+              </div>
+              <div className="w-full md:w-auto">
+                <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
+                <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ minWidth: 150 }}
+                  className="w-full md:w-40 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-all text-gray-700"
                 />
-              </Stack>
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button variant="outlined" size="small" onClick={handleClearFilters}>
-                  Clear Filters
-                </Button>
-              </Box>
-            </Paper>
-          </Collapse>
-        </Box>
-
+              </div>
+              <button
+                onClick={handleClearFilters}
+                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-theme/20 transition-colors shadow-sm whitespace-nowrap"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </Collapse>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
+          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
+              <span className="sr-only">Close</span>
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         )}
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
-            {success}
-          </Alert>
+          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">{success}</p>
+              </div>
+            </div>
+            <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-500">
+              <span className="sr-only">Close</span>
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         )}
 
         <AssignmentTable
           assignments={assignments}
           onDelete={handleDeleteAssignment}
           onEdit={handleEditClick}
-        />
-
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={totalRecords}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          pagination={
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              component="div"
+              count={totalRecords}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              sx={{
+                border: 'none',
+                '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: '0.875rem',
+                  color: '#6b7280',
+                  margin: 0,
+                },
+                '.MuiTablePagination-select': {
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: '0.875rem',
+                  color: '#374151',
+                  fontWeight: 500,
+                },
+                '.MuiTablePagination-actions .MuiIconButton-root': {
+                  color: '#6b7280',
+                }
+              }}
+            />
+          }
         />
 
         <AssignmentFormDialog
@@ -342,8 +388,8 @@ const CreateAssignment = () => {
           submitting={submitting}
           editing={!!editAssignment}
         />
-      </Box>
-    </MainLayout>
+      </div>
+    </MainLayout >
   );
 };
 

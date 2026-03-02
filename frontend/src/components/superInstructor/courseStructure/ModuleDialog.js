@@ -33,14 +33,14 @@ const ModuleDialog = ({ open, onClose, module, formData, onFormChange, onSave })
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{
-            bgcolor: '#e3f2fd',
+            bgcolor: 'action.hover',
             p: 1.5,
             borderRadius: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <GridViewIcon sx={{ color: '#1976d2' }} />
+            <GridViewIcon color="primary" />
           </Box>
           <Box>
             <Typography variant="h6" fontWeight="bold">
@@ -114,15 +114,16 @@ const ModuleDialog = ({ open, onClose, module, formData, onFormChange, onSave })
         <Button
           onClick={onSave}
           variant="contained"
+          color="primary"
           disabled={!isFormValid}
           startIcon={<SaveIcon />}
           sx={{
             textTransform: 'none',
-            fontWeight: 500,
+            fontWeight: 600,
             px: 3,
-            borderRadius: 1.5,
-            bgcolor: '#0288d1',
-            '&:hover': { bgcolor: '#01579b' },
+            borderRadius: 2,
+            boxShadow: 2,
+            '&:hover': { boxShadow: 4 },
           }}
         >
           {module ? 'Update Module' : 'Create Module'}

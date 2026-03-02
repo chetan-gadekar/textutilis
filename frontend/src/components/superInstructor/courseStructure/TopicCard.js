@@ -8,6 +8,7 @@ import {
   List,
   Divider,
   Collapse,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -16,18 +17,19 @@ import ContentListItem from './ContentListItem';
 import MenuIcon from '@mui/icons-material/Menu';
 
 const PAPER_SX = {
-  mb: 1,
-  borderRadius: 1,
-  borderColor: '#e0e0e0',
+  mb: 2,
+  borderRadius: 2,
+  borderColor: 'divider',
   overflow: 'hidden',
-  boxShadow: 'none'
+  boxShadow: 'none',
+  bgcolor: 'background.paper',
 };
 
 const HEADER_BOX_SX = {
   display: 'flex',
   alignItems: 'center',
   p: 2,
-  bgcolor: '#fff',
+  bgcolor: 'background.paper',
   gap: 2
 };
 
@@ -47,27 +49,31 @@ const TopicCard = ({
   return (
     <Paper variant="outlined" sx={PAPER_SX}>
       <Box sx={HEADER_BOX_SX}>
-        <MenuIcon sx={{ color: '#9e9e9e', cursor: 'grab' }} />
+        <MenuIcon sx={{ color: 'action.active', cursor: 'grab' }} />
 
-        <Typography variant="subtitle1" sx={{ flexGrow: 1, fontWeight: 500, color: '#424242' }}>
+        <Typography variant="subtitle1" sx={{ flexGrow: 1, fontWeight: 600, color: 'text.primary' }}>
           Lesson {index + 1}: {topic.title}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton
-            size="small"
-            onClick={() => onEditTopic(module, topic)}
-            sx={{ color: '#757575' }}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => onDeleteTopic(topic._id)}
-            sx={{ color: '#757575' }}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          <Tooltip title="Edit Lesson">
+            <IconButton
+              size="small"
+              onClick={() => onEditTopic(module, topic)}
+              sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete Lesson">
+            <IconButton
+              size="small"
+              onClick={() => onDeleteTopic(topic._id)}
+              sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -103,7 +109,7 @@ const TopicCard = ({
             size="small"
             startIcon={<AddIcon />}
             onClick={() => onAddContent(topic)}
-            sx={{ textTransform: 'none', color: '#1976d2', fontWeight: 500 }}
+            sx={{ textTransform: 'none', color: 'primary.main', fontWeight: 600, '&:hover': { bgcolor: 'action.hover' } }}
           >
             Add Content to Lesson
           </Button>

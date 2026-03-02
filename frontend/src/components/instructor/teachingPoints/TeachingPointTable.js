@@ -1,103 +1,93 @@
-import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  Box,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import AssignmentIcon from '@mui/icons-material/Assignment';
+import { Tooltip } from '@mui/material';
+import { Copy, FileText, Edit3, Trash } from 'lucide-react';
 
 const TeachingPointTable = ({ points, onEdit, onDelete, onDuplicate }) => {
   return (
-    <TableContainer component={Paper} sx={{ borderRadius: 1, boxShadow: 1 }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Visibility</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Created At</TableCell>
-            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {points.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                No topics found for today
-              </TableCell>
-            </TableRow>
-          ) : (
-            points.map((point, index) => (
-              <TableRow key={point._id || point.tempId || index} hover>
-                <TableCell>{point.title}</TableCell>
-                <TableCell
-                  sx={{
-                    maxWidth: 300,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {point.description}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={point.visibility || 'Visible'}
-                    size="small"
-                    sx={{
-                      bgcolor: '#2e7d32',
-                      color: 'white',
-                      height: 24,
-                      fontSize: '0.75rem',
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  {point.createdAt
-                    ? new Date(point.createdAt).toLocaleDateString()
-                    : new Date().toLocaleDateString()}
-                </TableCell>
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    <Tooltip title="Duplicate">
-                      <IconButton size="small" color="primary" onClick={() => onDuplicate(point)}>
-                        <ContentCopyIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Details">
-                      <IconButton size="small" color="primary">
-                        <AssignmentIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit">
-                      <IconButton size="small" color="primary" onClick={() => onEdit(point)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton color="error" onClick={() => onDelete(point)} size="small">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Title</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Description</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Visibility</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Created At</th>
+              <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {points.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                  <div className="flex flex-col items-center justify-center">
+                    <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-lg font-medium text-gray-600">No topics found for today</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              points.map((point, index) => (
+                <tr key={point._id || point.tempId || index} className="hover:bg-gray-50 transition-colors duration-150">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-semibold text-gray-800">{point.title}</div>
+                  </td>
+                  <td className="px-6 py-4 hidden md:table-cell">
+                    <div className="text-sm text-gray-500 max-w-xs truncate">
+                      {point.description}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border bg-green-50 text-green-700 border-green-200">
+                      {point.visibility || 'Visible'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                    {point.createdAt
+                      ? new Date(point.createdAt).toLocaleDateString()
+                      : new Date().toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end gap-2 items-center">
+                      <Tooltip title="Duplicate" placement="top">
+                        <button
+                          onClick={() => onDuplicate(point)}
+                          className="p-2.5 bg-theme/5 hover:bg-theme/10 text-theme hover:text-theme-dark rounded-xl transition-colors"
+                        >
+                          <Copy size={18} strokeWidth={2} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="View Details" placement="top">
+                        <button className="p-2.5 bg-theme/5 hover:bg-theme/10 text-theme hover:text-theme-dark rounded-xl transition-colors">
+                          <FileText size={18} strokeWidth={2} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="Edit" placement="top">
+                        <button
+                          onClick={() => onEdit(point)}
+                          className="p-2.5 bg-theme/5 hover:bg-theme/10 text-theme hover:text-theme-dark rounded-xl transition-colors"
+                        >
+                          <Edit3 size={18} strokeWidth={2} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="Delete" placement="top">
+                        <button
+                          onClick={() => onDelete(point)}
+                          className="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl transition-colors"
+                        >
+                          <Trash size={18} strokeWidth={2} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 

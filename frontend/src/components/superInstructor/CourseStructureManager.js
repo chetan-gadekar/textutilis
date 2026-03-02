@@ -128,10 +128,14 @@ const CourseStructureManager = () => {
       <Box>
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
-            <Button onClick={() => navigate('/super-instructor/courses')} sx={{ mb: 1 }}>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/super-instructor/courses')}
+              sx={{ mb: 1, textTransform: 'none', color: 'text.secondary', '&:hover': { color: 'primary.main', bgcolor: 'transparent' } }}
+            >
               ← Back to Courses
             </Button>
-            <Typography variant="h5" component="h1" fontWeight={700}>
+            <Typography variant="h4" component="h1" fontWeight={700} color="text.primary">
               Course Builder
             </Typography>
           </Box>
@@ -143,7 +147,17 @@ const CourseStructureManager = () => {
           </Alert>
         )}
 
-        <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fff', minHeight: '60vh' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            bgcolor: 'background.paper',
+            minHeight: '60vh',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
           {modules.length === 0 ? (
             <Box sx={{ p: 8, textAlign: 'center' }}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -180,15 +194,19 @@ const CourseStructureManager = () => {
         <Box sx={{ mt: 3 }}>
           <Button
             variant="contained"
+            color="primary"
             startIcon={<AddIcon />}
             onClick={() => handleOpenModuleDialog(null, modules.length)}
             sx={{
-              bgcolor: '#0288d1', // Specific blue from image
-              '&:hover': { bgcolor: '#01579b' },
               textTransform: 'none',
               fontWeight: 600,
               px: 3,
-              py: 1
+              py: 1,
+              borderRadius: 2,
+              boxShadow: 2,
+              '&:hover': {
+                boxShadow: 4
+              }
             }}
           >
             Add new topic

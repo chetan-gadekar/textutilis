@@ -101,20 +101,24 @@ const FacultyTable = ({
                       <SchoolIcon />
                     </IconButton>
                   </Tooltip>
-                  <IconButton
-                    color="primary"
-                    onClick={() => onEdit(facultyMember)}
-                    size="small"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => onDelete(facultyMember._id)}
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Tooltip title="Edit Faculty">
+                    <IconButton
+                      color="primary"
+                      onClick={() => onEdit(facultyMember)}
+                      size="small"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Faculty">
+                    <IconButton
+                      color="error"
+                      onClick={() => onDelete(facultyMember._id)}
+                      size="small"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))
