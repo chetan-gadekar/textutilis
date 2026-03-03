@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Typography,
     Grid,
     Card,
     CardContent,
     CardActions,
     Button,
-    Box,
     Alert,
-    CircularProgress,
     Chip,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Eye } from 'lucide-react';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
 
@@ -49,67 +46,90 @@ const InstructorCourses = () => {
     if (loading) {
         return (
             <MainLayout>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-                    <CircularProgress />
-                </Box>
+                <div className="flex justify-center items-center min-h-[50vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme"></div>
+                </div>
             </MainLayout>
         );
     }
 
     return (
         <MainLayout>
-            <Box>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    My Courses
-                </Typography>
+            <div className="font-poppins h-full">
+                <div className="mb-6">
+                    <h1 className="text-3xl font-medium text-gray-800">My Courses</h1>
+                    <p className="text-gray-500 mt-1 font-light">View and review assignments for your courses</p>
+                </div>
 
                 {error && (
-                    <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-                        {error}
-                    </Alert>
+                    <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center shadow-sm">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-red-700">{error}</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
+                            <span className="sr-only">Close</span>
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
                 )}
 
                 {courses.length === 0 ? (
-                    <Alert severity="info">You have not been assigned any courses yet.</Alert>
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-blue-700">
+                                    You have not been assigned any courses yet.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 ) : (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {courses.map((course) => (
-                            <Grid item xs={12} md={6} key={course._id}>
-                                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                    <CardContent sx={{ flexGrow: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                                            <Typography variant="h5" component="h2">
-                                                {course.title}
-                                            </Typography>
-                                            {course.isVisible && (
-                                                <Chip label="Active" color="success" size="small" />
-                                            )}
-                                        </Box>
-                                        <Typography variant="body2" color="text.secondary" paragraph>
-                                            {course.description || 'No description available'}
-                                        </Typography>
-                                        <Box sx={{ mt: 1 }}>
-                                            {/* Potentially show instructor name if it's assigned? */}
-                                        </Box>
-                                    </CardContent>
-                                    <CardActions>
-                                        <Button
-                                            size="small"
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={() => handleViewAssignments(course._id)}
-                                            startIcon={<VisibilityIcon />}
-                                        >
-                                            Review Assignments
-                                        </Button>
-                                        {/* Add more actions if needed */}
-                                    </CardActions>
-                                </Card>
-                            </Grid>
+                            <div key={course._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+                                <div className="p-6 flex-grow flex flex-col">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <h2 className="text-xl font-semibold text-gray-800 line-clamp-2">
+                                            {course.title}
+                                        </h2>
+                                        {course.isVisible && (
+                                            <span className="ml-2 flex-shrink-0 px-2.5 py-1 inline-flex text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-200">
+                                                Active
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-gray-600 mb-4 flex-grow line-clamp-3">
+                                        {course.description || 'No description available'}
+                                    </p>
+                                </div>
+                                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 mt-auto">
+                                    <button
+                                        onClick={() => handleViewAssignments(course._id)}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-theme hover:bg-theme-dark rounded-lg transition-colors shadow-sm"
+                                    >
+                                        <Eye size={18} strokeWidth={2} />
+                                        Review Assignments
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
+                    </div>
                 )}
-            </Box>
+            </div>
         </MainLayout>
     );
 };

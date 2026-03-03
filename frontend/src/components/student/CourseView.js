@@ -127,15 +127,32 @@ const CourseView = () => {
         )}
 
         {filteredCourses.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 8, bgcolor: 'white', borderRadius: '16px', border: '1px dashed #e0e0e0' }}>
+          <Box
+            sx={{
+              textAlign: 'center',
+              py: 8,
+              bgcolor: 'white',
+              borderRadius: '16px',
+              border: '1px dashed #e0e0e0'
+            }}
+          >
             <Box
               component="img"
               src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png"
-              sx={{ width: 120, height: 120, opacity: 0.5, mb: 2 }}
+              sx={{
+                width: 120,
+                height: 120,
+                opacity: 0.5,
+                mb: 2,
+                display: 'block',
+                mx: 'auto'   // 👈 This centers it perfectly
+              }}
             />
+
             <Typography variant="h6" color="text.secondary">
               No courses found in this category.
             </Typography>
+
             <Typography variant="body2" color="text.disabled">
               Try checking other tabs or browse new courses.
             </Typography>

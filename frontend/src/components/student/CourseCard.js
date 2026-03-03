@@ -98,24 +98,26 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                     )}
                 </Box>
 
+
+            </Box>
+
+            <CardContent sx={{ flexGrow: 1, pt: 2, pb: 1, px: 3 }}>
                 <Typography
-                    variant="h5"
+                    variant="h6"
                     component="h3"
                     sx={{
-                        color: 'white',
-                        fontWeight: 700,
+                        color: 'text.secondary',
+                        fontWeight: 600,
                         textShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         display: '-webkit-box',
                         overflow: 'hidden',
                         WebkitBoxOrient: 'vertical',
                         WebkitLineClamp: 2,
+                        minHeight: '3em',
                     }}
                 >
                     {title}
                 </Typography>
-            </Box>
-
-            <CardContent sx={{ flexGrow: 1, pt: 2, pb: 1, px: 3 }}>
                 <Typography
                     variant="body2"
                     color="text.secondary"
@@ -125,8 +127,8 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                         overflow: 'hidden',
                         WebkitBoxOrient: 'vertical',
                         WebkitLineClamp: 3,
-                        minHeight: '3em', // reduced from 4.5em
-                        lineHeight: 1.5
+                        minHeight: '0em', // reduced from 4.5em
+                        lineHeight: 2.0
                     }}
                 >
                     {description || 'No description available for this course.'}

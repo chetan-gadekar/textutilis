@@ -1,33 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Typography,
-  Box,
-  Button,
-  Alert,
-  CircularProgress,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  LinearProgress,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Stack,
-  MenuItem,
-  Collapse,
-} from '@mui/material';
-import UploadIcon from '@mui/icons-material/Upload';
-import DownloadIcon from '@mui/icons-material/Download';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import FilterListOffIcon from '@mui/icons-material/FilterListOff';
+import { Dialog, Collapse } from '@mui/material';
+import { Upload, Download, Filter, FilterX } from 'lucide-react';
 import assignmentService from '../../services/assignmentService';
 import MainLayout from '../layout/MainLayout';
 import FileUpload from '../common/FileUpload';
@@ -141,192 +114,235 @@ const AssignmentView = () => {
 
   return (
     <MainLayout>
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            My Assignments
-          </Typography>
-          <Button
-            startIcon={showFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+      <div className="container mx-auto px-4 py-6 font-poppins">
+        {/* Header Section */}
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-medium text-gray-800">My Assignments</h1>
+            <p className="text-gray-500 mt-1 font-light">View and submit your course assignments</p>
+          </div>
+          <button
             onClick={() => setShowFilters(!showFilters)}
-            variant="outlined"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-theme transition-colors shadow-sm"
           >
+            {showFilters ? <FilterX size={18} /> : <Filter size={18} />}
             {showFilters ? 'Hide Filters' : 'Show Filters'}
-          </Button>
-        </Box>
+          </button>
+        </div>
 
+        {/* Filters Section */}
         <Collapse in={showFilters}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
-              <TextField
-                label="Start Date (Due)"
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setPage(0);
-                }}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                label="End Date (Due)"
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  setPage(0);
-                }}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                select
-                label="Status"
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value);
-                  setPage(0);
-                }}
-                fullWidth
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date (Due)</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setPage(0);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date (Due)</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setPage(0);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    setStatus(e.target.value);
+                    setPage(0);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-colors bg-white"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={handleClearFilters}
+                className="px-4 py-2 text-sm font-medium text-theme hover:bg-theme/5 rounded-lg transition-colors"
               >
-                <MenuItem value="all">All Statuses</MenuItem>
-                <MenuItem value="submitted">Submitted</MenuItem>
-                <MenuItem value="pending">Pending</MenuItem>
-              </TextField>
-            </Stack>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button onClick={handleClearFilters} color="primary">
                 Clear Filters
-              </Button>
-            </Box>
-          </Paper>
+              </button>
+            </div>
+          </div>
         </Collapse>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
+          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center shadow-sm">
+            <p className="text-sm text-red-700">{error}</p>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
+              <span className="sr-only">Close</span>
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         )}
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme"></div>
+          </div>
         ) : assignments.length === 0 ? (
-          <Alert severity="info">No assignments found matching your criteria.</Alert>
+          <div className="bg-blue-50 text-blue-800 p-4 rounded-lg flex items-center shadow-sm border border-blue-100">
+            <svg className="w-5 h-5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"></path>
+            </svg>
+            <span className="text-sm font-medium">No assignments found matching your criteria.</span>
+          </div>
         ) : (
-          <Paper>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Assignment</TableCell>
-                    <TableCell>Course</TableCell>
-                    <TableCell>Due Date</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Assignment File</TableCell>
-                    <TableCell>My Submission</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignment</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignment File</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">My Submission</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {assignments.map((assignment) => (
-                    <TableRow key={assignment._id}>
-                      <TableCell>
-                        <Typography variant="body1" fontWeight="bold">
-                          {assignment.title}
-                        </Typography>
+                    <tr key={assignment._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-semibold text-gray-900">{assignment.title}</p>
                         {assignment.description && (
-                          <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 200, display: 'block' }}>
-                            {assignment.description}
-                          </Typography>
+                          <p className="text-xs text-gray-500 mt-1 truncate max-w-xs">{assignment.description}</p>
                         )}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {assignment.course?.title || 'Unknown'}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No Due Date'}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={assignment.status === 'submitted' ? 'Submitted' : 'Pending'}
-                          color={assignment.status === 'submitted' ? 'success' : 'warning'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${assignment.status === 'submitted'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {assignment.status === 'submitted' ? 'Submitted' : 'Pending'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
                         {assignment.attachments && assignment.attachments.length > 0 ? (
-                          <Stack spacing={1}>
+                          <div className="flex flex-col gap-2">
                             {assignment.attachments.map((file, index) => (
-                              <Button
+                              <a
                                 key={index}
-                                variant="outlined"
-                                size="small"
                                 href={file.fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                startIcon={<DownloadIcon />}
-                                sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
+                                className="inline-flex items-center gap-1.5 text-theme hover:text-theme/80 transition-colors bg-theme/5 hover:bg-theme/10 px-2 py-1 rounded text-xs font-medium"
                               >
-                                {file.fileName || `File ${index + 1}`}
-                              </Button>
+                                <Download size={14} />
+                                <span className="truncate max-w-[120px]">{file.fileName || `File ${index + 1}`}</span>
+                              </a>
                             ))}
-                          </Stack>
+                          </div>
                         ) : (
-                          <Typography variant="caption" color="text.secondary">None</Typography>
+                          <span className="text-gray-400 italic">None</span>
                         )}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {assignment.submission ? (
-                          <Box>
-                            <Typography variant="caption" display="block">
-                              {new Date(assignment.submission.submittedAt).toLocaleDateString()}
-                            </Typography>
+                          <div>
+                            <p className="font-medium text-gray-900">{new Date(assignment.submission.submittedAt).toLocaleDateString()}</p>
                             {assignment.submission.fileName && (
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                {assignment.submission.fileName}
-                              </Typography>
+                              <p className="text-xs text-gray-500 max-w-[120px] truncate">{assignment.submission.fileName}</p>
                             )}
-                          </Box>
+                          </div>
                         ) : (
-                          <Typography variant="caption" color="text.secondary">-</Typography>
+                          <span className="text-gray-400">-</span>
                         )}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<UploadIcon />}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
                           onClick={() => handleOpenDialog(assignment)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-theme text-white text-xs font-semibold rounded-lg hover:bg-theme/90 transition-colors shadow-sm"
                         >
+                          <Upload size={14} />
                           {assignment.submission ? 'Update' : 'Submit'}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                        </button>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={totalRecords}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </Paper>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Rows per page:</span>
+                <select
+                  value={rowsPerPage}
+                  onChange={handleChangeRowsPerPage}
+                  className="border-gray-300 rounded-md text-sm focus:ring-theme focus:border-theme py-1 pl-2 pr-6"
+                >
+                  {[5, 10, 25].map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-700">
+                  {page * rowsPerPage + 1}-{Math.min((page + 1) * rowsPerPage, totalRecords)} of {totalRecords}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleChangePage(e, page - 1)}
+                    disabled={page === 0}
+                    className="p-1 rounded-md text-gray-500 hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                  </button>
+                  <button
+                    onClick={(e) => handleChangePage(e, page + 1)}
+                    disabled={page >= Math.ceil(totalRecords / rowsPerPage) - 1}
+                    className="p-1 rounded-md text-gray-500 hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
-        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {selectedAssignment?.title || 'Submit Assignment'}
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ pt: 2 }}>
+        {/* Dialog for File Uploads */}
+        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth PaperProps={{ className: "rounded-xl" }}>
+          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-800">
+              {selectedAssignment?.title || 'Submit Assignment'}
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="pt-2">
               <FileUpload
                 label="Select Assignment File"
                 accept=".pdf,.doc,.docx,.txt"
@@ -336,26 +352,41 @@ const AssignmentView = () => {
                 }}
               />
               {fileName && !uploading && (
-                <Typography variant="body2" sx={{ mt: 1, color: 'success.main' }}>
-                  Ready to submit: {fileName}
-                </Typography>
+                <p className="mt-3 text-sm font-medium text-green-600 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  Ready to submit: <span className="text-gray-900">{fileName}</span>
+                </p>
               )}
-              {uploading && <LinearProgress sx={{ mt: 2 }} />}
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog} disabled={uploading}>Cancel</Button>
-            <Button
-              onClick={handleSubmit}
-              variant="contained"
-              disabled={!fileUrl || uploading}
-              startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
+              {uploading && (
+                <div className="mt-4 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-theme h-1.5 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="px-6 py-4 bg-gray-50 flex justify-end items-center gap-3 rounded-b-xl border-t border-gray-100">
+            <button
+              onClick={handleCloseDialog}
+              disabled={uploading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
             >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!fileUrl || uploading}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-theme text-white text-sm font-semibold rounded-lg hover:bg-theme/90 transition-all shadow-sm shadow-theme/20 disabled:opacity-50 disabled:shadow-none"
+            >
+              {uploading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Upload size={16} />
+              )}
               {uploading ? 'Submitting...' : 'Confirm Submission'}
-            </Button>
-          </DialogActions>
+            </button>
+          </div>
         </Dialog>
-      </Box>
+      </div>
     </MainLayout>
   );
 };
