@@ -50,7 +50,8 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) =
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '60vh',
+          height: '83vh',          // 👈 Full viewport height
+          overflow: 'hidden',       // 👈 Prevent scroll
           bgcolor: 'white',
           borderRadius: 2,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',

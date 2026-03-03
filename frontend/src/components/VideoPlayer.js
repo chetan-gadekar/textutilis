@@ -77,19 +77,33 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
     }
   };
 
+  const containerStyle = {
+    width: '100%',
+    aspectRatio: '16/9',
+    maxHeight: '70vh',
+    bgcolor: 'black',
+    borderRadius: 1,
+    overflow: 'hidden',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  };
+
   if (loading) {
     return (
-      <Box sx={{ textAlign: 'center', p: 5 }}>
-        <CircularProgress />
+      <Box sx={containerStyle}>
+        <CircularProgress sx={{ color: 'white' }} />
       </Box>
     );
   }
 
   if (error || !video) {
     return (
-      <Alert severity="error">
-        {error || 'Video not found'}
-      </Alert>
+      <Box sx={containerStyle}>
+        <Alert severity="error">
+          {error || 'Video not found'}
+        </Alert>
+      </Box>
     );
   }
 
@@ -97,7 +111,7 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
   const playbackUrl = video.isDirectUrl ? video.playback.direct : (video.playback?.hls || video.playback?.dash);
 
   return (
-    <Box>
+    <Box sx={containerStyle}>
       {!isReady ? (
         <Alert severity="warning">
           <Typography variant="h6">Video is processing...</Typography>
@@ -107,23 +121,24 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
           </Typography>
         </Alert>
       ) : playbackUrl ? (
-        <Box sx={{ width: '100%', bgcolor: 'black', borderRadius: 1, overflow: 'hidden' }}>
-          <video
-            ref={videoRef}
-            controls
-            controlsList="nodownload" // Prevents download option
-            disablePictureInPicture
-            style={{
-              width: '100%',
-              maxHeight: '70vh',
-              display: 'block',
-            }}
-            poster={video.thumbnail || undefined}
-          >
-            <source src={playbackUrl} type={video.isDirectUrl ? "video/mp4" : "application/x-mpegURL"} />
-            Your browser does not support the video tag.
-          </video>
-        </Box>
+        <video
+          ref={videoRef}
+          controls
+          controlsList="nodownload" // Prevents download option
+          disablePictureInPicture
+          style={{
+            width: '100%',
+            height: '100%',
+            maxHeight: '70vh',
+            display: 'block',
+            objectFit: 'contain',
+            backgroundColor: 'black'
+          }}
+          poster={video.thumbnail || undefined}
+        >
+          <source src={playbackUrl} type={video.isDirectUrl ? "video/mp4" : "application/x-mpegURL"} />
+          Your browser does not support the video tag.
+        </video>
       ) : (
         <Alert severity="error">No playback URL available</Alert>
       )}
