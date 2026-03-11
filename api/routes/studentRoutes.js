@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const studentController = require('../controllers/studentController');
+const performanceController = require('../controllers/performanceController');
 const { protect, authorize } = require('../middlewares/auth');
 
 // All routes require student role
@@ -22,5 +23,9 @@ router.get('/my-assignments', studentController.getMyAssignments);
 router.post('/assignments/:assignmentId/submit', studentController.submitAssignment);
 
 router.get('/profile', studentController.getMyProfile);
+
+// Performance routes
+router.get('/performance', performanceController.getMyPerformance);
+router.put('/performance/self-evaluation', performanceController.saveSelfEvaluation);
 
 module.exports = router;

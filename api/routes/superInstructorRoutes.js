@@ -4,6 +4,7 @@ const superInstructorController = require('../controllers/superInstructorControl
 const moduleController = require('../controllers/moduleController');
 const topicController = require('../controllers/topicController');
 const topicContentController = require('../controllers/topicContentController');
+const performanceController = require('../controllers/performanceController');
 const { protect, authorize } = require('../middlewares/auth');
 const { validateCourse, validateContent, validateAssignment, validateTopicContent } = require('../middlewares/validator');
 
@@ -50,5 +51,9 @@ router.post('/topics/:topicId/content', validateTopicContent, topicContentContro
 router.get('/topics/:topicId/content', topicContentController.getContent);
 router.put('/content/:id', validateTopicContent, topicContentController.updateContent);
 router.delete('/content/:id', topicContentController.deleteContent);
+
+// Performance routes
+router.get('/performance', performanceController.getAllStudentsPerformance);
+router.put('/performance/:studentId/:courseId', performanceController.saveInstructorAssessment);
 
 module.exports = router;

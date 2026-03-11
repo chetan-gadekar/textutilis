@@ -12,7 +12,8 @@ import {
   Users,
   FileText,
   PlusCircle,
-  ShieldCheck
+  ShieldCheck,
+  BarChart2
 } from "lucide-react";
 import profile from "../../assets/logo.jpeg";
 import { useAuth } from '../../hooks/useAuth';
@@ -111,6 +112,7 @@ const getMenuItems = (isAdmin, isSuperInstructor, isInstructor, isStudent) => {
       { text: 'Overview', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
       { text: 'My Courses', icon: <BookOpen size={20} />, path: '/student/courses' },
       { text: 'Assignments', icon: <FileText size={20} />, path: '/student/assignments' },
+      { text: 'Performance', icon: <BarChart2 size={20} />, path: '/student/performance' },
       { text: 'My Profile', icon: <UserCircle size={20} />, path: '/student/profile' },
       // { text: 'Career Services', icon: <Briefcase size={20} />, path: '/career-services' },
     ];
@@ -129,6 +131,7 @@ const getMenuItems = (isAdmin, isSuperInstructor, isInstructor, isStudent) => {
       { text: 'My Courses', icon: <BookOpen size={20} />, path: '/super-instructor/courses' },
       { text: 'Create Assignment', icon: <PlusCircle size={20} />, path: '/super-instructor/create-assignment' },
       { text: 'Review Assignments', icon: <FileText size={20} />, path: '/instructor/assignments' },
+      { text: 'Performance', icon: <BarChart2 size={20} />, path: '/super-instructor/performance' },
       { text: 'Teaching Points', icon: <ShieldCheck size={20} />, path: '/instructor/teaching-points' },
     ];
   }
@@ -136,6 +139,7 @@ const getMenuItems = (isAdmin, isSuperInstructor, isInstructor, isStudent) => {
     return [
       { text: 'Overview', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
       { text: 'My Courses', icon: <BookOpen size={20} />, path: '/instructor/courses' },
+      { text: 'Performance', icon: <BarChart2 size={20} />, path: '/instructor/performance' },
       { text: 'Review Assignments', icon: <FileText size={20} />, path: '/instructor/assignments' },
       { text: 'Teaching Points', icon: <FileText size={20} />, path: '/instructor/teaching-points' },
     ];

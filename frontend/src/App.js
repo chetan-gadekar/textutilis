@@ -30,6 +30,12 @@ import CourseDashboard from './components/student/CourseDashboard';
 import CourseDetail from './components/student/CourseDetail';
 import AssignmentView from './components/student/AssignmentView';
 import StudentProfile from './components/student/StudentProfile';
+import StudentPerformance from './components/student/performance/StudentPerformance';
+
+// Additional Performance Components
+import InstructorPerformance from './components/instructor/performance/InstructorPerformance';
+import SuperInstructorPerformance from './components/superInstructor/performance/SuperInstructorPerformance';
+import PerformanceDetail from './components/common/performance/PerformanceDetail';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -105,6 +111,14 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/super-instructor/performance"
+            element={
+              <ProtectedRoute allowedRoles={['super_instructor']}>
+                <SuperInstructorPerformance />
+              </ProtectedRoute>
+            }
+          />
           {/* Instructor Routes */}
           <Route
             path="/instructor/teaching-points"
@@ -127,6 +141,14 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={['instructor', 'super_instructor']}>
                 <InstructorCourses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/performance"
+            element={
+              <ProtectedRoute allowedRoles={['instructor', 'super_instructor']}>
+                <InstructorPerformance />
               </ProtectedRoute>
             }
           />
@@ -168,6 +190,46 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/performance"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentPerformance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/performance/self-eval/:courseId"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <PerformanceDetail mode="edit" type="self" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/performance/instructor-eval/:courseId"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <PerformanceDetail mode="view" type="instructor" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/performance/view-self/:studentId/:courseId"
+            element={
+              <ProtectedRoute allowedRoles={['instructor', 'super_instructor']}>
+                <PerformanceDetail mode="view" type="self" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/performance/assess/:studentId/:courseId"
+            element={
+              <ProtectedRoute allowedRoles={['instructor', 'super_instructor']}>
+                <PerformanceDetail mode="edit" type="instructor" />
               </ProtectedRoute>
             }
           />
