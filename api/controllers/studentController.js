@@ -273,7 +273,7 @@ const submitAssignment = async (req, res, next) => {
 const getMyProfile = async (req, res, next) => {
   try {
     const student = await studentService.getStudentById(req.user.id);
-    const performance = await performanceService.getPerformanceByStudent(req.user.id);
+    const performance = await performanceService.getStudentPerformances(req.user.id);
     res.json({
       success: true,
       data: {
