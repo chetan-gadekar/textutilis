@@ -7,7 +7,7 @@ import { BookOpen } from 'lucide-react';
 
 const StudentTable = ({ students, onAssignCourses, onToggleStatus }) => {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto pb-2">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>

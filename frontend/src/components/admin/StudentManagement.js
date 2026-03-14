@@ -168,10 +168,10 @@ const StudentManagement = () => {
   return (
     <MainLayout>
       <div className="font-poppins h-full">
-        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-medium text-gray-800">Student Management</h1>
-            <p className="text-gray-500 mt-1 font-light">View and manage enrolled students</p>
+            <h1 className="text-2xl md:text-3xl font-medium text-gray-800">Student Management</h1>
+            <p className="text-gray-500 mt-1 font-light text-sm md:text-base">View and manage enrolled students</p>
           </div>
           <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"} placement="left">
             <button
@@ -263,7 +263,7 @@ const StudentManagement = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 w-full">
           <StudentTable
             students={students}
             onAssignCourses={handleOpenAssignDialog}
@@ -280,6 +280,10 @@ const StudentManagement = () => {
             labelRowsPerPage="Students per page"
             className="border-t border-gray-100 bg-gray-50/50"
             sx={{
+              '.MuiTablePagination-toolbar': {
+                flexWrap: 'wrap',
+                justifyContent: { xs: 'center', sm: 'flex-end' },
+              },
               '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
                 fontFamily: 'Poppins',
                 fontSize: '0.875rem',

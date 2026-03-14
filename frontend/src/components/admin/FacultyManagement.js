@@ -290,7 +290,7 @@ const FacultyManagement = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4 w-full">
           <FacultyTable
             faculty={faculty}
             onEdit={handleOpenDialog}
@@ -309,6 +309,10 @@ const FacultyManagement = () => {
             labelRowsPerPage="Faculty per page"
             className="border-t border-gray-100 bg-gray-50/50"
             sx={{
+              '.MuiTablePagination-toolbar': {
+                flexWrap: 'wrap',
+                justifyContent: { xs: 'center', sm: 'flex-end' },
+              },
               '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
                 fontFamily: 'Poppins',
                 fontSize: '0.875rem',

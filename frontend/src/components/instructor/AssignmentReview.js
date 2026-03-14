@@ -219,7 +219,7 @@ const AssignmentReview = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 w-full">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -302,7 +302,7 @@ const AssignmentReview = () => {
               </tbody>
             </table>
           </div>
-          <div className="bg-white border-t border-gray-100 flex justify-end items-center px-4 py-1">
+          <div className="bg-white border-t border-gray-100 flex justify-end items-center px-4 py-1 w-full overflow-x-auto">
             <TablePagination
               rowsPerPageOptions={[5, 10, 25, 50]}
               component="div"

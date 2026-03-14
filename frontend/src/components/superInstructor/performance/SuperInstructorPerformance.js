@@ -154,63 +154,65 @@ const SuperInstructorPerformance = () => {
 
                 {error && <Alert severity="error" className="mb-6">{error}</Alert>}
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table className="w-full border-collapse">
-                        <thead className="bg-gray-50/80 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Student</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Course</th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Self Avg</th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Instr Avg</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr><td colSpan="5" className="px-6 py-12 text-center"><CircularProgress /></td></tr>
-                            ) : performances.length === 0 ? (
-                                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-400 font-light">No global records found.</td></tr>
-                            ) : (
-                                paginatedData.map((perf) => (
-                                    <tr key={perf._id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-gray-800 group-hover:text-theme transition-colors">{perf.studentId?.name || 'Unknown'}</div>
-                                            <div className="text-xs text-gray-400">{perf.studentId?.email}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600 font-medium">
-                                            {perf.courseId?.title}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
-                                                {getAvg(perf.selfEvaluation)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">
-                                                {getAvg(perf.instructorAssessment)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right flex justify-end gap-3">
-                                            <button
-                                                onClick={() => navigate(`/instructor/performance/view-self/${perf.studentId._id}/${perf.courseId._id}`)}
-                                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                title="View Self Evaluation"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => navigate(`/instructor/performance/assess/${perf.studentId._id}/${perf.courseId._id}`)}
-                                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                                                title="Assess Student (Instructor View)"
-                                            >
-                                                <Edit3 size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 w-full">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 border-collapse">
+                            <thead className="bg-gray-50/80 border-b border-gray-200">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Student</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Course</th>
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Self Avg</th>
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Instr Avg</th>
+                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {loading ? (
+                                    <tr><td colSpan="5" className="px-6 py-12 text-center"><CircularProgress /></td></tr>
+                                ) : performances.length === 0 ? (
+                                    <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-400 font-light">No global records found.</td></tr>
+                                ) : (
+                                    paginatedData.map((perf) => (
+                                        <tr key={perf._id} className="hover:bg-gray-50/50 transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <div className="font-bold text-gray-800 group-hover:text-theme transition-colors">{perf.studentId?.name || 'Unknown'}</div>
+                                                <div className="text-xs text-gray-400">{perf.studentId?.email}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                                {perf.courseId?.title}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
+                                                    {getAvg(perf.selfEvaluation)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">
+                                                    {getAvg(perf.instructorAssessment)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right flex justify-end gap-3">
+                                                <button
+                                                    onClick={() => navigate(`/instructor/performance/view-self/${perf.studentId._id}/${perf.courseId._id}`)}
+                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="View Self Evaluation"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/instructor/performance/assess/${perf.studentId._id}/${perf.courseId._id}`)}
+                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                    title="Assess Student (Instructor View)"
+                                                >
+                                                    <Edit3 size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                     <TablePagination
                         rowsPerPageOptions={[5, 10, 25]}
                         component="div"
@@ -219,7 +221,7 @@ const SuperInstructorPerformance = () => {
                         page={page}
                         onPageChange={handleChangePage}
                         onRowsPerPageChange={handleChangeRowsPerPage}
-                        className="border-t border-gray-100"
+                        className="border-t border-gray-100 w-full overflow-x-auto"
                     />
                 </div>
             </div>

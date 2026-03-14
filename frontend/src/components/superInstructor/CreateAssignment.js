@@ -389,7 +389,7 @@ const CreateAssignment = () => {
           editing={!!editAssignment}
         />
       </div>
-    </MainLayout >
+    </MainLayout>
   );
 };
 

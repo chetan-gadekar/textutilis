@@ -248,7 +248,7 @@ const TeachingPointsView = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4 w-full">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -332,8 +332,12 @@ const TeachingPointsView = () => {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             labelRowsPerPage="Records per page"
-            className="border-t border-gray-100 bg-gray-50/50"
+            className="border-t border-gray-100 bg-gray-50/50 w-full overflow-x-auto"
             sx={{
+              '.MuiTablePagination-toolbar': {
+                flexWrap: 'wrap',
+                justifyContent: { xs: 'center', sm: 'flex-end' },
+              },
               '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
                 fontFamily: 'Poppins',
                 fontSize: '0.875rem',
