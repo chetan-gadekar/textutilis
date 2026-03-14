@@ -17,6 +17,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
+  Menu as MenuIcon,
   Search as SearchIcon,
   NotificationsOutlined as NotificationsIcon,
   Settings as SettingsIcon,
@@ -126,6 +127,15 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle }
       <Toolbar sx={{ height: 70 }}>
         {/* Left Section: Logo or Back Button */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton
+            edge="start"
+            aria-label="menu"
+            onClick={onSidebarToggle}
+            sx={{ mr: 1, display: { md: 'none' }, color: 'text.primary' }}
+          >
+            <MenuIcon />
+          </IconButton>
+
           {onBack && (
             <Tooltip title="Back">
               <IconButton

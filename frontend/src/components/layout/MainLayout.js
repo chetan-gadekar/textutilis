@@ -39,8 +39,8 @@ const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, ini
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          mt: 8,
+          p: { xs: 2, sm: 3 },
+          mt: { xs: 7, sm: 8 },
           bgcolor: '#fafafa',
           minHeight: 'calc(100vh - 64px)',
           transition: (theme) =>

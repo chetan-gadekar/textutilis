@@ -176,3 +176,27 @@
 .ml-3 {
     margin-left: 0.75rem;
 }
+
+@media (max-width: 899px) {
+    .sidebar-container {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        background-color: white;
+        z-index: 1200;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        padding-top: 64px;
+        /* Space for the topbar */
+    }
+
+    .sidebar-container.collapsed {
+        transform: translateX(-100%);
+    }
+
+    .sidebar-container.expanded {
+        transform: translateX(0);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
+    }
+}

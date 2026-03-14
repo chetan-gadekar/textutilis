@@ -33,7 +33,7 @@ export default function Sidebar({ open: expanded, onToggle }) {
   const menuItems = getMenuItems(isAdmin, isSuperInstructor, isInstructor, isStudent);
 
   return (
-    <aside className="sidebar-container">
+    <aside className={`sidebar-container ${expanded ? 'expanded' : 'collapsed'}`}>
       <nav className="sidebar-nav">
         <div className="sidebar-header">
           <img
@@ -47,7 +47,7 @@ export default function Sidebar({ open: expanded, onToggle }) {
           </button>
         </div>
 
-        <SidebarContext.Provider value={{ expanded, navigate, location }}>
+        <SidebarContext.Provider value={{ expanded, navigate, location, onToggle }}>
           <ul className="sidebar-list">
             {menuItems.map((item, index) => (
               <SidebarItem
@@ -82,11 +82,18 @@ export default function Sidebar({ open: expanded, onToggle }) {
 }
 
 function SidebarItem({ icon, text, path, active, alert }) {
-  const { expanded, navigate } = useContext(SidebarContext);
+  const { expanded, navigate, onToggle } = useContext(SidebarContext);
+
+  const handleClick = () => {
+    navigate(path);
+    if (window.innerWidth <= 899 && expanded) {
+      onToggle();
+    }
+  };
 
   return (
     <li
-      onClick={() => navigate(path)}
+      onClick={handleClick}
       className={`sidebar-item ${active ? "active" : ""}`}
     >
       {icon}

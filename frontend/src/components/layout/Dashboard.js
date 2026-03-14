@@ -106,7 +106,7 @@ const Dashboard = () => {
   return (
     <MainLayout>
       <div className="font-poppins h-full">
-        <div className="mb-10 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-10 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
           <div>
             <h1 className="text-3xl font-medium text-gray-800 mb-2">
               Welcome, <span className="text-theme font-medium">{user?.name}</span>!

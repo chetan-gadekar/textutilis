@@ -14,3 +14,10 @@
   -moz-user-select: none;
   -ms-user-select: none;
 }
+
+html,
+body {
+  /* Prevent iOS input zoom and pinch zoom globally */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+}
