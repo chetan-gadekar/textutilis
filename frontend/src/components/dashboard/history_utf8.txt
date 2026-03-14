@@ -1,0 +1,1047 @@
+﻿commit d88d78f4fc114788cc6766324c1800f335a97666
+Author: taufiqattar4252 <06taufiqattar@gmail.com>
+Date:   Sat Mar 14 11:01:36 2026 +0530
+
+    sidebar fix overall system
+
+diff --git a/frontend/src/components/dashboard/StudentDashboard.js b/frontend/src/components/dashboard/StudentDashboard.js
+index 439ba66..e69de29 100644
+--- a/frontend/src/components/dashboard/StudentDashboard.js
++++ b/frontend/src/components/dashboard/StudentDashboard.js
+@@ -1,255 +0,0 @@
+-import React, { useState, useEffect } from 'react';
+-import { useNavigate } from 'react-router-dom';
+-import { BookOpen, Play, CheckCircle2 } from 'lucide-react';
+-import courseService from '../../services/courseService';
+-import MainLayout from '../layout/MainLayout';
+-
+-const StudentDashboard = () => {
+-  const navigate = useNavigate();
+-  const [courses, setCourses] = useState([]);
+-  const [loading, setLoading] = useState(true);
+-  const [error, setError] = useState(null);
+-  const [filter, setFilter] = useState('all');
+-
+-  useEffect(() => {
+-    fetchCourses();
+-  }, []);
+-
+-  const fetchCourses = async () => {
+-    try {
+-      setLoading(true);
+-      const response = await courseService.getStudentCourses();
+-      const coursesData = response.data || [];
+-      const extractedCourses = coursesData.map((enrollment) => ({
+-        ...enrollment.courseId,
+-        enrollment: {
+-          progress: enrollment.progress,
+-          enrolledAt: enrollment.enrolledAt,
+-        },
+-      }));
+-      setCourses(extractedCourses);
+-      setError(null);
+-    } catch (err) {
+-      setError(err.message || 'Failed to fetch courses');
+-    } finally {
+-      setLoading(false);
+-    }
+-  };
+-
+-  const handleFilterChange = (event, newFilter) => {
+-    if (newFilter !== null) {
+-      setFilter(newFilter);
+-    }
+-  };
+-
+-  const filteredCourses = filter === 'all'
+-    ? courses
+-    : courses.filter(course => course.enrollment?.progress > 0 && course.enrollment?.progress < 100);
+-
+-  if (loading) {
+-    return (
+-      <MainLayout>
+-        <div className="flex justify-center items-center min-h-[50vh]">
+-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme"></div>
+-        </div>
+-      </MainLayout>
+-    );
+-  }
+-
+-  return (
+-    <MainLayout>
+-      <div className="container mx-auto px-4 py-6 font-poppins">
+-        {/* Header Section */}
+-        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+-          <div>
+-            <h1 className="text-3xl font-medium text-gray-800 flex items-center gap-3">
+-              <BookOpen className="text-theme" size={32} />
+-              My Courses
+-            </h1>
+-            <p className="text-gray-500 mt-1 font-light">Resume learning and track your progress</p>
+-          </div>
+-
+-          <div className="flex items-center gap-2 p-1 bg-gray-100/80 rounded-full border border-gray-200">
+-            <button
+-              onClick={() => setFilter('all')}
+-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${filter === 'all'
+-                ? 'bg-white text-gray-800 shadow-sm border border-gray-200/50'
+-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+-                }`}
+-            >
+-              All Courses
+-            </button>
+-            <button
+-              onClick={() => setFilter('in_progress')}
+-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${filter === 'in_progress'
+-                ? 'bg-white text-gray-800 shadow-sm border border-gray-200/50'
+-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+-                }`}
+-            >
+-              In Progress
+-            </button>
+-          </div>
+-        </div>
+-
+-        {error && (
+-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center shadow-sm">
+-            <p className="text-sm text-red-700">{error}</p>
+-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
+-              <span className="sr-only">Close</span>
+-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+-              </svg>
+-            </button>
+-          </div>
+-        )}
+-
+-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+-          <div className="lg:col-span-2">
+-            {filteredCourses.length === 0 ? (
+-              <div className="bg-white p-16 text-center rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+-                  <BookOpen className="text-gray-300" size={32} />
+-                </div>
+-                <h3 className="text-lg font-medium text-gray-800 mb-2">No Courses Found</h3>
+-                <p className="text-gray-500 text-sm">
+-                  {filter === 'all' ? 'You are not enrolled in any courses yet.' : 'There are no courses currently in progress.'}
+-                </p>
+-              </div>
+-            ) : (
+-              <div className="grid grid-cols-1 gap-6">
+-                {filteredCourses.map((course) => {
+-                  const progress = course.enrollment?.progress || 0;
+-                  const isStarted = progress > 0;
+-
+-                  return (
+-                    <div key={course._id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-[180px]">
+-                      {/* Card Media Section */}
+-                      <div className="relative w-full sm:w-[220px] h-48 sm:h-full bg-gray-50 shrink-0">
+-                        <div
+-                          className="w-full h-full flex items-center justify-center bg-gray-50 bg-cover bg-center relative"
+-                          style={{ backgroundImage: course.bannerImage ? `url(${course.bannerImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+-                        >
+-                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
+-                            <span className="text-[10px] font-bold text-blue-600 tracking-wider">SKILLS</span>
+-                          </div>
+-
+-
+-                        </div>
+-                      </div>
+-
+-                      {/* Card Content Section */}
+-                      <div className="flex-grow flex flex-col p-5">
+-                        <div className="flex justify-between items-start mb-2 gap-4">
+-                          <h2 className="text-lg font-semibold text-gray-800 line-clamp-1">
+-                            {course.title}
+-                          </h2>
+-
+-                          {/* Circular Progress SVG */}
+-                          <div className="relative w-10 h-10 shrink-0">
+-                            <svg className="w-10 h-10 transform -rotate-90">
+-                              <circle
+-                                cx="20" cy="20" r="18"
+-                                fill="none"
+-                                className="stroke-gray-200"
+-                                strokeWidth="3"
+-                              />
+-                              <circle
+-                                cx="20" cy="20" r="18"
+-                                fill="none"
+-                                className={progress > 0 ? "stroke-green-500" : "stroke-gray-200"}
+-                                strokeWidth="3"
+-                                strokeDasharray={`${2 * Math.PI * 18}`}
+-                                strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
+-                                strokeLinecap="round"
+-                                style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+-                              />
+-                            </svg>
+-                          </div>
+-                        </div>
+-
+-                        <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
+-                          {course.description || 'No description available'}
+-                        </p>
+-
+-                        {/* Linear Progress Bar */}
+-                        {isStarted && (
+-                          <div className="mb-4 mt-auto">
+-                            <div className="flex justify-between items-center mb-1.5">
+-                              <span className="text-xs font-medium text-gray-500">Progress</span>
+-                              <span className="text-xs font-bold text-gray-700">{progress}%</span>
+-                            </div>
+-                            <div className="w-full bg-gray-100 rounded-full h-1.5">
+-                              <div
+-                                className="bg-green-500 h-1.5 rounded-full transition-all duration-500 ease-out"
+-                                style={{ width: `${progress}%` }}
+-                              ></div>
+-                            </div>
+-                          </div>
+-                        )}
+-
+-                        {/* Action Area */}
+-                        <div className={isStarted ? "" : "mt-auto"}>
+-                          <button
+-                            onClick={() => navigate(`/student/courses/${course._id}`)}
+-                            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${isStarted
+-                              ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
+-                              : 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent'
+-                              }`}
+-                          >
+-                            {isStarted ? (
+-                              <>
+-                                Continue Learning
+-                                <Play size={16} className="fill-current" />
+-                              </>
+-                            ) : (
+-                              'Start Learning'
+-                            )}
+-                          </button>
+-                        </div>
+-                      </div>
+-                    </div>
+-                  );
+-                })}
+-              </div>
+-            )}
+-          </div>
+-          <div className="lg:col-span-1">
+-            <div className="sticky top-[84px] bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+-              <h2 className="text-xl font-bold text-gray-800 mb-6">
+-                Skills Report
+-              </h2>
+-
+-              <div className="bg-gray-50 rounded-xl p-6 relative overflow-hidden group">
+-                {/* Simulated content with blur */}
+-                <div className="filter blur-[2px] transition-all duration-300 group-hover:blur-sm opacity-60">
+-                  <div className="flex justify-between items-center mb-4">
+-                    <div className="h-2 w-20 bg-gray-300 rounded"></div>
+-                    <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
+-                  </div>
+-                  <div className="space-y-3">
+-                    <div className="h-2 w-full bg-gray-300 rounded"></div>
+-                    <div className="h-2 w-5/6 bg-gray-300 rounded"></div>
+-                    <div className="h-2 w-4/6 bg-gray-300 rounded"></div>
+-                  </div>
+-                </div>
+-
+-                {/* Coming Soon Overlay */}
+-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white/40 backdrop-blur-[1px]">
+-                  <span className="text-4xl mb-3">≡ƒÜÇ</span>
+-                  <h3 className="text-lg font-bold text-gray-800 mb-1 tracking-wide">
+-                    COMING SOON
+-                  </h3>
+-                  <p className="text-sm font-medium text-gray-600">
+-                    Your skills portfolio is being prepared
+-                  </p>
+-                </div>
+-              </div>
+-            </div>
+-          </div>
+-        </div>
+-      </div>
+-    </MainLayout>
+-  );
+-};
+-
+-export default StudentDashboard;
+
+commit 1a395d051cf72b9163df30174d39b014ad47095c
+Author: ATTTAUFIQ <workattartaufiq@gmail.com>
+Date:   Tue Mar 3 15:24:23 2026 +0530
+
+    ui enhancement in student and faculty
+
+diff --git a/frontend/src/components/dashboard/StudentDashboard.js b/frontend/src/components/dashboard/StudentDashboard.js
+index f65cf17..439ba66 100644
+--- a/frontend/src/components/dashboard/StudentDashboard.js
++++ b/frontend/src/components/dashboard/StudentDashboard.js
+@@ -1,21 +1,6 @@
+ import React, { useState, useEffect } from 'react';
+ import { useNavigate } from 'react-router-dom';
+-import {
+-  Box,
+-  Typography,
+-  Grid,
+-  Card,
+-  CardContent,
+-  CardMedia,
+-  Button,
+-  LinearProgress,
+-  ToggleButton,
+-  ToggleButtonGroup,
+-  CircularProgress,
+-  Alert,
+-  Paper,
+-} from '@mui/material';
+-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
++import { BookOpen, Play, CheckCircle2 } from 'lucide-react';
+ import courseService from '../../services/courseService';
+ import MainLayout from '../layout/MainLayout';
+ 
+@@ -64,226 +49,205 @@ const StudentDashboard = () => {
+   if (loading) {
+     return (
+       <MainLayout>
+-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+-          <CircularProgress />
+-        </Box>
++        <div className="flex justify-center items-center min-h-[50vh]">
++          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme"></div>
++        </div>
+       </MainLayout>
+     );
+   }
+ 
+   return (
+     <MainLayout>
+-      <Box>
+-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+-            My Courses
+-          </Typography>
+-          <ToggleButtonGroup
+-            value={filter}
+-            exclusive
+-            onChange={handleFilterChange}
+-            aria-label="course filter"
+-            size="small"
+-          >
+-            <ToggleButton value="all" aria-label="all courses">
+-              All
+-            </ToggleButton>
+-            <ToggleButton value="in_progress" aria-label="in progress">
++      <div className="container mx-auto px-4 py-6 font-poppins">
++        {/* Header Section */}
++        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
++          <div>
++            <h1 className="text-3xl font-medium text-gray-800 flex items-center gap-3">
++              <BookOpen className="text-theme" size={32} />
++              My Courses
++            </h1>
++            <p className="text-gray-500 mt-1 font-light">Resume learning and track your progress</p>
++          </div>
++
++          <div className="flex items-center gap-2 p-1 bg-gray-100/80 rounded-full border border-gray-200">
++            <button
++              onClick={() => setFilter('all')}
++              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${filter === 'all'
++                ? 'bg-white text-gray-800 shadow-sm border border-gray-200/50'
++                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
++                }`}
++            >
++              All Courses
++            </button>
++            <button
++              onClick={() => setFilter('in_progress')}
++              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${filter === 'in_progress'
++                ? 'bg-white text-gray-800 shadow-sm border border-gray-200/50'
++                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
++                }`}
++            >
+               In Progress
+-            </ToggleButton>
+-          </ToggleButtonGroup>
+-        </Box>
++            </button>
++          </div>
++        </div>
+ 
+         {error && (
+-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+-            {error}
+-          </Alert>
++          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center shadow-sm">
++            <p className="text-sm text-red-700">{error}</p>
++            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
++              <span className="sr-only">Close</span>
++              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
++                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
++              </svg>
++            </button>
++          </div>
+         )}
+ 
+-        <Grid container spacing={3}>
+-          <Grid item xs={12} md={8}>
++        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
++          <div className="lg:col-span-2">
+             {filteredCourses.length === 0 ? (
+-              <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'white', borderRadius: 2 }}>
+-                <Typography variant="h6" color="text.secondary" gutterBottom>
+-                  {filter === 'all' ? 'You are not enrolled in any courses yet.' : 'No courses in progress.'}
+-                </Typography>
+-              </Paper>
++              <div className="bg-white p-16 text-center rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
++                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
++                  <BookOpen className="text-gray-300" size={32} />
++                </div>
++                <h3 className="text-lg font-medium text-gray-800 mb-2">No Courses Found</h3>
++                <p className="text-gray-500 text-sm">
++                  {filter === 'all' ? 'You are not enrolled in any courses yet.' : 'There are no courses currently in progress.'}
++                </p>
++              </div>
+             ) : (
+-              <Grid container spacing={3}>
++              <div className="grid grid-cols-1 gap-6">
+                 {filteredCourses.map((course) => {
+                   const progress = course.enrollment?.progress || 0;
+                   const isStarted = progress > 0;
+ 
+                   return (
+-                    <Grid item xs={12} key={course._id}>
+-                      <Card
+-                        sx={{
+-                          display: 'flex',
+-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+-                          borderRadius: 2,
+-                          overflow: 'hidden',
+-                          height: 180
+-                        }}
+-                      >
+-                        <Box sx={{ position: 'relative', width: 220, bgcolor: '#f5f5f5', flexShrink: 0 }}>
+-                          <CardMedia
+-                            component="div"
+-                            sx={{
+-                              height: '100%',
+-                              display: 'flex',
+-                              alignItems: 'center',
+-                              justifyContent: 'center',
+-                              bgcolor: '#f5f5f5',
+-                              backgroundImage: course.bannerImage ? `url(${course.bannerImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+-                              backgroundSize: 'cover',
+-                              backgroundPosition: 'center',
+-                              position: 'relative',
+-                            }}
+-                          >
+-                            <Box
+-                              sx={{
+-                                position: 'absolute',
+-                                top: 8,
+-                                left: 8,
+-                                bgcolor: 'rgba(255, 255, 255, 0.9)',
+-                                px: 1,
+-                                py: 0.5,
+-                                borderRadius: 1,
+-                              }}
+-                            >
+-                              <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+-                                SKILLS
+-                              </Typography>
+-                            </Box>
+-                            <Typography
+-                              variant="body1"
+-                              sx={{
+-                                color: 'white',
+-                                fontWeight: 'bold',
+-                                textAlign: 'center',
+-                                px: 2,
+-                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+-                              }}
+-                            >
+-                              {course.title}
+-                            </Typography>
+-                          </CardMedia>
+-                        </Box>
+-
+-                        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
+-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+-                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
+-                              {course.title}
+-                            </Typography>
+-                            <Box sx={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
+-                              <svg width={40} height={40}>
+-                                <circle cx={20} cy={20} r={18} fill="none" stroke="#e0e0e0" strokeWidth={3} />
+-                                <circle
+-                                  cx={20} cy={20} r={18} fill="none"
+-                                  stroke={progress > 0 ? '#4caf50' : '#e0e0e0'}
+-                                  strokeWidth={3}
+-                                  strokeDasharray={`${2 * Math.PI * 18}`}
+-                                  strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
+-                                  strokeLinecap="round"
+-                                  transform="rotate(-90 20 20)"
+-                                />
+-                              </svg>
+-                            </Box>
+-                          </Box>
+-
+-                          <Typography
+-                            variant="body2"
+-                            color="text.secondary"
+-                            sx={{
+-                              mb: 2,
+-                              display: '-webkit-box',
+-                              WebkitLineClamp: 1,
+-                              WebkitBoxOrient: 'vertical',
+-                              overflow: 'hidden',
+-                            }}
+-                          >
+-                            {course.description || 'No description available'}
+-                          </Typography>
+-
+-                          {isStarted && (
+-                            <Box sx={{ mb: 2 }}>
+-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+-                                <Typography variant="caption" color="text.secondary">Progress</Typography>
+-                                <Typography variant="caption" color="text.secondary" fontWeight="bold">{progress}%</Typography>
+-                              </Box>
+-                              <LinearProgress
+-                                variant="determinate"
+-                                value={progress}
+-                                sx={{
+-                                  height: 4,
+-                                  borderRadius: 2,
+-                                  bgcolor: '#e0e0e0',
+-                                  '& .MuiLinearProgress-bar': { bgcolor: '#4caf50' },
+-                                }}
++                    <div key={course._id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-[180px]">
++                      {/* Card Media Section */}
++                      <div className="relative w-full sm:w-[220px] h-48 sm:h-full bg-gray-50 shrink-0">
++                        <div
++                          className="w-full h-full flex items-center justify-center bg-gray-50 bg-cover bg-center relative"
++                          style={{ backgroundImage: course.bannerImage ? `url(${course.bannerImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
++                        >
++                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
++                            <span className="text-[10px] font-bold text-blue-600 tracking-wider">SKILLS</span>
++                          </div>
++
++
++                        </div>
++                      </div>
++
++                      {/* Card Content Section */}
++                      <div className="flex-grow flex flex-col p-5">
++                        <div className="flex justify-between items-start mb-2 gap-4">
++                          <h2 className="text-lg font-semibold text-gray-800 line-clamp-1">
++                            {course.title}
++                          </h2>
++
++                          {/* Circular Progress SVG */}
++                          <div className="relative w-10 h-10 shrink-0">
++                            <svg className="w-10 h-10 transform -rotate-90">
++                              <circle
++                                cx="20" cy="20" r="18"
++                                fill="none"
++                                className="stroke-gray-200"
++                                strokeWidth="3"
+                               />
+-                            </Box>
+-                          )}
+-
+-                          <Box sx={{ mt: 'auto' }}>
+-                            <Button
+-                              size="small"
+-                              variant={isStarted ? 'contained' : 'outlined'}
+-                              color={isStarted ? 'error' : 'primary'}
+-                              endIcon={isStarted && <PlayArrowIcon />}
+-                              onClick={() => navigate(`/student/courses/${course._id}`)}
+-                              sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 'bold' }}
+-                            >
+-                              {isStarted ? 'Continue Learning' : 'Start Learning'}
+-                            </Button>
+-                          </Box>
+-                        </CardContent>
+-                      </Card>
+-                    </Grid>
++                              <circle
++                                cx="20" cy="20" r="18"
++                                fill="none"
++                                className={progress > 0 ? "stroke-green-500" : "stroke-gray-200"}
++                                strokeWidth="3"
++                                strokeDasharray={`${2 * Math.PI * 18}`}
++                                strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
++                                strokeLinecap="round"
++                                style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
++                              />
++                            </svg>
++                          </div>
++                        </div>
++
++                        <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
++                          {course.description || 'No description available'}
++                        </p>
++
++                        {/* Linear Progress Bar */}
++                        {isStarted && (
++                          <div className="mb-4 mt-auto">
++                            <div className="flex justify-between items-center mb-1.5">
++                              <span className="text-xs font-medium text-gray-500">Progress</span>
++                              <span className="text-xs font-bold text-gray-700">{progress}%</span>
++                            </div>
++                            <div className="w-full bg-gray-100 rounded-full h-1.5">
++                              <div
++                                className="bg-green-500 h-1.5 rounded-full transition-all duration-500 ease-out"
++                                style={{ width: `${progress}%` }}
++                              ></div>
++                            </div>
++                          </div>
++                        )}
++
++                        {/* Action Area */}
++                        <div className={isStarted ? "" : "mt-auto"}>
++                          <button
++                            onClick={() => navigate(`/student/courses/${course._id}`)}
++                            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${isStarted
++                              ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
++                              : 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent'
++                              }`}
++                          >
++                            {isStarted ? (
++                              <>
++                                Continue Learning
++                                <Play size={16} className="fill-current" />
++                              </>
++                            ) : (
++                              'Start Learning'
++                            )}
++                          </button>
++                        </div>
++                      </div>
++                    </div>
+                   );
+                 })}
+-              </Grid>
++              </div>
+             )}
+-          </Grid>
+-
+-          <Grid item xs={12} md={4}>
+-            <Box sx={{ position: 'sticky', top: 84 }}>
+-              <Paper
+-                sx={{
+-                  p: 3,
+-                  textAlign: 'center',
+-                  bgcolor: 'white',
+-                  borderRadius: 2,
+-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+-                }}
+-              >
+-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+-                  Skills Report
+-                </Typography>
+-                <Box
+-                  sx={{
+-                    p: 3,
+-                    bgcolor: '#f5f5f5',
+-                    borderRadius: 2,
+-                    position: 'relative',
+-                    overflow: 'hidden',
+-                    filter: 'blur(1px)',
+-                  }}
+-                >
+-                  <Typography variant="h4" sx={{ mb: 1, opacity: 0.5 }}>
+-                    ΓÅ▒∩╕Å
+-                  </Typography>
+-                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, opacity: 0.5 }}>
++          </div>
++          <div className="lg:col-span-1">
++            <div className="sticky top-[84px] bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
++              <h2 className="text-xl font-bold text-gray-800 mb-6">
++                Skills Report
++              </h2>
++
++              <div className="bg-gray-50 rounded-xl p-6 relative overflow-hidden group">
++                {/* Simulated content with blur */}
++                <div className="filter blur-[2px] transition-all duration-300 group-hover:blur-sm opacity-60">
++                  <div className="flex justify-between items-center mb-4">
++                    <div className="h-2 w-20 bg-gray-300 rounded"></div>
++                    <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
++                  </div>
++                  <div className="space-y-3">
++                    <div className="h-2 w-full bg-gray-300 rounded"></div>
++                    <div className="h-2 w-5/6 bg-gray-300 rounded"></div>
++                    <div className="h-2 w-4/6 bg-gray-300 rounded"></div>
++                  </div>
++                </div>
++
++                {/* Coming Soon Overlay */}
++                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white/40 backdrop-blur-[1px]">
++                  <span className="text-4xl mb-3">≡ƒÜÇ</span>
++                  <h3 className="text-lg font-bold text-gray-800 mb-1 tracking-wide">
+                     COMING SOON
+-                  </Typography>
+-                  <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.7 }}>
+-                    Something Cool is being prepared
+-                  </Typography>
+-                </Box>
+-              </Paper>
+-            </Box>
+-          </Grid>
+-        </Grid>
+-      </Box>
++                  </h3>
++                  <p className="text-sm font-medium text-gray-600">
++                    Your skills portfolio is being prepared
++                  </p>
++                </div>
++              </div>
++            </div>
++          </div>
++        </div>
++      </div>
+     </MainLayout>
+   );
+ };
+
+commit e6bdbf36afe7b1a220d8f4515901943fcd85dd6e
+Author: chetan gadekar <chetangadekar67@gmail.com>
+Date:   Sun Mar 1 15:42:35 2026 +0530
+
+    course api optimization and banner image added
+
+diff --git a/frontend/src/components/dashboard/StudentDashboard.js b/frontend/src/components/dashboard/StudentDashboard.js
+index d15d4bb..f65cf17 100644
+--- a/frontend/src/components/dashboard/StudentDashboard.js
++++ b/frontend/src/components/dashboard/StudentDashboard.js
+@@ -134,7 +134,9 @@ const StudentDashboard = () => {
+                               alignItems: 'center',
+                               justifyContent: 'center',
+                               bgcolor: '#f5f5f5',
+-                              backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
++                              backgroundImage: course.bannerImage ? `url(${course.bannerImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
++                              backgroundSize: 'cover',
++                              backgroundPosition: 'center',
+                               position: 'relative',
+                             }}
+                           >
+
+commit 3353a5618778ff0ae537060c74f4a3625649ef03
+Author: chetan gadekar <chetangadekar67@gmail.com>
+Date:   Thu Jan 22 12:45:42 2026 +0530
+
+    issue fix
+
+diff --git a/frontend/src/components/dashboard/StudentDashboard.js b/frontend/src/components/dashboard/StudentDashboard.js
+index 4c766a3..d15d4bb 100644
+--- a/frontend/src/components/dashboard/StudentDashboard.js
++++ b/frontend/src/components/dashboard/StudentDashboard.js
+@@ -9,7 +9,6 @@ import {
+   CardMedia,
+   Button,
+   LinearProgress,
+-  Chip,
+   ToggleButton,
+   ToggleButtonGroup,
+   CircularProgress,
+
+commit 6f0b204eb48dbdecfd135ad5e019566d5153b52b
+Author: chetan gadekar <chetangadekar67@gmail.com>
+Date:   Thu Jan 22 10:31:40 2026 +0530
+
+    fix: remove node_modules from git tracking
+
+diff --git a/frontend/src/components/dashboard/StudentDashboard.js b/frontend/src/components/dashboard/StudentDashboard.js
+new file mode 100644
+index 0000000..4c766a3
+--- /dev/null
++++ b/frontend/src/components/dashboard/StudentDashboard.js
+@@ -0,0 +1,290 @@
++import React, { useState, useEffect } from 'react';
++import { useNavigate } from 'react-router-dom';
++import {
++  Box,
++  Typography,
++  Grid,
++  Card,
++  CardContent,
++  CardMedia,
++  Button,
++  LinearProgress,
++  Chip,
++  ToggleButton,
++  ToggleButtonGroup,
++  CircularProgress,
++  Alert,
++  Paper,
++} from '@mui/material';
++import PlayArrowIcon from '@mui/icons-material/PlayArrow';
++import courseService from '../../services/courseService';
++import MainLayout from '../layout/MainLayout';
++
++const StudentDashboard = () => {
++  const navigate = useNavigate();
++  const [courses, setCourses] = useState([]);
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++  const [filter, setFilter] = useState('all');
++
++  useEffect(() => {
++    fetchCourses();
++  }, []);
++
++  const fetchCourses = async () => {
++    try {
++      setLoading(true);
++      const response = await courseService.getStudentCourses();
++      const coursesData = response.data || [];
++      const extractedCourses = coursesData.map((enrollment) => ({
++        ...enrollment.courseId,
++        enrollment: {
++          progress: enrollment.progress,
++          enrolledAt: enrollment.enrolledAt,
++        },
++      }));
++      setCourses(extractedCourses);
++      setError(null);
++    } catch (err) {
++      setError(err.message || 'Failed to fetch courses');
++    } finally {
++      setLoading(false);
++    }
++  };
++
++  const handleFilterChange = (event, newFilter) => {
++    if (newFilter !== null) {
++      setFilter(newFilter);
++    }
++  };
++
++  const filteredCourses = filter === 'all'
++    ? courses
++    : courses.filter(course => course.enrollment?.progress > 0 && course.enrollment?.progress < 100);
++
++  if (loading) {
++    return (
++      <MainLayout>
++        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
++          <CircularProgress />
++        </Box>
++      </MainLayout>
++    );
++  }
++
++  return (
++    <MainLayout>
++      <Box>
++        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
++          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
++            My Courses
++          </Typography>
++          <ToggleButtonGroup
++            value={filter}
++            exclusive
++            onChange={handleFilterChange}
++            aria-label="course filter"
++            size="small"
++          >
++            <ToggleButton value="all" aria-label="all courses">
++              All
++            </ToggleButton>
++            <ToggleButton value="in_progress" aria-label="in progress">
++              In Progress
++            </ToggleButton>
++          </ToggleButtonGroup>
++        </Box>
++
++        {error && (
++          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
++            {error}
++          </Alert>
++        )}
++
++        <Grid container spacing={3}>
++          <Grid item xs={12} md={8}>
++            {filteredCourses.length === 0 ? (
++              <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'white', borderRadius: 2 }}>
++                <Typography variant="h6" color="text.secondary" gutterBottom>
++                  {filter === 'all' ? 'You are not enrolled in any courses yet.' : 'No courses in progress.'}
++                </Typography>
++              </Paper>
++            ) : (
++              <Grid container spacing={3}>
++                {filteredCourses.map((course) => {
++                  const progress = course.enrollment?.progress || 0;
++                  const isStarted = progress > 0;
++
++                  return (
++                    <Grid item xs={12} key={course._id}>
++                      <Card
++                        sx={{
++                          display: 'flex',
++                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
++                          borderRadius: 2,
++                          overflow: 'hidden',
++                          height: 180
++                        }}
++                      >
++                        <Box sx={{ position: 'relative', width: 220, bgcolor: '#f5f5f5', flexShrink: 0 }}>
++                          <CardMedia
++                            component="div"
++                            sx={{
++                              height: '100%',
++                              display: 'flex',
++                              alignItems: 'center',
++                              justifyContent: 'center',
++                              bgcolor: '#f5f5f5',
++                              backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
++                              position: 'relative',
++                            }}
++                          >
++                            <Box
++                              sx={{
++                                position: 'absolute',
++                                top: 8,
++                                left: 8,
++                                bgcolor: 'rgba(255, 255, 255, 0.9)',
++                                px: 1,
++                                py: 0.5,
++                                borderRadius: 1,
++                              }}
++                            >
++                              <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
++                                SKILLS
++                              </Typography>
++                            </Box>
++                            <Typography
++                              variant="body1"
++                              sx={{
++                                color: 'white',
++                                fontWeight: 'bold',
++                                textAlign: 'center',
++                                px: 2,
++                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
++                              }}
++                            >
++                              {course.title}
++                            </Typography>
++                          </CardMedia>
++                        </Box>
++
++                        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
++                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
++                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
++                              {course.title}
++                            </Typography>
++                            <Box sx={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
++                              <svg width={40} height={40}>
++                                <circle cx={20} cy={20} r={18} fill="none" stroke="#e0e0e0" strokeWidth={3} />
++                                <circle
++                                  cx={20} cy={20} r={18} fill="none"
++                                  stroke={progress > 0 ? '#4caf50' : '#e0e0e0'}
++                                  strokeWidth={3}
++                                  strokeDasharray={`${2 * Math.PI * 18}`}
++                                  strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
++                                  strokeLinecap="round"
++                                  transform="rotate(-90 20 20)"
++                                />
++                              </svg>
++                            </Box>
++                          </Box>
++
++                          <Typography
++                            variant="body2"
++                            color="text.secondary"
++                            sx={{
++                              mb: 2,
++                              display: '-webkit-box',
++                              WebkitLineClamp: 1,
++                              WebkitBoxOrient: 'vertical',
++                              overflow: 'hidden',
++                            }}
++                          >
++                            {course.description || 'No description available'}
++                          </Typography>
++
++                          {isStarted && (
++                            <Box sx={{ mb: 2 }}>
++                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
++                                <Typography variant="caption" color="text.secondary">Progress</Typography>
++                                <Typography variant="caption" color="text.secondary" fontWeight="bold">{progress}%</Typography>
++                              </Box>
++                              <LinearProgress
++                                variant="determinate"
++                                value={progress}
++                                sx={{
++                                  height: 4,
++                                  borderRadius: 2,
++                                  bgcolor: '#e0e0e0',
++                                  '& .MuiLinearProgress-bar': { bgcolor: '#4caf50' },
++                                }}
++                              />
++                            </Box>
++                          )}
++
++                          <Box sx={{ mt: 'auto' }}>
++                            <Button
++                              size="small"
++                              variant={isStarted ? 'contained' : 'outlined'}
++                              color={isStarted ? 'error' : 'primary'}
++                              endIcon={isStarted && <PlayArrowIcon />}
++                              onClick={() => navigate(`/student/courses/${course._id}`)}
++                              sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 'bold' }}
++                            >
++                              {isStarted ? 'Continue Learning' : 'Start Learning'}
++                            </Button>
++                          </Box>
++                        </CardContent>
++                      </Card>
++                    </Grid>
++                  );
++                })}
++              </Grid>
++            )}
++          </Grid>
++
++          <Grid item xs={12} md={4}>
++            <Box sx={{ position: 'sticky', top: 84 }}>
++              <Paper
++                sx={{
++                  p: 3,
++                  textAlign: 'center',
++                  bgcolor: 'white',
++                  borderRadius: 2,
++                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
++                }}
++              >
++                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
++                  Skills Report
++                </Typography>
++                <Box
++                  sx={{
++                    p: 3,
++                    bgcolor: '#f5f5f5',
++                    borderRadius: 2,
++                    position: 'relative',
++                    overflow: 'hidden',
++                    filter: 'blur(1px)',
++                  }}
++                >
++                  <Typography variant="h4" sx={{ mb: 1, opacity: 0.5 }}>
++                    ΓÅ▒∩╕Å
++                  </Typography>
++                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, opacity: 0.5 }}>
++                    COMING SOON
++                  </Typography>
++                  <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.7 }}>
++                    Something Cool is being prepared
++                  </Typography>
++                </Box>
++              </Paper>
++            </Box>
++          </Grid>
++        </Grid>
++      </Box>
++    </MainLayout>
++  );
++};
++
++export default StudentDashboard;
