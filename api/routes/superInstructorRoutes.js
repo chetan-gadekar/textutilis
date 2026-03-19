@@ -19,12 +19,6 @@ router.get('/courses/:id', superInstructorController.getCourse);
 router.put('/courses/:id', validateCourse, superInstructorController.updateCourse);
 router.delete('/courses/:id', superInstructorController.deleteCourse);
 
-// Content routes
-router.post('/courses/:courseId/content', validateContent, superInstructorController.createContent);
-router.get('/courses/:courseId/content', superInstructorController.getContent);
-router.put('/content/:id', validateContent, superInstructorController.updateContent);
-router.delete('/content/:id', superInstructorController.deleteContent);
-
 // Assignment routes
 router.get('/assignments', superInstructorController.getAllAssignments);
 router.post('/courses/:courseId/assignments', validateAssignment, superInstructorController.createAssignment);

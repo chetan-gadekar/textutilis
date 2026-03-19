@@ -29,9 +29,9 @@ const R2_PUBLIC_URL = process.env.CLOUDFLARE_R2_PUBLIC_URL || '';
 /**
  * Generate a signed GET URL for a file in R2.
  * @param {string} fileKey - The key of the file in the bucket.
- * @param {number} expiresIn - Expiration time in seconds (default 10 seconds for testing).
+ * @param {number} expiresIn - Expiration time in seconds (default 5 seconds).
  */
-const getSignedGetUrl = async (fileKey, expiresIn = 10) => {
+const getSignedGetUrl = async (fileKey, expiresIn = 5) => {
     try {
         const command = new GetObjectCommand({
             Bucket: R2_BUCKET_NAME,
@@ -52,7 +52,7 @@ const getSignedGetUrl = async (fileKey, expiresIn = 10) => {
 const stripR2Signature = (url) => {
     if (!url || typeof url !== 'string') return url;
     if (!url.includes('r2.cloudflarestorage.com')) return url;
-    
+
     try {
         const urlObj = new URL(url);
         // Remove all X-Amz-* parameters
@@ -72,52 +72,61 @@ const stripR2Signature = (url) => {
 
 /**
  * Recursively search for R2 URLs in an object/array and sign them.
+ * Uses a WeakSet to prevent infinite recursion on circular references.
  */
-const signR2Urls = async (data) => {
-    if (!data) return data;
+const signR2Urls = async (data, visited = new WeakSet()) => {
+    if (!data || typeof data !== 'object') return data;
+
+    // Prevent infinite recursion for circular references
+    if (visited.has(data)) return data;
+    visited.add(data);
 
     if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
-            data[i] = await signR2Urls(data[i]);
+            data[i] = await signR2Urls(data[i], visited);
         }
         return data;
     }
 
-    if (typeof data === 'object') {
-        const isContent = data.contentType === 'video' && data.contentData;
-        if (isContent && data.contentData.includes('r2.cloudflarestorage.com')) {
-            const url = stripR2Signature(data.contentData);
+    // Handle Mongoose documents or plain objects
+    // If it's a Mongoose document without .lean(), we shouldn't deep-sign it
+    // because it contains many internal circular references.
+    if (data.constructor && data.constructor.name === 'model') {
+        // This is likely a non-lean Mongoose document.
+        // We only sign its direct properties to be safe.
+        const plainData = data.toObject ? data.toObject() : data;
+        return await signR2Urls(plainData, visited);
+    }
+
+    // Handle TopicContent pattern (specific optimization)
+    if (data.contentType === 'video' && data.contentData && typeof data.contentData === 'string' && data.contentData.includes('r2.cloudflarestorage.com')) {
+        const url = stripR2Signature(data.contentData);
+        const match = url.match(/lms_videos\/.*$/);
+        if (match) {
+            const fileKey = match[0];
+            const signedUrl = await getSignedGetUrl(fileKey);
+            if (signedUrl) data.contentData = signedUrl;
+        }
+    }
+
+    // Handle all other fields recursively
+    for (const key in data) {
+        // Skip internal Mongoose keys if any leaked through
+        if (key.startsWith('$') || key.startsWith('_')) {
+            if (key !== '_id') continue; 
+        }
+
+        const value = data[key];
+        if (typeof value === 'string' && value.includes('r2.cloudflarestorage.com')) {
+            const url = stripR2Signature(value);
             const match = url.match(/lms_videos\/.*$/);
             if (match) {
                 const fileKey = match[0];
-                console.log(`Signing R2 URL for key: ${fileKey}`);
                 const signedUrl = await getSignedGetUrl(fileKey);
-                if (signedUrl) {
-                    data.contentData = signedUrl;
-                    console.log(`Successfully signed URL for: ${fileKey}`);
-                } else {
-                    console.error(`Failed to sign URL for: ${fileKey}`);
-                }
-            } else {
-                console.warn(`Could not extract key from R2 URL: ${url}`);
+                if (signedUrl) data[key] = signedUrl;
             }
-        }
-
-        // Handle generic keys like fileUrl, url, contentData, attachments
-        for (const key in data) {
-            const value = data[key];
-            if (typeof value === 'string' && value.includes('r2.cloudflarestorage.com')) {
-                const url = stripR2Signature(value);
-                const match = url.match(/lms_videos\/.*$/);
-                if (match) {
-                    const fileKey = match[0];
-                    console.log(`Signing R2 URL in field ${key} for key: ${fileKey}`);
-                    const signedUrl = await getSignedGetUrl(fileKey);
-                    if (signedUrl) data[key] = signedUrl;
-                }
-            } else if (typeof value === 'object' && value !== null) {
-                data[key] = await signR2Urls(value);
-            }
+        } else if (typeof value === 'object' && value !== null) {
+            data[key] = await signR2Urls(value, visited);
         }
     }
 

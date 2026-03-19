@@ -1,6 +1,8 @@
 const courseService = require('../services/courseService');
-const contentService = require('../services/contentService');
+const topicContentService = require('../services/topicContentService');
 const assignmentService = require('../services/assignmentService');
+const moduleService = require('../services/moduleService');
+const topicService = require('../services/topicService');
 
 // Helper to check if user has access to course (Owner or Assigned)
 const checkAccess = (course, user) => {
@@ -142,31 +144,17 @@ const deleteCourse = async (req, res, next) => {
   }
 };
 
-// @desc    Create course content
-// @route   POST /api/super-instructor/courses/:courseId/content
+// @desc    Create course content (Topic Content)
+// @route   POST /api/super-instructor/courses/:courseId/content (Legacy support)
 // @access  Private/SuperInstructor
 const createContent = async (req, res, next) => {
   try {
-    const { courseId } = req.params;
-    const course = await courseService.getCourseById(courseId);
-
-    // Verify ownership or assignment
-    if (!checkAccess(course, req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to add content to this course',
-      });
+    // This is a bridge for legacy calls. It requires a topicId in body.
+    if (!req.body.topicId) {
+      return res.status(400).json({ success: false, message: 'topicId is required' });
     }
-
-    const contentData = {
-      ...req.body,
-      courseId,
-    };
-    const content = await contentService.createContent(contentData);
-    res.status(201).json({
-      success: true,
-      data: content,
-    });
+    const content = await topicContentService.createContent(req.body);
+    res.status(201).json({ success: true, data: content });
   } catch (error) {
     next(error);
   }
@@ -178,23 +166,17 @@ const createContent = async (req, res, next) => {
 const getContent = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    const course = await courseService.getCourseById(courseId);
-
-    // Verify ownership or assignment
-    if (!checkAccess(course, req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to view this course content',
-      });
-    }
-
-    const content = await contentService.getContentByCourse(courseId);
+    const modules = await moduleService.getModulesByCourse(courseId);
+    const moduleIds = modules.map(m => m._id);
+    // Find all topics for these modules
+    const Topic = require('../schemas/Topic');
+    const topics = await Topic.find({ moduleId: { $in: moduleIds } });
+    const topicIds = topics.map(t => t._id);
+    
+    const content = await topicContentService.getContentByTopic({ $in: topicIds });
+    
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.json({
-      success: true,
-      count: content.length,
-      data: content,
-    });
+    res.json({ success: true, count: content.length, data: content });
   } catch (error) {
     next(error);
   }
@@ -206,22 +188,21 @@ const getContent = async (req, res, next) => {
 const updateContent = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const content = await contentService.getContentById(id);
-    const course = await courseService.getCourseById(content.courseId);
+    const content = await topicContentService.getContentById(id);
+    const { topic } = await topicService.getTopicById(content.topicId);
+    const { module } = await moduleService.getModuleById(topic.moduleId._id);
+    const course = await courseService.getCourseById(module.courseId._id);
 
-    // Verify ownership
-    if (course.instructor._id.toString() !== req.user.id) {
+    // Verify ownership or assignment
+    if (!checkAccess(course, req.user)) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this content',
       });
     }
 
-    const updatedContent = await contentService.updateContent(id, req.body);
-    res.json({
-      success: true,
-      data: updatedContent,
-    });
+    const updatedContent = await topicContentService.updateContent(id, req.body);
+    res.json({ success: true, data: updatedContent });
   } catch (error) {
     next(error);
   }
@@ -233,22 +214,21 @@ const updateContent = async (req, res, next) => {
 const deleteContent = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const content = await contentService.getContentById(id);
-    const course = await courseService.getCourseById(content.courseId);
+    const content = await topicContentService.getContentById(id);
+    const { topic } = await topicService.getTopicById(content.topicId);
+    const { module } = await moduleService.getModuleById(topic.moduleId._id);
+    const course = await courseService.getCourseById(module.courseId._id);
 
-    // Verify ownership
-    if (course.instructor._id.toString() !== req.user.id) {
+    // Verify ownership or assignment
+    if (!checkAccess(course, req.user)) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this content',
       });
     }
 
-    await contentService.deleteContent(id);
-    res.json({
-      success: true,
-      message: 'Content deleted successfully',
-    });
+    await topicContentService.deleteContent(id);
+    res.json({ success: true, message: 'Content deleted successfully' });
   } catch (error) {
     next(error);
   }
