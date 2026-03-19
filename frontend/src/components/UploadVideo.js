@@ -17,9 +17,9 @@ const UploadVideo = ({ onUploadSuccess }) => {
         toast.error('Please select a valid video file');
         return;
       }
-      // Check file size (500MB limit)
-      if (selectedFile.size > 500 * 1024 * 1024) {
-        toast.error('File size must be less than 500MB');
+      // Check file size (3GB limit)
+      if (selectedFile.size > 3 * 1024 * 1024 * 1024) {
+        toast.error('File size must be less than 3GB');
         return;
       }
       setFile(selectedFile);

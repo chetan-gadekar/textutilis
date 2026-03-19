@@ -23,9 +23,9 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            // 500MB limit for videos (R2 supports larger files)
-            if (selectedFile.size > 500 * 1024 * 1024) {
-                setError("Video file too large (max 500MB)");
+            // 3GB limit for videos (R2 supports larger files)
+            if (selectedFile.size > 3 * 1024 * 1024 * 1024) {
+                setError("Video file too large (max 3GB)");
                 return;
             }
             if (!selectedFile.type.startsWith('video/')) {
@@ -97,7 +97,7 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
                     <MovieIcon sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
                     <Typography color="primary" fontWeight="medium">{label}</Typography>
                     <Typography variant="caption" color="textSecondary">
-                        Max size: 500MB | Formats: MP4, WebM, etc.
+                        Max size: 3GB | Formats: MP4, WebM, etc.
                     </Typography>
                 </Box>
             ) : (

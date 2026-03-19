@@ -104,7 +104,7 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
         const match = url.match(/lms_videos\/.*$/);
         if (match) {
             const fileKey = match[0];
-            const signedUrl = await getSignedGetUrl(fileKey);
+            const signedUrl = await getSignedGetUrl(fileKey, 30); // 2 minutes for video playback
             if (signedUrl) data.contentData = signedUrl;
         }
     }
@@ -113,7 +113,7 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
     for (const key in data) {
         // Skip internal Mongoose keys if any leaked through
         if (key.startsWith('$') || key.startsWith('_')) {
-            if (key !== '_id') continue; 
+            if (key !== '_id') continue;
         }
 
         const value = data[key];
@@ -122,7 +122,7 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
             const match = url.match(/lms_videos\/.*$/);
             if (match) {
                 const fileKey = match[0];
-                const signedUrl = await getSignedGetUrl(fileKey);
+                const signedUrl = await getSignedGetUrl(fileKey, 14400); // 4 hours for video playback
                 if (signedUrl) data[key] = signedUrl;
             }
         } else if (typeof value === 'object' && value !== null) {

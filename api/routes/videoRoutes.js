@@ -9,7 +9,7 @@ const { protect } = require('../middlewares/auth');
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB limit
+  limits: { fileSize: 3 * 1024 * 1024 * 1024 }, // 3GB limit
 });
 
 // Cloudflare Stream API configuration

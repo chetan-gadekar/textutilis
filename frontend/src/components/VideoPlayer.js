@@ -126,6 +126,8 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
           controls
           controlsList="nodownload" // Prevents download option
           disablePictureInPicture
+          preload="auto"
+          playsInline
           style={{
             width: '100%',
             height: '100%',
