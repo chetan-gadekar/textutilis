@@ -3,8 +3,12 @@ const router = express.Router();
 const videoUploadController = require('../controllers/videoUploadController');
 const { protect, authorize } = require('../middlewares/auth');
 
-// Video upload route - restricted to instructors/admins
+// Get presigned URL for direct-to-R2 video upload
 // POST /api/upload/video
-router.post('/', protect, authorize('super_instructor', 'instructor', 'admin'), videoUploadController.uploadVideo);
+router.post('/', protect, authorize('super_instructor', 'instructor', 'admin'), videoUploadController.getPresignedUrl);
+
+// Confirm video upload completed
+// POST /api/upload/video/confirm
+router.post('/confirm', protect, authorize('super_instructor', 'instructor', 'admin'), videoUploadController.confirmUpload);
 
 module.exports = router;

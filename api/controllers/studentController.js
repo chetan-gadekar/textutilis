@@ -84,6 +84,7 @@ const getContent = async (req, res, next) => {
       contentId,
       req.user.id
     );
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       data,
@@ -130,6 +131,7 @@ const saveVideoProgress = async (req, res, next) => {
     const TopicContent = require('../schemas/TopicContent');
     const Module = require('../schemas/Module');
     const Topic = require('../schemas/Topic');
+    const Progress = require('../schemas/Progress');
 
     // Get all content for course
     const modules = await Module.find({ courseId });

@@ -43,6 +43,7 @@ const getSubmissions = async (req, res, next) => {
   try {
     const { assignmentId } = req.params;
     const submissions = await assignmentService.getSubmissionsByAssignment(assignmentId);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       count: submissions.length,
@@ -69,6 +70,7 @@ const getAllSubmissions = async (req, res, next) => {
     };
 
     const { submissions, total, pages, currentPage } = await assignmentService.getAllSubmissions(filters);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       count: submissions.length,

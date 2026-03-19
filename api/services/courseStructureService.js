@@ -4,6 +4,7 @@ const Topic = require('../schemas/Topic');
 const TopicContent = require('../schemas/TopicContent');
 const Enrollment = require('../schemas/Enrollment');
 const Progress = require('../schemas/Progress');
+const { signR2Urls } = require('../utils/r2Client');
 
 // Get full course structure for student
 const getCourseStructureForStudent = async (courseId, studentId) => {
@@ -144,7 +145,7 @@ const getContentForStudent = async (contentId, studentId) => {
   const progress = await Progress.findOne({ studentId, contentId }).lean();
 
   return {
-    content: content,
+    content: await signR2Urls(content),
     progress: progress ? {
       videoPosition: progress.videoPosition,
       isCompleted: progress.isCompleted,

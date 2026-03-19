@@ -1,96 +1,138 @@
-const cloudinary = require('../utils/cloudinary');
-const multer = require('multer');
-const streamifier = require('streamifier');
+const { PutObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } = require('../utils/r2Client');
 
-// Configure multer to store files in memory
-const storage = multer.memoryStorage();
-const upload = multer({
-    storage,
-    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
-    fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('video/')) {
-            return cb(new Error('Only video files are allowed'), false);
+/**
+ * Generate a presigned PUT URL for direct browser-to-R2 upload.
+ * POST /api/upload/video
+ * Body: { fileName, fileType }
+ * Returns: { presignedUrl, fileKey, publicUrl }
+ */
+const getPresignedUrl = async (req, res) => {
+    try {
+        const { fileName, fileType } = req.body;
+
+        if (!fileName || !fileType) {
+            return res.status(400).json({
+                success: false,
+                message: 'fileName and fileType are required',
+            });
         }
-        cb(null, true);
+
+        // Validate video mime type
+        if (!fileType.startsWith('video/')) {
+            return res.status(400).json({
+                success: false,
+                message: 'Only video files are allowed',
+            });
+        }
+
+        if (!R2_PUBLIC_URL) {
+            return res.status(500).json({
+                success: false,
+                message: 'R2 public URL not configured. Set CLOUDFLARE_R2_PUBLIC_URL in .env',
+            });
+        }
+
+        // Generate unique key: lms_videos/<uuid>-<sanitized-filename>
+        const ext = path.extname(fileName);
+        const baseName = path.basename(fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileKey = `lms_videos/${uuidv4()}-${baseName}${ext}`;
+
+        const command = new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileKey,
+            ContentType: fileType,
+            // Explicitly disable checksums which can cause 401/403 on R2 with some SDK versions
+            ChecksumAlgorithm: undefined,
+        });
+
+        console.log(`Generating presigned URL for Bucket: ${R2_BUCKET_NAME}, Key: ${fileKey}`);
+
+        // Presigned URL valid for 30 minutes
+        const presignedUrl = await getSignedUrl(r2Client, command, { 
+            expiresIn: 1800,
+            unhoistableHeaders: new Set(['content-type']),
+        });
+
+        const publicUrl = `${R2_PUBLIC_URL}/${R2_BUCKET_NAME}/${fileKey}`;
+
+        res.json({
+            success: true,
+            data: {
+                presignedUrl,
+                fileKey,
+                publicUrl,
+            },
+        });
+    } catch (error) {
+        console.error('Presigned URL generation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to generate upload URL',
+            error: error.message,
+        });
     }
-}).single('video');
+};
 
-const uploadVideo = (req, res) => {
-    upload(req, res, async (err) => {
-        // Handle multer errors
-        if (err instanceof multer.MulterError) {
-            console.error('Multer error:', err);
+/**
+ * Confirm that an upload to R2 completed successfully.
+ * POST /api/upload/video/confirm
+ * Body: { fileKey, fileName }
+ * Returns: { url, fileName, fileKey }
+ */
+const confirmUpload = async (req, res) => {
+    try {
+        const { fileKey, fileName } = req.body;
+
+        if (!fileKey) {
             return res.status(400).json({
                 success: false,
-                message: `Upload error: ${err.message}`
-            });
-        } else if (err) {
-            console.error('Upload error:', err);
-            return res.status(400).json({
-                success: false,
-                message: err.message
+                message: 'fileKey is required',
             });
         }
 
-        // Check if file exists
-        if (!req.file) {
-            return res.status(400).json({
+        // Check that the object actually exists in R2
+        const headCommand = new HeadObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileKey,
+        });
+
+        const headResult = await r2Client.send(headCommand);
+
+        const publicUrl = `${R2_PUBLIC_URL}/${R2_BUCKET_NAME}/${fileKey}`;
+
+        res.json({
+            success: true,
+            data: {
+                url: publicUrl,
+                fileName: fileName || fileKey,
+                fileKey,
+                size: headResult.ContentLength,
+                contentType: headResult.ContentType,
+            },
+        });
+    } catch (error) {
+        console.error('Upload confirmation error:', error);
+
+        if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+            return res.status(404).json({
                 success: false,
-                message: 'No video file uploaded'
+                message: 'Upload not found. The file may not have been uploaded yet.',
             });
         }
 
-        console.log(`Starting Cloudinary upload for: ${req.file.originalname} (${(req.file.size / (1024 * 1024)).toFixed(2)} MB)`);
-
-        try {
-            // Upload to Cloudinary using stream
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'lms_videos',
-                    resource_type: 'video',
-                    chunk_size: 6000000, // 6MB chunks
-                    timeout: 120000 // 2 minute timeout
-                },
-                (error, result) => {
-                    if (error) {
-                        console.error('Cloudinary upload error:', error);
-                        return res.status(500).json({
-                            success: false,
-                            message: 'Cloudinary upload failed',
-                            error: error.message
-                        });
-                    }
-
-                    console.log('Cloudinary upload successful:', result.public_id);
-
-                    res.json({
-                        success: true,
-                        data: {
-                            url: result.secure_url,
-                            public_id: result.public_id,
-                            fileName: req.file.originalname,
-                            format: result.format,
-                            duration: result.duration || 0,
-                            size: result.bytes
-                        }
-                    });
-                }
-            );
-
-            // Pipe the file buffer to Cloudinary
-            streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-
-        } catch (error) {
-            console.error('Video upload processing error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to process video upload',
-                error: error.message
-            });
-        }
-    });
+        res.status(500).json({
+            success: false,
+            message: 'Failed to confirm upload',
+            error: error.message,
+        });
+    }
 };
 
 module.exports = {
-    uploadVideo
+    getPresignedUrl,
+    confirmUpload,
 };

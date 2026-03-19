@@ -9,8 +9,14 @@ const createModule = async (req, res, next) => {
     const { courseId } = req.params;
     const course = await courseService.getCourseById(courseId);
     
-    // Verify ownership
-    if (course.instructor._id.toString() !== req.user.id) {
+    // Verify ownership or bypass for admin/super_instructor
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to add modules to this course',
@@ -39,8 +45,15 @@ const getModules = async (req, res, next) => {
     const { courseId } = req.params;
     const course = await courseService.getCourseById(courseId);
     
-    // Verify ownership
-    if (course.instructor._id.toString() !== req.user.id) {
+    // Verify ownership or bypass
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
+      console.log(`Auth failed for user ${req.user.id} (${req.user.role}) on course ${courseId}. Instructor: ${course.instructor?._id || course.instructor || 'null'}`);
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view modules for this course',
@@ -68,7 +81,13 @@ const getModule = async (req, res, next) => {
     
     // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view this module',
@@ -94,7 +113,13 @@ const updateModule = async (req, res, next) => {
     
     // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this module',
@@ -121,7 +146,13 @@ const deleteModule = async (req, res, next) => {
     
     // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this module',

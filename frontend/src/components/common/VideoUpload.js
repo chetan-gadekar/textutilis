@@ -16,15 +16,16 @@ import uploadService from '../../services/uploadService';
 const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            // 100MB limit for videos
-            if (selectedFile.size > 100 * 1024 * 1024) {
-                setError("Video file too large (max 100MB)");
+            // 500MB limit for videos (R2 supports larger files)
+            if (selectedFile.size > 500 * 1024 * 1024) {
+                setError("Video file too large (max 500MB)");
                 return;
             }
             if (!selectedFile.type.startsWith('video/')) {
@@ -34,6 +35,7 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
             setFile(selectedFile);
             setError(null);
             setSuccess(false);
+            setUploadProgress(0);
         }
     };
 
@@ -43,12 +45,16 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
         try {
             setUploading(true);
             setError(null);
+            setUploadProgress(0);
 
-            const response = await uploadService.uploadVideo(file);
+            const response = await uploadService.uploadVideo(file, (progress) => {
+                setUploadProgress(progress);
+            });
 
             if (response.success) {
                 setSuccess(true);
-                onUploadSuccess(response.data.url, response.data.fileName, response.data.duration);
+                setUploadProgress(100);
+                onUploadSuccess(response.data.url, response.data.fileName, 0);
             } else {
                 setError(response.message || "Upload failed");
             }
@@ -62,6 +68,7 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
     const reset = () => {
         setFile(null);
         setUploading(false);
+        setUploadProgress(0);
         setError(null);
         setSuccess(false);
     };
@@ -90,39 +97,60 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
                     <MovieIcon sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
                     <Typography color="primary" fontWeight="medium">{label}</Typography>
                     <Typography variant="caption" color="textSecondary">
-                        Max size: 100MB | Formats: MP4, WebM, etc.
+                        Max size: 500MB | Formats: MP4, WebM, etc.
                     </Typography>
                 </Box>
             ) : (
-                <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <MovieIcon color="primary" />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" noWrap fontWeight="bold">
-                            {file.name}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                            {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </Typography>
-                        {uploading && (
-                            <Box sx={{ mt: 1 }}>
-                                <LinearProgress />
-                                <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                                    Uploading to Cloudinary...
-                                </Typography>
-                            </Box>
+                <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <MovieIcon color="primary" />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="body2" noWrap fontWeight="bold">
+                                {file.name}
+                            </Typography>
+                            <Typography variant="caption" color="textSecondary">
+                                {(file.size / (1024 * 1024)).toFixed(2)} MB
+                            </Typography>
+                        </Box>
+                        {!uploading && !success && (
+                            <Button size="small" variant="contained" onClick={handleUpload}>
+                                Upload
+                            </Button>
+                        )}
+                        {!uploading && (
+                            <Tooltip title="Remove Video">
+                                <IconButton size="small" onClick={reset}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </Tooltip>
                         )}
                     </Box>
-                    {!uploading && !success && (
-                        <Button size="small" variant="contained" onClick={handleUpload}>
-                            Upload
-                        </Button>
-                    )}
-                    {!uploading && (
-                        <Tooltip title="Remove Video">
-                            <IconButton size="small" onClick={reset}>
-                                <CloseIcon />
-                            </IconButton>
-                        </Tooltip>
+
+                    {/* Real-time upload progress bar */}
+                    {uploading && (
+                        <Box sx={{ mt: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                <Typography variant="caption" color="textSecondary">
+                                    {uploadProgress >= 95 ? 'Finalizing...' : 'Uploading...'}
+                                </Typography>
+                                <Typography variant="caption" color="primary" fontWeight="bold">
+                                    {uploadProgress}%
+                                </Typography>
+                            </Box>
+                            <LinearProgress
+                                variant="determinate"
+                                value={uploadProgress}
+                                sx={{
+                                    height: 8,
+                                    borderRadius: 4,
+                                    bgcolor: 'rgba(25, 118, 210, 0.1)',
+                                    '& .MuiLinearProgress-bar': {
+                                        borderRadius: 4,
+                                        background: 'linear-gradient(90deg, #1976d2, #42a5f5)',
+                                    }
+                                }}
+                            />
+                        </Box>
                     )}
                 </Paper>
             )}

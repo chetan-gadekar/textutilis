@@ -189,6 +189,7 @@ const getContent = async (req, res, next) => {
     }
 
     const content = await contentService.getContentByCourse(courseId);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       count: content.length,
@@ -299,6 +300,7 @@ const getAllAssignments = async (req, res, next) => {
     };
 
     const { assignments, total, pages, currentPage } = await assignmentService.getAllAssignments(filters);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       count: assignments.length,
@@ -329,6 +331,7 @@ const getAssignments = async (req, res, next) => {
     }
 
     const assignments = await assignmentService.getAssignmentsByCourse(courseId);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       count: assignments.length,
@@ -357,6 +360,7 @@ const updateAssignment = async (req, res, next) => {
     }
 
     const updatedAssignment = await assignmentService.updateAssignment(id, req.body);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       data: updatedAssignment,

@@ -12,7 +12,13 @@ const createTopic = async (req, res, next) => {
     
     // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to add topics to this module',
@@ -43,7 +49,13 @@ const getTopics = async (req, res, next) => {
     
     // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view topics for this module',
@@ -72,7 +84,13 @@ const getTopic = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view this topic',
@@ -99,7 +117,13 @@ const updateTopic = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this topic',
@@ -127,7 +151,13 @@ const deleteTopic = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this topic',

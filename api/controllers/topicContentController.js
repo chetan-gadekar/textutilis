@@ -14,7 +14,13 @@ const createContent = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to add content to this topic',
@@ -46,7 +52,13 @@ const getContent = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view content for this topic',
@@ -54,6 +66,7 @@ const getContent = async (req, res, next) => {
     }
 
     const content = await topicContentService.getContentByTopic(topicId);
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({
       success: true,
       count: content.length,
@@ -76,7 +89,13 @@ const updateContent = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this content',
@@ -105,7 +124,13 @@ const deleteContent = async (req, res, next) => {
     // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
-    if (course.instructor._id.toString() !== req.user.id) {
+    const isOwner = course.instructor && (
+      (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
+      (course.instructor.toString() === req.user.id)
+    );
+    const hasBypass = req.user.role === 'admin' || req.user.role === 'super_instructor';
+
+    if (!isOwner && !hasBypass) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this content',

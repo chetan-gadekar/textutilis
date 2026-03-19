@@ -114,10 +114,10 @@ const ContentDialog = ({
           {formData.contentType === 'video' && (
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Cloudinary Video Upload (Testing)
+                Video Upload
               </Typography>
               <VideoUpload
-                label="Upload Video to Cloudinary"
+                label="Upload Video"
                 onUploadSuccess={(url, fileName, duration) => {
                   onFormChange({
                     ...formData,

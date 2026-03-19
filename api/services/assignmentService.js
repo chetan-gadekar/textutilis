@@ -1,7 +1,15 @@
 const { Assignment, Submission } = require('../schemas/Assignment');
+const { signR2Urls, stripR2Signature } = require('../utils/r2Client');
 
 // Create assignment
 const createAssignment = async (assignmentData) => {
+  // Sanitize R2 URLs in attachments
+  if (assignmentData.attachments) {
+    assignmentData.attachments = assignmentData.attachments.map(att => ({
+      ...att,
+      fileUrl: stripR2Signature(att.fileUrl)
+    }));
+  }
   const assignment = await Assignment.create(assignmentData);
   return assignment;
 };
@@ -10,8 +18,9 @@ const createAssignment = async (assignmentData) => {
 const getAssignmentsByCourse = async (courseId) => {
   const assignments = await Assignment.find({ courseId })
     .populate('createdBy', 'name email')
-    .sort({ createdAt: -1 });
-  return assignments;
+    .sort({ createdAt: -1 })
+    .lean();
+  return await signR2Urls(assignments);
 };
 
 // Get all assignments with pagination and filters
@@ -46,7 +55,7 @@ const getAllAssignments = async (filters = {}) => {
     .limit(parseInt(limit));
 
   return {
-    assignments,
+    assignments: await signR2Urls(assignments),
     total,
     pages: Math.ceil(total / limit),
     currentPage: parseInt(page),
@@ -57,24 +66,32 @@ const getAllAssignments = async (filters = {}) => {
 const getAssignmentById = async (assignmentId) => {
   const assignment = await Assignment.findById(assignmentId)
     .populate('createdBy', 'name email')
-    .populate('courseId', 'title');
+    .populate('courseId', 'title')
+    .lean();
   if (!assignment) {
     throw new Error('Assignment not found');
   }
-  return assignment;
+  return await signR2Urls(assignment);
 };
 
 // Update assignment
 const updateAssignment = async (assignmentId, updateData) => {
+  // Sanitize R2 URLs in attachments
+  if (updateData.attachments) {
+    updateData.attachments = updateData.attachments.map(att => ({
+      ...att,
+      fileUrl: stripR2Signature(att.fileUrl)
+    }));
+  }
   const assignment = await Assignment.findByIdAndUpdate(
     assignmentId,
     { $set: updateData },
     { new: true, runValidators: true }
-  );
+  ).lean();
   if (!assignment) {
     throw new Error('Assignment not found');
   }
-  return assignment;
+  return await signR2Urls(assignment);
 };
 
 // Delete assignment
@@ -92,6 +109,9 @@ const deleteAssignment = async (assignmentId) => {
 
 // Submit assignment
 const submitAssignment = async (submissionData) => {
+  // Sanitize R2 URL
+  submissionData.fileUrl = stripR2Signature(submissionData.fileUrl);
+
   // Check if already submitted
   const existingSubmission = await Submission.findOne({
     assignmentId: submissionData.assignmentId,
@@ -105,19 +125,20 @@ const submitAssignment = async (submissionData) => {
     existingSubmission.submittedAt = new Date();
     existingSubmission.status = 'pending';
     await existingSubmission.save();
-    return existingSubmission;
+    return await signR2Urls(existingSubmission.toObject());
   }
 
   const submission = await Submission.create(submissionData);
-  return submission;
+  return await signR2Urls(submission.toObject());
 };
 
 // Get submissions by assignment
 const getSubmissionsByAssignment = async (assignmentId) => {
   const submissions = await Submission.find({ assignmentId })
     .populate('studentId', 'name email')
-    .sort({ submittedAt: -1 });
-  return submissions;
+    .sort({ submittedAt: -1 })
+    .lean();
+  return await signR2Urls(submissions);
 };
 
 // Get submissions by student
@@ -128,8 +149,9 @@ const getSubmissionsByStudent = async (studentId) => {
       path: 'assignmentId',
       populate: { path: 'courseId', select: 'title' },
     })
-    .sort({ submittedAt: -1 });
-  return submissions;
+    .sort({ submittedAt: -1 })
+    .lean();
+  return await signR2Urls(submissions);
 };
 
 // Get all submissions with pagination and filters
@@ -176,7 +198,7 @@ const getAllSubmissions = async (filters = {}) => {
     .limit(parseInt(limit));
 
   return {
-    submissions,
+    submissions: await signR2Urls(submissions),
     total,
     pages: Math.ceil(total / limit),
     currentPage: parseInt(page),
@@ -249,7 +271,7 @@ const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
   const paginatedAssignments = studentAssignments.slice(startIndex, endIndex);
 
   return {
-    assignments: paginatedAssignments,
+    assignments: await signR2Urls(paginatedAssignments),
     total,
     pages: Math.ceil(total / limit),
     currentPage: parseInt(page)
