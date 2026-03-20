@@ -5,6 +5,9 @@ import { getMe } from './store/slices/authSlice';
 // Navbar is now integrated into MainLayout
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import ForgotPassword from './components/auth/ForgotPassword';
+import VerifyOtp from './components/auth/VerifyOtp';
+import ResetPassword from './components/auth/ResetPassword';
 import Dashboard from './components/layout/Dashboard';
 import ProtectedRoute from './utils/ProtectedRoute';
 import './App.css';
@@ -53,6 +56,9 @@ const App = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/dashboard"
             element={
