@@ -25,7 +25,9 @@ import {
   Logout as LogoutIcon,
   LocalFireDepartment as LocalFireDepartmentIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  PlaylistPlay as PlaylistPlayIcon,
 } from '@mui/icons-material';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useAuth } from '../../hooks/useAuth';
 import { alpha, styled } from '@mui/material/styles';
 
@@ -76,7 +78,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle }) => {
+const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle, onCourseMenuToggle, rightActions }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -127,14 +129,24 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle }
       <Toolbar sx={{ height: 70 }}>
         {/* Left Section: Logo or Back Button */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
-            edge="start"
-            aria-label="menu"
-            onClick={onSidebarToggle}
-            sx={{ mr: 1, display: { md: 'none' }, color: 'text.primary' }}
-          >
-            <MenuIcon />
-          </IconButton>
+          {onCourseMenuToggle ? (
+            <IconButton
+              edge="start"
+              onClick={onCourseMenuToggle}
+              sx={{ mr: 1, display: { md: 'none' }, color: 'text.primary' }}
+            >
+              <PlaylistPlayIcon sx={{ fontSize: 32 }} />
+            </IconButton>
+          ) : (
+            <IconButton
+              edge="start"
+              aria-label="menu"
+              onClick={onSidebarToggle}
+              sx={{ mr: 1, display: { md: 'none' }, color: 'text.primary' }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
 
           {onBack && (
             <Tooltip title="Back">
@@ -209,12 +221,14 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle }
         {/* Right Section: Actions */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           {showProgress && progress !== undefined && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2, bgcolor: alpha('#E3F2FD', 0.5), p: 0.5, px: 1.5, borderRadius: '20px' }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main', fontSize: '0.8rem' }}>
-                {progress}% Complete
+            <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1 }}>
+              <CircularProgress variant="determinate" value={progress} size={36} thickness={4} sx={{ color: '#ff6b6b' }} />
+              <Typography variant="caption" sx={{ position: 'absolute', fontWeight: 600, fontSize: '0.65rem' }}>
+                {Math.round(progress)}%
               </Typography>
             </Box>
           )}
+          {rightActions}
 
           <Tooltip title="Daily Streak">
             <Chip

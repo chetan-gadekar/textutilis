@@ -12,10 +12,12 @@ import {
   ListItemIcon,
   Avatar,
   Divider,
+  IconButton,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  KeyboardBackspace as ArrowBackIcon,
   Sensors as SensorsIcon, // For "System Design Live" style icon
   PlayCircleOutline as PlayIcon,
   ArticleOutlined as ArticleIcon,
@@ -38,32 +40,50 @@ const CourseSidebar = ({
   onModuleToggle,
   onContentClick,
   drawerWidth = 320,
+  variant = 'permanent',
+  open = true,
+  onClose,
+  isMobile = false,
 }) => {
   const theme = useTheme();
 
   return (
     <Drawer
-      variant="permanent"
+      variant={variant}
+      open={open}
+      onClose={onClose}
+      ModalProps={{
+        keepMounted: true, // Better open performance on mobile.
+      }}
       sx={{
         width: drawerWidth,
         flexShrink: 0,
+        zIndex: isMobile ? 1205 : undefined,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          top: 64, // Keep spacing below app bar
-          left: 80, // Keep offset for main sidebar
-          height: 'calc(100% - 64px)',
+          top: isMobile ? 0 : 64, // Keep spacing below app bar on desktop
+          left: isMobile ? 0 : 80, // Keep offset for main sidebar
+          height: isMobile ? '100%' : 'calc(100% - 64px)',
           borderRight: '1px solid',
           borderColor: 'divider',
           bgcolor: '#ffffff',
           fontFamily: "'Poppins', sans-serif !important",
-          zIndex: 1100, // Keep z-index for layered sidebars
+          zIndex: isMobile ? 1300 : 1100, // Higher z-index on mobile
         },
         '& .MuiTypography-root, & *': {
           fontFamily: "'Poppins', sans-serif !important",
         }
       }}
     >
+      {isMobile && (
+        <Box sx={{ display: 'flex', alignItems: 'center', px: 2, height: 90, borderBottom: '1px solid #e0e0e0' }}>
+          <IconButton onClick={onClose} sx={{ color: '#1a1a1a' }}>
+            <ArrowBackIcon />
+          </IconButton>
+        </Box>
+      )}
+
       {/* Course Header - Removed as per user code */}
 
       {/* Modules List */}

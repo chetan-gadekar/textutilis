@@ -3,7 +3,7 @@ import { Box, CssBaseline } from '@mui/material';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 
-const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, initialCollapsed = false }) => {
+const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, initialCollapsed = false, onCourseMenuToggle, rightActions }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(() => {
     if (initialCollapsed) return false;
     const saved = localStorage.getItem('sidebarOpen');
@@ -33,6 +33,8 @@ const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, ini
         showProgress={showProgress}
         progress={progress}
         onSidebarToggle={handleSidebarToggle}
+        onCourseMenuToggle={onCourseMenuToggle}
+        rightActions={rightActions}
       />
       <Sidebar open={sidebarOpen} onToggle={handleSidebarToggle} />
       <Box

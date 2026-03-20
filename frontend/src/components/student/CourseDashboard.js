@@ -4,6 +4,8 @@ import {
   Box,
   CircularProgress,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import courseService from '../../services/courseService';
 import studentService from '../../services/studentService';
@@ -17,6 +19,10 @@ const DRAWER_WIDTH = 320;
 const CourseDashboard = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  
   const [courseStructure, setCourseStructure] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,6 +87,9 @@ const CourseDashboard = () => {
   const handleContentClick = async (content) => {
     try {
       setContentLoading(true);
+      if (isMobile) {
+        setMobileOpen(false);
+      }
       // Fetch full content details (including contentData/description) on demand
       const response = await courseService.getStudentContent(content._id);
       setSelectedContent(response.data.content);
@@ -142,7 +151,7 @@ const CourseDashboard = () => {
 
   const { course, modules } = courseStructure;
   const drawerWidth = 320;
-  const mainSidebarWidth = 80; // Width of the main navigation sidebar
+  const mainSidebarWidth = isMobile ? 0 : 80;
 
   return (
     <MainLayout
@@ -151,6 +160,7 @@ const CourseDashboard = () => {
       showProgress={true}
       progress={course?.progress || 0}
       initialCollapsed={true}
+      onCourseMenuToggle={() => setMobileOpen(true)}
     >
       <Box
         sx={{
@@ -172,6 +182,10 @@ const CourseDashboard = () => {
           onModuleToggle={handleModuleToggle}
           onContentClick={handleContentClick}
           drawerWidth={drawerWidth}
+          variant={isMobile ? 'temporary' : 'permanent'}
+          open={isMobile ? mobileOpen : true}
+          onClose={() => setMobileOpen(false)}
+          isMobile={isMobile}
         />
 
         {/* Main Content Area - positioned to the right of sidebar */}
@@ -180,13 +194,13 @@ const CourseDashboard = () => {
           onContextMenu={(e) => e.preventDefault()}
           sx={{
             position: 'absolute',
-            left: `${drawerWidth}px`, // Start after course sidebar
+            left: isMobile ? 0 : `${drawerWidth}px`, // Start after course sidebar
             top: 0,
             right: 0,
             bottom: 0,
             overflow: 'auto',
-            bgcolor: '#f5f5f5',
-            p: 3,
+            bgcolor: '#FAFAFA', // Match lighter background
+            p: { xs: 1.5, sm: 2, md: 3 },
             userSelect: 'none',
             WebkitUserSelect: 'none',
             msUserSelect: 'none',

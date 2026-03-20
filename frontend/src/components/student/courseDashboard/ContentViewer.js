@@ -5,7 +5,11 @@ import {
   Paper,
   IconButton,
   Tooltip,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import VideoPlayer from '../../VideoPlayer';
@@ -102,19 +106,30 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) =
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           mb: 2,
-          pb: 2,
-          borderBottom: '2px solid #e0e0e0',
+          borderBottom: '1px solid #e0e0e0',
+          pb: 2
         }}
       >
-        <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-            Current Lecture
+        <Box sx={{ flex: 1, pr: 2 }}>
+          <Typography variant="body1" sx={{ fontWeight: 600, color: '#37474F', mb: 1.5, lineHeight: 1.4, fontFamily: 'Poppins' }}>
+            Lecture : {content.title}
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
-            {content.title}
-          </Typography>
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={currentProgress?.isCompleted || false} 
+                disabled 
+                size="small"
+                icon={<RadioButtonUncheckedIcon sx={{ fontSize: 20 }} />}
+                checkedIcon={<CheckCircleIcon sx={{ fontSize: 20, color: '#9E9E9E' }} />}
+                sx={{ p: 0.5, py: 0 }}
+              />
+            }
+            label={<Typography variant="caption" sx={{ color: '#78909C', fontWeight: 500 }}>Mark As Complete</Typography>}
+            sx={{ ml: -0.5, m: 0 }}
+          />
         </Box>
         {content.contentType === 'ppt' && content.contentData && (
           <Tooltip title={isFullscreen ? "Exit Fullscreen" : "Full Screen"}>
