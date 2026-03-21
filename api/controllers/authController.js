@@ -41,6 +41,7 @@ const login = async (req, res, next) => {
         email: user.email,
         role: user.role,
         isActive: user.isActive,
+        currentStreak: user.currentStreak,
       },
     });
   } catch (error) {

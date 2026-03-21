@@ -102,11 +102,21 @@ const CourseDashboard = () => {
     }
   };
 
-  const handleProgressUpdate = async (progress) => {
+  const handleProgressUpdate = async (progress, isManualToggle = false) => {
     if (!selectedContent) return;
 
-    const isCompleted = progress > 0.95;
-    const videoPosition = progress * 100;
+    let isCompleted = progress > 0.95;
+    let videoPosition = progress * 100;
+
+    if (!isManualToggle && currentProgress) {
+      // Don't downgrade progress or completion status during normal video playback
+      if (currentProgress.isCompleted) {
+        isCompleted = true;
+      }
+      if (currentProgress.videoPosition > videoPosition) {
+        videoPosition = currentProgress.videoPosition;
+      }
+    }
 
     const module = courseStructure.modules.find((m) =>
       m.topics.some((t) => t.content.some((c) => c._id === selectedContent._id))
@@ -124,6 +134,13 @@ const CourseDashboard = () => {
         videoPosition,
         isCompleted
       );
+
+      // Update current progress locally so the checkbox reflects this immediately
+      setCurrentProgress((prev) => ({
+        ...prev,
+        isCompleted: isCompleted,
+        videoPosition: videoPosition,
+      }));
 
       // Refresh structure to show updated progress in sidebar
       const response = await courseService.getStudentCourseStructure(courseId);

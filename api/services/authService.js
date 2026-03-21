@@ -27,6 +27,47 @@ const registerUser = async (userData) => {
   };
 };
 
+// Helper to update student streak
+const updateUserStreak = (user) => {
+  if (user.role !== 'student') return false;
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const lastActivity = user.lastActivityDate ? new Date(user.lastActivityDate) : null;
+  let lastActivityDay = null;
+
+  if (lastActivity) {
+    lastActivityDay = new Date(lastActivity.getFullYear(), lastActivity.getMonth(), lastActivity.getDate());
+  }
+
+  let needsSave = false;
+
+  if (!lastActivityDay) {
+    user.currentStreak = 1;
+    user.lastActivityDate = now;
+    needsSave = true;
+  } else {
+    const diffTime = today.getTime() - lastActivityDay.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      user.currentStreak = (user.currentStreak || 0) + 1;
+      user.lastActivityDate = now;
+      needsSave = true;
+    } else if (diffDays > 1) {
+      user.currentStreak = 1;
+      user.lastActivityDate = now;
+      needsSave = true;
+    } else if (diffDays === 0 && !user.currentStreak) {
+      user.currentStreak = 1;
+      needsSave = true;
+    }
+  }
+
+  return needsSave;
+};
+
 // Login user
 const loginUser = async (email, password) => {
   // Check if user exists
@@ -52,6 +93,10 @@ const loginUser = async (email, password) => {
     const crypto = require('crypto');
     const sessionToken = crypto.randomBytes(32).toString('hex');
     user.sessionToken = sessionToken;
+
+    // Update streak on login
+    updateUserStreak(user);
+
     await user.save();
   }
 
@@ -62,6 +107,7 @@ const loginUser = async (email, password) => {
     role: user.role,
     isActive: user.isActive,
     sessionToken: user.role === 'student' ? user.sessionToken : null,
+    currentStreak: user.currentStreak || 0,
   };
 };
 
@@ -71,6 +117,13 @@ const getCurrentUser = async (userId) => {
   if (!user) {
     throw new Error('User not found');
   }
+
+  // Update streak logic for students
+  const needsSave = updateUserStreak(user);
+  if (needsSave) {
+    await user.save();
+  }
+
   return user;
 };
 

@@ -14,6 +14,7 @@ import {
     PlayArrowRounded,
     AccessTimeRounded,
     TrendingUpRounded,
+    CheckCircleRounded
 } from '@mui/icons-material';
 
 const CourseCard = ({ course, onStart, onContinue }) => {
@@ -92,7 +93,11 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                             }}
                         >
                             <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <CircularProgressVariant value={progress} size={24} thickness={5} color={theme.palette.primary.main} />
+                                {progress === 100 ? (
+                                    <CheckCircleRounded sx={{ color: theme.palette.success.main, fontSize: 32 }} />
+                                ) : (
+                                    <CircularProgressVariant value={progress} size={24} thickness={5} color={theme.palette.primary.main} />
+                                )}
                             </Box>
                         </Box>
                     )}
@@ -178,9 +183,9 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                 <Button
                     fullWidth
                     variant={isStarted ? "outlined" : "contained"}
-                    color="primary"
+                    color={progress === 100 ? "success" : "primary"}
                     onClick={() => (isStarted ? onContinue(course._id) : onStart(course._id))}
-                    endIcon={<PlayArrowRounded />}
+                    endIcon={progress === 100 ? <CheckCircleRounded /> : <PlayArrowRounded />}
                     sx={{
                         borderRadius: '10px',
                         textTransform: 'none',
@@ -195,7 +200,7 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                         }
                     }}
                 >
-                    {isStarted ? 'Continue Learning' : 'Start Learning'}
+                    {isStarted ? (progress === 100 ? 'Completed' : 'Continue Learning') : 'Start Learning'}
                 </Button>
             </Box>
         </Card>

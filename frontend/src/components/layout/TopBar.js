@@ -233,7 +233,7 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle, 
           <Tooltip title="Daily Streak">
             <Chip
               icon={<LocalFireDepartmentIcon sx={{ color: '#FF7043 !important', fontSize: '1.2rem' }} />}
-              label="8 Days Streak"
+              label={`${user?.currentStreak || 1} Days Streak`}
               size="small"
               sx={{
                 bgcolor: alpha('#FFF3E0', 0.6),
@@ -246,13 +246,13 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle, 
             />
           </Tooltip>
 
-          <Tooltip title="Notifications">
+          {/* <Tooltip title="Notifications">
             <IconButton size="small" sx={{ ml: 1, color: 'text.secondary' }}>
               <Badge badgeContent={3} color="error" variant="dot">
                 <NotificationsIcon fontSize="small" />
               </Badge>
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
 
           <Box
             onClick={handleClick}
@@ -341,12 +341,12 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle, 
               </ListItemIcon>
               Profile
             </MenuItem>
-            <MenuItem onClick={handleClose}>
+            {/* <MenuItem onClick={handleClose}>
               <ListItemIcon>
                 <SettingsIcon fontSize="small" />
               </ListItemIcon>
               Settings
-            </MenuItem>
+            </MenuItem> */}
             <Divider />
             <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
               <ListItemIcon>

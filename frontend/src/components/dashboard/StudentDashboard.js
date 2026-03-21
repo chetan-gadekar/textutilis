@@ -144,27 +144,31 @@ const StudentDashboard = () => {
                                                         {course.title}
                                                     </h2>
 
-                                                    {/* Circular Progress SVG */}
-                                                    <div className="relative w-10 h-10 shrink-0">
-                                                        <svg className="w-10 h-10 transform -rotate-90">
-                                                            <circle
-                                                                cx="20" cy="20" r="18"
-                                                                fill="none"
-                                                                className="stroke-gray-200"
-                                                                strokeWidth="3"
-                                                            />
-                                                            <circle
-                                                                cx="20" cy="20" r="18"
-                                                                fill="none"
-                                                                className={progress > 0 ? "stroke-green-500" : "stroke-gray-200"}
-                                                                strokeWidth="3"
-                                                                strokeDasharray={`${2 * Math.PI * 18}`}
-                                                                strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
-                                                                strokeLinecap="round"
-                                                                style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
-                                                            />
-                                                        </svg>
-                                                    </div>
+                                                    {/* Circular Progress SVG or CheckCircle */}
+                                                    {progress === 100 ? (
+                                                        <CheckCircle2 className="w-10 h-10 text-green-500 shrink-0" />
+                                                    ) : (
+                                                        <div className="relative w-10 h-10 shrink-0">
+                                                            <svg className="w-10 h-10 transform -rotate-90">
+                                                                <circle
+                                                                    cx="20" cy="20" r="18"
+                                                                    fill="none"
+                                                                    className="stroke-gray-200"
+                                                                    strokeWidth="3"
+                                                                />
+                                                                <circle
+                                                                    cx="20" cy="20" r="18"
+                                                                    fill="none"
+                                                                    className={progress > 0 ? "stroke-green-500" : "stroke-gray-200"}
+                                                                    strokeWidth="3"
+                                                                    strokeDasharray={`${2 * Math.PI * 18}`}
+                                                                    strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
+                                                                    strokeLinecap="round"
+                                                                    style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
@@ -192,15 +196,24 @@ const StudentDashboard = () => {
                                                     <button
                                                         onClick={() => navigate(`/student/courses/${course._id}`)}
                                                         className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${isStarted
-                                                            ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
+                                                            ? progress === 100
+                                                                ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-100'
+                                                                : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
                                                             : 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent'
                                                             }`}
                                                     >
                                                         {isStarted ? (
-                                                            <>
-                                                                Continue Learning
-                                                                <Play size={16} className="fill-current" />
-                                                            </>
+                                                            progress === 100 ? (
+                                                                <>
+                                                                    Completed
+                                                                    <CheckCircle2 size={16} />
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    Continue Learning
+                                                                    <Play size={16} className="fill-current" />
+                                                                </>
+                                                            )
                                                         ) : (
                                                             'Start Learning'
                                                         )}

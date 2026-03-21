@@ -10,6 +10,8 @@ import VerifyOtp from './components/auth/VerifyOtp';
 import ResetPassword from './components/auth/ResetPassword';
 import Dashboard from './components/layout/Dashboard';
 import ProtectedRoute from './utils/ProtectedRoute';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
 // Admin components
@@ -53,6 +55,7 @@ const App = () => {
   return (
     <Router>
       <div className="App">
+        <ToastContainer position="top-right" autoClose={3000} />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

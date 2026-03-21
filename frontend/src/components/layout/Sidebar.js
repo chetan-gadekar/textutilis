@@ -73,7 +73,7 @@ export default function Sidebar({ open: expanded, onToggle }) {
               <h4 className="sidebar-user-name">{user?.name || "User"}</h4>
               <span className="sidebar-user-email">{user?.email || "user@example.com"}</span>
             </div>
-            <MoreVertical size={20} color="#4b5563" />
+            {/* <MoreVertical size={20} color="#4b5563" /> */}
           </div>
         </div>
       </nav>

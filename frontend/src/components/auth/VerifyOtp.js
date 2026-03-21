@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { verifyOtp, clearError } from '../../store/slices/authSlice';
+import { verifyOtp, forgotPassword, clearError } from '../../store/slices/authSlice';
 import loginBanner from '../../assets/login_banner.jpg';
 import { CheckCircle } from 'lucide-react';
 
@@ -17,6 +17,8 @@ const VerifyOtp = () => {
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   useEffect(() => {
     dispatch(clearError());
@@ -94,6 +96,17 @@ const VerifyOtp = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    setIsResending(true);
+    setResendMessage('');
+    const result = await dispatch(forgotPassword(email));
+    setIsResending(false);
+    if (forgotPassword.fulfilled.match(result)) {
+      setResendMessage('OTP resent successfully!');
+      setTimeout(() => setResendMessage(''), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-white font-poppins relative">
       {/* Success Modal */}
@@ -155,9 +168,28 @@ const VerifyOtp = () => {
               disabled={loading || otpValues.join('').length < 6}
               className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {loading ? 'Verifying...' : 'Verify OTP'}
+              {loading && !isResending ? 'Verifying...' : 'Verify OTP'}
             </button>
           </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500 mb-2">
+              Didn't receive OTP?{' '}
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="font-medium text-theme hover:text-theme-dark underline decoration-theme/30 hover:decoration-theme disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isResending ? 'Resending...' : 'Resend OTP'}
+              </button>
+            </p>
+            {resendMessage && (
+              <p className="text-sm text-green-600 font-medium animate-pulse">
+                {resendMessage}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -173,3 +205,4 @@ const VerifyOtp = () => {
 };
 
 export default VerifyOtp;
+

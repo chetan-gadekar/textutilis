@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { register, clearError } from '../../store/slices/authSlice';
 import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-toastify';
 import loginBanner from '../../assets/login_banner.jpg';
 
 const Register = () => {
@@ -41,7 +42,13 @@ const Register = () => {
       return;
     }
     const { confirmPassword, ...userData } = formData;
-    dispatch(register(userData));
+    try {
+      await dispatch(register(userData)).unwrap();
+      toast.success('Registration successful! Please login.');
+      navigate('/login');
+    } catch (err) {
+      // Error handled by Redux state
+    }
   };
 
   return (
@@ -103,7 +110,7 @@ const Register = () => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="role">
                 Role
               </label>
@@ -118,7 +125,7 @@ const Register = () => {
                 <option value="instructor">Instructor</option>
                 <option value="super_instructor">Super Instructor</option>
               </select>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

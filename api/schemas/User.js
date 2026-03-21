@@ -39,6 +39,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  lastActivityDate: {
+    type: Date,
+    default: null,
+  },
+  currentStreak: {
+    type: Number,
+    default: 1,
+  },
   resetPasswordOtp: {
     type: String,
     default: null,

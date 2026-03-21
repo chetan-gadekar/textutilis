@@ -120,7 +120,7 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) =
             control={
               <Checkbox 
                 checked={currentProgress?.isCompleted || false} 
-                disabled 
+                onChange={(e) => onProgressUpdate(e.target.checked ? 1 : 0, true)}
                 size="small"
                 icon={<RadioButtonUncheckedIcon sx={{ fontSize: 20 }} />}
                 checkedIcon={<CheckCircleIcon sx={{ fontSize: 20, color: '#9E9E9E' }} />}
