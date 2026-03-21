@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { resetPassword, clearError } from '../../store/slices/authSlice';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { toast } from 'react-toastify';
 import loginBanner from '../../assets/login_banner.jpg';
 
 const ResetPassword = () => {
@@ -23,8 +24,24 @@ const ResetPassword = () => {
     return <Navigate to="/forgot-password" replace />;
   }
 
+  const passwordCriteria = [
+    { label: 'At least 8 characters', met: newPassword.length >= 8 },
+    { label: 'Atleast One uppercase letter', met: /[A-Z]/.test(newPassword) },
+    { label: 'Atleast One lowercase letter', met: /[a-z]/.test(newPassword) },
+    { label: 'Atleast One number', met: /\d/.test(newPassword) },
+    { label: 'Atleast One special character', met: /[\W_]/.test(newPassword) }
+  ];
+
+  const isPasswordValid = passwordCriteria.every(c => c.met);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isPasswordValid) {
+      toast.error('Please ensure all password requirements are met.');
+      return;
+    }
+
     const result = await dispatch(resetPassword({ email, otp, newPassword }));
     if (resetPassword.fulfilled.match(result)) {
       sessionStorage.setItem('sessionMessage', 'Password reset successfully. Please log in.');
@@ -84,11 +101,23 @@ const ResetPassword = () => {
                   )}
                 </button>
               </div>
+
+              <div className="mt-3">
+                <div className="text-sm text-gray-600 mb-2">Password requirements:</div>
+                <ul className="grid grid-cols-1 gap-2 text-xs">
+                  {passwordCriteria.map((c, i) => (
+                    <li key={i} className={`flex items-center ${c.met ? 'text-green-600' : 'text-gray-400'}`}>
+                      {c.met ? <CheckCircle className="w-4 h-4 mr-2" /> : <div className="w-4 h-4 rounded-full border border-gray-300 mr-2" />}
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || newPassword.length > 0 && !isPasswordValid}
               className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed mt-6"
             >
               {loading ? 'Resetting...' : 'Reset Password'}

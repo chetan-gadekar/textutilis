@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { register, clearError } from '../../store/slices/authSlice';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import loginBanner from '../../assets/login_banner.jpg';
 
@@ -35,12 +35,28 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const passwordCriteria = [
+    { label: 'At least 8 characters', met: formData.password.length >= 8 },
+    { label: 'Atleast One uppercase letter', met: /[A-Z]/.test(formData.password) },
+    { label: 'Atleast One lowercase letter', met: /[a-z]/.test(formData.password) },
+    { label: 'Atleast One number', met: /\d/.test(formData.password) },
+    { label: 'Atleast One special character', met: /[\W_]/.test(formData.password) }
+  ];
+
+  const isPasswordValid = passwordCriteria.every(c => c.met);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
+
+    if (!isPasswordValid) {
+      toast.error('Please ensure all password requirements are met.');
+      return;
+    }
+
     const { confirmPassword, ...userData } = formData;
     try {
       await dispatch(register(userData)).unwrap();
@@ -184,11 +200,23 @@ const Register = () => {
                   </button>
                 </div>
               </div>
+
+              <div className="col-span-1 md:col-span-2 mt-2">
+                <div className="text-sm text-gray-600 mb-2">Password requirements:</div>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                  {passwordCriteria.map((c, i) => (
+                    <li key={i} className={`flex items-center ${c.met ? 'text-green-600' : 'text-gray-400'}`}>
+                      {c.met ? <CheckCircle className="w-4 h-4 mr-2" /> : <div className="w-4 h-4 rounded-full border border-gray-300 mr-2" />}
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || formData.password.length > 0 && !isPasswordValid}
               className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed mt-6"
             >
               {loading ? 'Registering...' : 'Register'}
