@@ -45,7 +45,7 @@ const uploadService = {
                 if (event.lengthComputable && onProgress) {
                     // Scale XHR progress to 0-95% so the last 5% represents backend confirmation
                     const percentage = Math.round((event.loaded / event.total) * 95);
-                    onProgress(percentage);
+                    onProgress(percentage, event.loaded, event.total);
                 }
             });
 

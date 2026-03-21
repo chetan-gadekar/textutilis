@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,6 +8,9 @@ const UploadVideo = ({ onUploadSuccess }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoName, setVideoName] = useState('');
+  
+  const [uploadStats, setUploadStats] = useState({ loadedMB: 0, totalMB: 0, speedMBps: 0 });
+  const startTimeRef = useRef(Date.now());
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -37,6 +40,8 @@ const UploadVideo = ({ onUploadSuccess }) => {
 
     setUploading(true);
     setUploadProgress(0);
+    setUploadStats({ loadedMB: 0, totalMB: 0, speedMBps: 0 });
+    startTimeRef.current = Date.now();
 
     const formData = new FormData();
     formData.append('video', file);
@@ -54,6 +59,21 @@ const UploadVideo = ({ onUploadSuccess }) => {
             (progressEvent.loaded * 100) / progressEvent.total
           );
           setUploadProgress(percentCompleted);
+          
+          const now = Date.now();
+          const elapsedTime = (now - startTimeRef.current) / 1000; // in seconds
+          
+          let currentSpeedMBps = "0.00";
+          if (elapsedTime > 0) {
+            const speedBytesPerSec = progressEvent.loaded / elapsedTime;
+            currentSpeedMBps = (speedBytesPerSec / (1024 * 1024)).toFixed(2);
+          }
+          
+          setUploadStats({
+            loadedMB: (progressEvent.loaded / (1024 * 1024)).toFixed(2),
+            totalMB: (progressEvent.total / (1024 * 1024)).toFixed(2),
+            speedMBps: currentSpeedMBps
+          });
         },
       });
 
@@ -131,6 +151,14 @@ const UploadVideo = ({ onUploadSuccess }) => {
                     >
                       {uploadProgress}%
                     </div>
+                  </div>
+                  <div className="d-flex justify-content-between mt-2 text-muted small">
+                    <span>
+                      {uploadStats.loadedMB} MB / {uploadStats.totalMB} MB
+                    </span>
+                    <span>
+                      {uploadStats.speedMBps} MB/s
+                    </span>
                   </div>
                 </div>
               )}

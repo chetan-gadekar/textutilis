@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Box,
     Button,
@@ -19,6 +19,8 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [uploadStats, setUploadStats] = useState({ loadedMB: 0, totalMB: 0, speedMBps: "0.00" });
+    const startTimeRef = useRef(null);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -46,9 +48,28 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
             setUploading(true);
             setError(null);
             setUploadProgress(0);
+            setUploadStats({ loadedMB: 0, totalMB: 0, speedMBps: "0.00" });
+            startTimeRef.current = Date.now();
 
-            const response = await uploadService.uploadVideo(file, (progress) => {
+            const response = await uploadService.uploadVideo(file, (progress, loaded, total) => {
                 setUploadProgress(progress);
+                
+                if (loaded !== undefined && total !== undefined) {
+                    const now = Date.now();
+                    const elapsedTime = (now - startTimeRef.current) / 1000;
+                    
+                    let currentSpeedMBps = "0.00";
+                    if (elapsedTime > 0) {
+                        const speedBytesPerSec = loaded / elapsedTime;
+                        currentSpeedMBps = (speedBytesPerSec / (1024 * 1024)).toFixed(2);
+                    }
+                    
+                    setUploadStats({
+                        loadedMB: (loaded / (1024 * 1024)).toFixed(2),
+                        totalMB: (total / (1024 * 1024)).toFixed(2),
+                        speedMBps: currentSpeedMBps
+                    });
+                }
             });
 
             if (response.success) {
@@ -150,6 +171,18 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
                                     }
                                 }}
                             />
+                            
+                            {/* Real-time Data Output */}
+                            {uploadStats.totalMB > 0 && uploadProgress < 95 && (
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+                                    <Typography variant="caption" color="textSecondary">
+                                        {uploadStats.loadedMB} MB / {uploadStats.totalMB} MB
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        {uploadStats.speedMBps} MB/s
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
                     )}
                 </Paper>
