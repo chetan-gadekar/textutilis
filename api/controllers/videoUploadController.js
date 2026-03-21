@@ -54,9 +54,9 @@ const getPresignedUrl = async (req, res) => {
 
         console.log(`Generating presigned URL for Bucket: ${R2_BUCKET_NAME}, Key: ${fileKey}`);
 
-        // Presigned URL valid for 30 minutes
+        // Presigned URL valid for 6 hours (21600 seconds) to accommodate large 3GB uploads
         const presignedUrl = await getSignedUrl(r2Client, command, { 
-            expiresIn: 1800,
+            expiresIn: 21600,
             unhoistableHeaders: new Set(['content-type']),
         });
 

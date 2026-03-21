@@ -58,7 +58,7 @@ const uploadService = {
             });
 
             xhr.addEventListener('error', () => {
-                reject(new Error('Network error during upload'));
+                reject(new Error('Network error during upload. If you are uploading a very large file, please ensure your internet connection is stable.'));
             });
 
             xhr.addEventListener('abort', () => {
