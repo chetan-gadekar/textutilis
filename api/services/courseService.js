@@ -1,6 +1,10 @@
 const Course = require('../schemas/Course');
 const CourseContent = require('../schemas/CourseContent');
 const Enrollment = require('../schemas/Enrollment');
+const Module = require('../schemas/Module');
+const Topic = require('../schemas/Topic');
+const TopicContent = require('../schemas/TopicContent');
+const { deleteFile, stripR2Signature } = require('../utils/r2Client');
 
 // Create course
 const createCourse = async (courseData) => {
@@ -63,14 +67,48 @@ const updateCourse = async (courseId, updateData) => {
 
 // Delete course
 const deleteCourse = async (courseId) => {
-  const course = await Course.findByIdAndDelete(courseId);
+  const course = await Course.findById(courseId);
   if (!course) {
     throw new Error('Course not found');
   }
 
-  // Delete related content and enrollments
+  // 1. Handle CourseContent (Legacy/Direct specific content)
+  const courseContents = await CourseContent.find({ courseId });
+  for (const content of courseContents) {
+    if (content.contentType === 'video' && content.contentData && content.contentData.includes('r2.cloudflarestorage.com')) {
+      const url = stripR2Signature(content.contentData);
+      const match = url.match(/lms_videos\/.*$/);
+      if (match) {
+        await deleteFile(match[0]);
+      }
+    }
+  }
+
+  // 2. Handle Cascading Deletion for Modules -> Topics -> TopicContent
+  const modules = await Module.find({ courseId });
+  const moduleIds = modules.map(m => m._id);
+  
+  const topics = await Topic.find({ moduleId: { $in: moduleIds } });
+  const topicIds = topics.map(t => t._id);
+
+  const topicContents = await TopicContent.find({ topicId: { $in: topicIds } });
+  for (const content of topicContents) {
+    if (content.contentType === 'video' && content.contentData && content.contentData.includes('r2.cloudflarestorage.com')) {
+      const url = stripR2Signature(content.contentData);
+      const match = url.match(/lms_videos\/.*$/);
+      if (match) {
+        await deleteFile(match[0]);
+      }
+    }
+  }
+
+  // Delete everything from DB
+  await TopicContent.deleteMany({ topicId: { $in: topicIds } });
+  await Topic.deleteMany({ moduleId: { $in: moduleIds } });
+  await Module.deleteMany({ courseId });
   await CourseContent.deleteMany({ courseId });
   await Enrollment.deleteMany({ courseId });
+  await Course.findByIdAndDelete(courseId);
 
   return course;
 };

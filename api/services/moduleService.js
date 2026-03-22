@@ -2,6 +2,7 @@ const Module = require('../schemas/Module');
 const Topic = require('../schemas/Topic');
 const TopicContent = require('../schemas/TopicContent');
 const Course = require('../schemas/Course');
+const { deleteFile, stripR2Signature } = require('../utils/r2Client');
 
 // Create module
 const createModule = async (moduleData) => {
@@ -51,16 +52,36 @@ const updateModule = async (moduleId, updateData) => {
 
 // Delete module
 const deleteModule = async (moduleId) => {
-  const module = await Module.findByIdAndDelete(moduleId);
+  const module = await Module.findById(moduleId);
   if (!module) {
     throw new Error('Module not found');
   }
   
-  // Delete related topics and content
+  // Find all topics for this module
   const topics = await Topic.find({ moduleId });
   const topicIds = topics.map(t => t._id);
+
+  // Find all content for these topics
+  const contents = await TopicContent.find({ topicId: { $in: topicIds } });
+  
+  // Delete R2 files for each video content
+  for (const content of contents) {
+    if (content.contentType === 'video' && content.contentData && content.contentData.includes('r2.cloudflarestorage.com')) {
+      const url = stripR2Signature(content.contentData);
+      const match = url.match(/lms_videos\/.*$/);
+      if (match) {
+        const fileKey = match[0];
+        await deleteFile(fileKey);
+      }
+    }
+  }
+
+  // Delete related topics and content from DB
   await TopicContent.deleteMany({ topicId: { $in: topicIds } });
   await Topic.deleteMany({ moduleId });
+  
+  // Delete module from DB
+  await Module.findByIdAndDelete(moduleId);
   
   return module;
 };

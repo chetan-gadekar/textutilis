@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     CircularProgress,
@@ -8,7 +8,8 @@ import {
     Link,
     Typography
 } from '@mui/material';
-import { Save, ArrowLeft, Plus } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Printer } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
 import performanceService from '../../../services/performanceService';
 import MainLayout from '../../layout/MainLayout';
 
@@ -24,6 +25,7 @@ const criteriaList = [
 const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
     const { studentId, courseId } = useParams();
     const navigate = useNavigate();
+    const contentRef = useRef(null);
 
     const [performance, setPerformance] = useState(null);
     const [data, setData] = useState(null);
@@ -31,6 +33,11 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [successMsg, setSuccessMsg] = useState('');
+
+    const handlePrint = useReactToPrint({
+        contentRef,
+        documentTitle: `Performance_Report_${performance?.studentId?.name || 'Student'}`,
+    });
 
     useEffect(() => {
         fetchData();
@@ -120,6 +127,65 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
 
     return (
         <MainLayout>
+            <style>
+                {`
+                    @media print {
+                        @page {
+                            margin: 15mm;
+                            size: portrait;
+                        }
+                        body {
+                            background: white !important;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                            font-size: 11pt;
+                        }
+                        .no-print {
+                            display: none !important;
+                        }
+                        .print-container {
+                            width: 100% !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            display: block !important;
+                            overflow: visible !important;
+                        }
+                        .print-container .bg-white {
+                            box-shadow: none !important;
+                            border: 1px solid #eee !important;
+                        }
+                        .print-container table {
+                            width: 100% !important;
+                            border-collapse: collapse !important;
+                            table-layout: auto !important;
+                        }
+                        .print-container th, .print-container td {
+                            border: 1px solid #ddd !important;
+                            padding: 6px 4px !important;
+                            word-wrap: break-word;
+                            font-size: 9pt;
+                        }
+                        .print-container th {
+                            background-color: #f9fafb !important;
+                            color: #374151 !important;
+                        }
+                        /* Accurate Theme Colors for Print */
+                        .print\\:bg-theme\\/5 { 
+                            background-color: rgba(147, 102, 236, 0.05) !important; 
+                        }
+                        .text-theme { 
+                            color: #9366ec !important; 
+                        }
+                        .text-theme-dark { 
+                            color: #9172d1 !important; 
+                        }
+                        
+                        /* Layout Fixes */
+                        h1, h2, h3 { page-break-after: avoid; }
+                        tr { page-break-inside: avoid; }
+                    }
+                `}
+            </style>
             <div className="max-w-7xl mx-auto px-4 font-poppins h-full">
                 <div className="mb-8 pt-6 flex justify-between items-start no-print">
                     <div>
@@ -134,8 +200,8 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                         <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
                             <ArrowLeft size={18} /> Back
                         </button>
-                        <button onClick={() => window.print()} className="px-6 py-2 text-sm bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all border border-gray-200 shadow-sm">
-                            Print Report
+                        <button onClick={handlePrint} className="flex items-center gap-2 px-6 py-2 text-sm bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all border border-gray-200 shadow-sm">
+                            <Printer size={18} /> Print Report
                         </button>
                         {mode === 'edit' && (
                             <button
@@ -149,78 +215,94 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-12">
-                    <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
-                        <h3 className="font-semibold text-gray-700">Assessment Matrix</h3>
+                {/* Printable Content Start */}
+                <div ref={contentRef} className="print-container">
+                    {/* Re-include header for print context */}
+                    <div className="hidden print:block mb-6">
+                        <h1 className="text-2xl font-bold text-gray-800">
+                            {type === 'self' ? 'Self Evaluation Report' : 'Instructor Assessment Report'}
+                        </h1>
+                        <div className="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p className="text-gray-700"><strong>Course:</strong> {performance?.courseId?.title}</p>
+                            <p className="text-gray-700"><strong>Student:</strong> {performance?.studentId?.name}</p>
+                            <p className="text-gray-700"><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+                        </div>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-sm">
-                            <thead>
-                                <tr className="bg-gray-50/80 border-b border-gray-100">
-                                    <th className="border-r border-gray-100 p-4 w-16 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">No.</th>
-                                    {criteriaList.map(c => (
-                                        <th key={c.key} className="border-r border-gray-100 p-4 text-center align-middle font-bold text-gray-500 uppercase tracking-wider text-[10px] leading-tight last:border-r-0">
-                                            {c.label}
-                                        </th>
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-12">
+                        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 print:bg-gray-100">
+                            <h3 className="font-semibold text-gray-700">Assessment Matrix</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50/80 border-b border-gray-100 print:bg-gray-50">
+                                        <th className="border-r border-gray-100 p-4 w-16 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">No.</th>
+                                        {criteriaList.map(c => (
+                                            <th key={c.key} className="border-r border-gray-100 p-4 text-center align-middle font-bold text-gray-500 uppercase tracking-wider text-[10px] leading-tight last:border-r-0">
+                                                {c.label}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {rows.map(idx => (
+                                        <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="border-r border-gray-100 p-3 text-center font-bold text-gray-400 bg-gray-50/30">{idx + 1}</td>
+                                            {criteriaList.map(c => {
+                                                const val = (data && data[c.key] && data[c.key][idx]) || 0;
+                                                return (
+                                                    <td key={c.key} className="border-r border-gray-100 p-0 text-center last:border-r-0">
+                                                        {mode === 'edit' ? (
+                                                            <input
+                                                                type="number"
+                                                                min="0" max="5"
+                                                                value={val || ''}
+                                                                placeholder="-"
+                                                                onChange={(e) => handleCellChange(idx, c.key, e.target.value)}
+                                                                className="w-full h-full p-3 text-center bg-transparent focus:bg-theme/5 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-theme transition-colors font-semibold text-gray-800 border-0"
+                                                            />
+                                                        ) : (
+                                                            <span className="font-semibold text-gray-700 p-3 block">{val || '-'}</span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {rows.map(idx => (
-                                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="border-r border-gray-100 p-3 text-center font-bold text-gray-400 bg-gray-50/30">{idx + 1}</td>
+                                    {mode === 'edit' && (
+                                        <tr className="no-print">
+                                            <td colSpan={criteriaList.length + 1} className="p-0">
+                                                <button
+                                                    onClick={handleAddRow}
+                                                    className="w-full py-4 bg-gray-50/50 hover:bg-gray-100 text-theme font-semibold flex items-center justify-center gap-2 transition-colors uppercase tracking-widest text-xs"
+                                                >
+                                                    <Plus size={16} /> Add Assignment Row
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                                <tfoot className="border-t-2 border-theme/10">
+                                    <tr className="bg-theme/5 font-bold print:bg-theme/5">
+                                        <td className="border-r border-gray-100 p-4 text-center uppercase tracking-widest text-[10px] text-theme">AVG</td>
                                         {criteriaList.map(c => {
-                                            const val = (data && data[c.key] && data[c.key][idx]) || 0;
+                                            const values = (data && data[c.key]) || [];
+                                            const sum = values.reduce((a, b) => a + (b || 0), 0);
+                                            const avg = values.length > 0 ? (sum / values.length).toFixed(2) : '0.00';
                                             return (
-                                                <td key={c.key} className="border-r border-gray-100 p-0 text-center last:border-r-0">
-                                                    {mode === 'edit' ? (
-                                                        <input
-                                                            type="number"
-                                                            min="0" max="5"
-                                                            value={val || ''}
-                                                            placeholder="-"
-                                                            onChange={(e) => handleCellChange(idx, c.key, e.target.value)}
-                                                            className="w-full h-full p-3 text-center bg-transparent focus:bg-theme/5 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-theme transition-colors font-semibold text-gray-800 border-0"
-                                                        />
-                                                    ) : (
-                                                        <span className="font-semibold text-gray-700 p-3 block">{val || '-'}</span>
-                                                    )}
+                                                <td key={c.key} className="border-r border-gray-100 p-4 text-center text-theme-dark font-black last:border-r-0">
+                                                    {avg}
                                                 </td>
                                             );
                                         })}
                                     </tr>
-                                ))}
-                                {mode === 'edit' && (
-                                    <tr className="no-print">
-                                        <td colSpan={criteriaList.length + 1} className="p-0">
-                                            <button
-                                                onClick={handleAddRow}
-                                                className="w-full py-4 bg-gray-50/50 hover:bg-gray-100 text-theme font-semibold flex items-center justify-center gap-2 transition-colors uppercase tracking-widest text-xs"
-                                            >
-                                                <Plus size={16} /> Add Assignment Row
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                            <tfoot className="border-t-2 border-theme/10">
-                                <tr className="bg-theme/5 font-bold">
-                                    <td className="border-r border-gray-100 p-4 text-center uppercase tracking-widest text-[10px] text-theme">AVG</td>
-                                    {criteriaList.map(c => {
-                                        const values = (data && data[c.key]) || [];
-                                        const sum = values.reduce((a, b) => a + (b || 0), 0);
-                                        const avg = values.length > 0 ? (sum / values.length).toFixed(2) : '0.00';
-                                        return (
-                                            <td key={c.key} className="border-r border-gray-100 p-4 text-center text-theme-dark font-black last:border-r-0">
-                                                {avg}
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            </tfoot>
-                        </table>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
+                {/* Printable Content End */}
             </div>
             <Snackbar open={!!successMsg} autoHideDuration={3000} onClose={() => setSuccessMsg('')}>
                 <Alert severity="success">{successMsg}</Alert>
