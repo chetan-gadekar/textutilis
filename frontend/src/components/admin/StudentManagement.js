@@ -96,13 +96,23 @@ const StudentManagement = () => {
     setPage(0);
   };
 
-  const handleToggleStatus = async (studentId) => {
+  const handleToggleStatus = async (studentId, currentStatus) => {
+    // Optimistic UI update: instantly toggle the status in the UI
+    setStudents(prevStudents => prevStudents.map(student => 
+      student._id === studentId ? { ...student, isActive: !currentStatus } : student
+    ));
+
     try {
       await adminService.toggleStudentStatus(studentId);
+      // Fetch fresh list silently in the background
       fetchStudents();
       setSuccess('Student status updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
+      // Revert UI change if API fails
+      setStudents(prevStudents => prevStudents.map(student => 
+        student._id === studentId ? { ...student, isActive: currentStatus } : student
+      ));
       setError(err.message || 'Failed to toggle student status');
     }
   };
