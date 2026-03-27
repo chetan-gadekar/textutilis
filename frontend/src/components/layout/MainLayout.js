@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Box, CssBaseline } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, CssBaseline, Backdrop, useMediaQuery, useTheme } from '@mui/material';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 
 const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, initialCollapsed = false, onCourseMenuToggle, rightActions }) => {
+  const isMobile = useMediaQuery('(max-width:899px)');
+
   const [sidebarOpen, setSidebarOpen] = React.useState(() => {
     if (initialCollapsed) return false;
     const saved = localStorage.getItem('sidebarOpen');
@@ -37,6 +39,17 @@ const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, ini
         rightActions={rightActions}
       />
       <Sidebar open={sidebarOpen} onToggle={handleSidebarToggle} />
+
+      {/* Dark overlay backdrop for mobile sidebar */}
+      <Backdrop
+        open={isMobile && sidebarOpen}
+        onClick={handleSidebarToggle}
+        sx={{
+          zIndex: 1199, // Just below Sidebar z-index: 1200
+          bgcolor: 'rgba(0, 0, 0, 0.6)',
+        }}
+      />
+
       <Box
         component="main"
         sx={{

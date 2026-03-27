@@ -5,16 +5,13 @@ import {
     Typography,
     Box,
     Button,
-    LinearProgress,
     Chip,
-    alpha,
     useTheme,
 } from '@mui/material';
 import {
     PlayArrowRounded,
-    AccessTimeRounded,
-    TrendingUpRounded,
-    CheckCircleRounded
+    CheckCircleRounded,
+    ArrowForwardRounded
 } from '@mui/icons-material';
 
 const CourseCard = ({ course, onStart, onContinue }) => {
@@ -40,168 +37,130 @@ const CourseCard = ({ course, onStart, onContinue }) => {
         <Card
             elevation={0}
             sx={{
-                height: '100%',
                 display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '16px',
+                flexDirection: { xs: 'column', md: 'row' },
+                borderRadius: '8px',
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: '#e0e0e0',
+                bgcolor: '#ffffff',
+                p: { xs: 2, md: 2 }, // Reduced internal padding
+                gap: { xs: 2, md: 2.5 }, // Reduced gap
+                alignItems: { xs: 'stretch', md: 'stretch' },
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 12px 24px -10px rgba(0, 0, 0, 0.15)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
                     borderColor: 'primary.main',
                 },
             }}
         >
-            {/* Cover Area */}
+            {/* Cover Area - Left Side */}
             <Box
                 sx={{
-                    height: 140,
+                    width: { xs: '100%', md: 220 }, // Reduced width
+                    minWidth: { xs: '100%', md: 220 },
+                    height: { xs: 150, md: 125 }, // Reduced height
                     background: course.bannerImage ? `url(${course.bannerImage})` : bgGradient,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    borderRadius: '8px',
                     position: 'relative',
-                    p: 3,
+                    flexShrink: 0
+                }}
+            >
+            </Box>
+
+            {/* Content Area - Right Side */}
+            <Box
+                sx={{
+                    flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
+                    minHeight: { md: 125 }, // Match image height constraint
+                    py: 0,
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Chip
-                        label="Course"
-                        size="small"
-                        sx={{
-                            bgcolor: 'rgba(255,255,255,0.2)',
-                            color: 'white',
-                            backdropFilter: 'blur(4px)',
-                            fontWeight: 600,
-                            border: '1px solid rgba(255,255,255,0.3)'
-                        }}
-                    />
-                    {isStarted && (
-                        <Box
+                {/* Header Row: Title and Progress Loop */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                    <Box sx={{ pr: 2, flex: 1 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: '#7a7a7a', fontWeight: 400, fontSize: '0.8rem', mb: 0.5 }}
+                        >
+                            {/* In the mockup, the title seems to be the category, showing course title is appropriate */}
+                            {title}
+                        </Typography>
+                        <Typography
+                            variant="subtitle1"
+                            component="h3"
                             sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: '50%',
-                                bgcolor: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                color: '#2C333D',
+                                fontWeight: 600,
+                                fontSize: '1rem', // slightly reduced size for compactness
+                                WebkitLineClamp: 2,
+                                display: '-webkit-box',
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                lineHeight: 1.3,
                             }}
                         >
-                            <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {progress === 100 ? (
-                                    <CheckCircleRounded sx={{ color: theme.palette.success.main, fontSize: 32 }} />
-                                ) : (
-                                    <CircularProgressVariant value={progress} size={24} thickness={5} color={theme.palette.primary.main} />
-                                )}
-                            </Box>
+                            {description && description.length > 5 ? description : `Lecture: Introduction to ${title}`}
+                        </Typography>
+                    </Box>
+
+                    {/* Progress Loop - Top Right Corner */}
+                    {isStarted ? (
+                        <Box sx={{ flexShrink: 0, mt: -0.5, mr: -0.5 }}>
+                            {progress === 100 ? (
+                                <ThinCheckCircle color={theme.palette.primary.main} size={26} />
+                            ) : (
+                                <CircularProgressVariant value={progress} size={26} thickness={2.5} color={theme.palette.primary.main} />
+                            )}
+                        </Box>
+                    ) : (
+                        <Box sx={{ flexShrink: 0, mt: -0.5, mr: -0.5 }}>
+                             <CircularProgressVariant value={0} size={26} thickness={2.5} color="#eaeaea" />
                         </Box>
                     )}
                 </Box>
 
+                {/* Footer Row: Progress Text and Action Button */}
+                <Box sx={{ 
+                    mt: 'auto', 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' }, 
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'stretch', sm: 'flex-end' }, 
+                    gap: { xs: 1.5, sm: 0 },
+                    pt: 1.5 
+                }}>
+                    <Typography variant="body2" sx={{ color: '#7a7a7a', fontWeight: 500, fontSize: '0.8rem', mb: { xs: 0, sm: 0.5 }, whiteSpace: 'nowrap' }}>
+                        {progress > 0 ? `${progress}% Completed` : '0/17 Modules Completed'}
+                    </Typography>
 
-            </Box>
-
-            <CardContent sx={{ flexGrow: 1, pt: 2, pb: 1, px: 3 }}>
-                <Typography
-                    variant="h6"
-                    component="h3"
-                    sx={{
-                        color: 'text.secondary',
-                        fontWeight: 600,
-                        textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        display: '-webkit-box',
-                        overflow: 'hidden',
-                        WebkitBoxOrient: 'vertical',
-                        WebkitLineClamp: 2,
-                        minHeight: '3em',
-                    }}
-                >
-                    {title}
-                </Typography>
-                <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                        mb: 2,
-                        display: '-webkit-box',
-                        overflow: 'hidden',
-                        WebkitBoxOrient: 'vertical',
-                        WebkitLineClamp: 3,
-                        minHeight: '0em', // reduced from 4.5em
-                        lineHeight: 2.0
-                    }}
-                >
-                    {description || 'No description available for this course.'}
-                </Typography>
-
-                {/* Stats Row */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                        <AccessTimeRounded sx={{ fontSize: 16 }} />
-                        <Typography variant="caption" fontWeight={500}>12h 30m</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                        <TrendingUpRounded sx={{ fontSize: 16 }} />
-                        <Typography variant="caption" fontWeight={500}>Beginner</Typography>
-                    </Box>
+                    <Button
+                        variant={!isStarted ? "outlined" : "contained"}
+                        color="primary"
+                        onClick={() => (isStarted ? onContinue(course._id) : onStart(course._id))}
+                        endIcon={progress === 100 ? <ThinCheckCircle color="#ffffff" tickColor={theme.palette.primary.main} size={18} /> : (isStarted ? <ArrowForwardRounded sx={{ fontSize: '18px' }}/> : null)}
+                        sx={{
+                            borderRadius: '4px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            width: { xs: '100%', sm: 200 }, // Ensure it fits the longest button text smoothly
+                            whiteSpace: 'nowrap',
+                            py: 0.8,
+                            fontSize: '0.85rem',
+                            boxShadow: 'none',
+                            '&:hover': {
+                                boxShadow: 'none'
+                            }
+                        }}
+                    >
+                        {isStarted ? (progress === 100 ? 'Completed' : 'Continue Learning') : 'Start Learning'}
+                    </Button>
                 </Box>
-
-                {isStarted ? (
-                    <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                                Progress
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                {progress}%
-                            </Typography>
-                        </Box>
-                        <LinearProgress
-                            variant="determinate"
-                            value={progress}
-                            sx={{
-                                height: 6,
-                                borderRadius: 3,
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                '& .MuiLinearProgress-bar': {
-                                    borderRadius: 3,
-                                },
-                            }}
-                        />
-                    </Box>
-                ) : (
-                    <Box sx={{ height: 21 }} /> // Spacer to match progress height
-                )}
-            </CardContent>
-
-            <Box sx={{ p: 2, pt: 0 }}>
-                <Button
-                    fullWidth
-                    variant={isStarted ? "outlined" : "contained"}
-                    color={progress === 100 ? "success" : "primary"}
-                    onClick={() => (isStarted ? onContinue(course._id) : onStart(course._id))}
-                    endIcon={progress === 100 ? <CheckCircleRounded /> : <PlayArrowRounded />}
-                    sx={{
-                        borderRadius: '10px',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        py: 1,
-                        boxShadow: isStarted ? 'none' : '0 4px 12px rgba(33, 150, 243, 0.3)',
-                        borderWidth: isStarted ? 2 : 0,
-                        '&:hover': {
-                            borderWidth: isStarted ? 2 : 0,
-                            boxShadow: isStarted ? 'none' : '0 6px 16px rgba(33, 150, 243, 0.4)',
-                            transform: 'translateY(-1px)'
-                        }
-                    }}
-                >
-                    {isStarted ? (progress === 100 ? 'Completed' : 'Continue Learning') : 'Start Learning'}
-                </Button>
             </Box>
         </Card>
     );
@@ -236,5 +195,12 @@ const CircularProgressVariant = ({ value, size, thickness, color }) => {
         </Box>
     )
 }
+
+const ThinCheckCircle = ({ color, size, tickColor = "#ffffff" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+        <circle cx="12" cy="12" r="12" fill={color} />
+        <path d="M7.5 12L10.5 15L16.5 9" stroke={tickColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
 
 export default CourseCard;

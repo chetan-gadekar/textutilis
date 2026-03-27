@@ -158,16 +158,52 @@ const CourseView = () => {
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={3}>
-            {filteredCourses.map((course) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={course._id}>
-                <CourseCard
-                  course={course}
-                  onStart={handleStartContinue}
-                  onContinue={handleStartContinue}
+          <Grid container spacing={4}>
+            {/* Left Column: Course Cards */}
+            <Grid item xs={12} lg={8}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {filteredCourses.map((course) => (
+                  <Box key={course._id}>
+                    <CourseCard
+                      course={course}
+                      onStart={handleStartContinue}
+                      onContinue={handleStartContinue}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+
+            {/* Right Column: Upcoming Events Placeholder */}
+            <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', lg: 'block' } }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333', mb: 2 }}>
+                Upcoming Events
+              </Typography>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  borderRadius: '12px',
+                  border: '1px solid',
+                  borderColor: '#eaeaea',
+                  bgcolor: '#ffffff',
+                  textAlign: 'center'
+                }}
+              >
+                <Box
+                  component="img"
+                  src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png"
+                  alt="Upcoming Events Placeholder"
+                  sx={{ width: 140, height: 140, mb: 3, mx: 'auto', display: 'block', opacity: 0.8 }}
                 />
-              </Grid>
-            ))}
+                <Typography variant="body2" sx={{ color: '#555', mb: 2, px: 2, lineHeight: 1.5 }}>
+                  Enroll in a course or masterclass to view upcoming classes
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#777' }}>
+                  Need More Info? <span style={{ color: '#ea6554', cursor: 'pointer', fontWeight: 500 }}>Connect To Counsellor</span>
+                </Typography>
+              </Paper>
+            </Grid>
           </Grid>
         )}
       </Container>
