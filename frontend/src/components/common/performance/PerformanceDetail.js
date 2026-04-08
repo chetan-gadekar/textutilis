@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CircularProgress } from '@mui/material';
 import notify from '../../../utils/notify';
 import { Save, ArrowLeft, Plus, Printer } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
+
 import performanceService from '../../../services/performanceService';
 import MainLayout from '../../layout/MainLayout';
 
@@ -25,10 +25,7 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    const handlePrint = useReactToPrint({
-        contentRef,
-        documentTitle: `Performance_Report_${performance?.studentId?.name || 'Student'}`,
-    });
+
 
     const fetchData = useCallback(async () => {
         try {
@@ -148,7 +145,7 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                 </div>
 
                 {/* Printable Content Start */}
-                <div ref={contentRef} className="print-container">
+                <div className="print-container">
                     {/* Re-include header for print context */}
                     <div className="hidden print:block mb-6">
                         <h1 className="text-2xl font-bold text-gray-800">
