@@ -1,6 +1,6 @@
 const TopicContent = require('../schemas/TopicContent');
 const Topic = require('../schemas/Topic');
-const { signR2Urls, stripR2Signature, deleteFile } = require('../utils/r2Client');
+const { signR2Urls, stripR2Signature } = require('../utils/r2Client');
 
 // Create topic content
 const createContent = async (contentData) => {
@@ -55,22 +55,10 @@ const updateContent = async (contentId, updateData) => {
 
 // Delete content
 const deleteContent = async (contentId) => {
-  const content = await TopicContent.findById(contentId);
+  const content = await TopicContent.findByIdAndDelete(contentId);
   if (!content) {
     throw new Error('Content not found');
   }
-
-  // If it's a video in R2, delete it
-  if (content.contentType === 'video' && content.contentData && content.contentData.includes('r2.cloudflarestorage.com')) {
-    const url = stripR2Signature(content.contentData);
-    const match = url.match(/lms_videos\/.*$/);
-    if (match) {
-      const fileKey = match[0];
-      await deleteFile(fileKey);
-    }
-  }
-
-  await TopicContent.findByIdAndDelete(contentId);
   return content;
 };
 

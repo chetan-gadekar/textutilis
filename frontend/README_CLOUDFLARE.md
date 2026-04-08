@@ -106,3 +106,4 @@ The application will be available at `http://localhost:5000`
 - **Upload fails**: Check that your API token has Stream:Edit permissions
 - **Video not playing**: Wait for processing to complete (status should be "ready")
 - **CORS errors**: Make sure the backend server is running and accessible
+ok

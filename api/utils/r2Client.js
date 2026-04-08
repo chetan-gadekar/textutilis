@@ -1,4 +1,4 @@
-const { S3Client, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
@@ -42,27 +42,6 @@ const getSignedGetUrl = async (fileKey, expiresIn = 5) => {
     } catch (error) {
         console.error('Error generating signed GET URL:', error);
         return null;
-    }
-};
-
-/**
- * Delete a file from R2.
- * @param {string} fileKey - The key of the file in the bucket.
- */
-const deleteFile = async (fileKey) => {
-    if (!fileKey) return;
-    try {
-        const command = new DeleteObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileKey,
-        });
-
-        await r2Client.send(command);
-        console.log(`Successfully deleted file from R2: ${fileKey}`);
-        return true;
-    } catch (error) {
-        console.error(`Error deleting file from R2 (${fileKey}):`, error);
-        return false;
     }
 };
 
@@ -171,7 +150,6 @@ module.exports = {
     R2_BUCKET_NAME,
     R2_PUBLIC_URL,
     getSignedGetUrl,
-    deleteFile,
     stripR2Signature,
     signR2Urls,
 };
