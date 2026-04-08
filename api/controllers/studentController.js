@@ -5,6 +5,11 @@ const studentService = require('../services/studentService');
 const performanceService = require('../services/performanceService');
 const courseStructureService = require('../services/courseStructureService');
 const Enrollment = require('../schemas/Enrollment');
+// Pre-loaded schemas for saveVideoProgress (avoids repeated require() on every call)
+const TopicContent = require('../schemas/TopicContent');
+const ModuleSchema = require('../schemas/Module');
+const TopicSchema = require('../schemas/Topic');
+const Progress = require('../schemas/Progress');
 
 // @desc    Get student's enrolled courses
 // @route   GET /api/student/courses
@@ -125,37 +130,35 @@ const saveVideoProgress = async (req, res, next) => {
       videoPosition,
       isCompleted,
     };
-    const progress = await studentService.saveVideoProgress(progressData);
 
-    // Update enrollment progress
-    const TopicContent = require('../schemas/TopicContent');
-    const Module = require('../schemas/Module');
-    const Topic = require('../schemas/Topic');
-    const Progress = require('../schemas/Progress');
+    // Save the progress record and fetch existing records in parallel
+    // We only need the total counts and completed count to update the enrollment percentage
+    const [progress, modules, allProgress] = await Promise.all([
+      studentService.saveVideoProgress(progressData),
+      ModuleSchema.find({ courseId }, '_id').lean(),
+      Progress.find({ studentId: req.user.id, courseId, isCompleted: true }, 'contentId').lean(),
+    ]);
 
-    // Get all content for course
-    const modules = await Module.find({ courseId });
     const moduleIds = modules.map(m => m._id);
-    const topics = await Topic.find({ moduleId: { $in: moduleIds } });
+    const topics = await TopicSchema.find({ moduleId: { $in: moduleIds } }, '_id').lean();
     const topicIds = topics.map(t => t._id);
-    const allContent = await TopicContent.find({ topicId: { $in: topicIds } });
 
-    // Calculate overall progress
-    const allProgress = await Progress.find({
-      studentId: req.user.id,
-      courseId,
-      contentId: { $in: allContent.map(c => c._id) },
-    });
+    // Get total content count and current completion in parallel
+    const [courseAllContentCount, enrollment] = await Promise.all([
+      TopicContent.countDocuments({ topicId: { $in: topicIds } }),
+      Enrollment.findOne({ studentId: req.user.id, courseId }),
+    ]);
 
-    const completedCount = allProgress.filter(p => p.isCompleted).length;
-    const overallProgress = allContent.length > 0
-      ? Math.round((completedCount / allContent.length) * 100)
+    const completedCount = allProgress.length;
+    const overallProgress = courseAllContentCount > 0
+      ? Math.round((completedCount / courseAllContentCount) * 100)
       : 0;
 
-    await Enrollment.findOneAndUpdate(
-      { studentId: req.user.id, courseId },
-      { progress: overallProgress }
-    );
+    // Only update if progress has actually changed to save a DB write
+    if (enrollment && enrollment.progress !== overallProgress) {
+      enrollment.progress = overallProgress;
+      await enrollment.save();
+    }
 
     res.json({
       success: true,
@@ -172,11 +175,11 @@ const saveVideoProgress = async (req, res, next) => {
 const getCourseProgress = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    const progress = await studentService.getStudentProgressInCourse(req.user.id, courseId);
-    const enrollment = await Enrollment.findOne({
-      studentId: req.user.id,
-      courseId,
-    });
+    // Fetch progress records and enrollment simultaneously - they are independent
+    const [progress, enrollment] = await Promise.all([
+      studentService.getStudentProgressInCourse(req.user.id, courseId),
+      Enrollment.findOne({ studentId: req.user.id, courseId }).lean(),
+    ]);
     res.json({
       success: true,
       data: {

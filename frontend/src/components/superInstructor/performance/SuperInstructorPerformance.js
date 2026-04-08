@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     CircularProgress,
-    Alert,
     TablePagination,
     Tooltip,
     Collapse
 } from '@mui/material';
+import notify from '../../../utils/notify';
 import { Search, Filter, FilterX, Eye, Edit3 } from 'lucide-react';
 import performanceService from '../../../services/performanceService';
 import MainLayout from '../../layout/MainLayout';
@@ -15,7 +15,6 @@ const SuperInstructorPerformance = () => {
     const navigate = useNavigate();
     const [performances, setPerformances] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     // Filters
     const [showFilters, setShowFilters] = useState(false);
@@ -44,9 +43,9 @@ const SuperInstructorPerformance = () => {
 
             const response = await performanceService.getAllPerformance(params);
             setPerformances(response.data || []);
-            setError(null);
+            // Error handling unified via notify
         } catch (err) {
-            setError(err.message || 'Failed to fetch performance data');
+            notify.error(err.message || 'Failed to fetch performance data');
         } finally {
             setLoading(false);
         }
@@ -152,7 +151,7 @@ const SuperInstructorPerformance = () => {
                     </div>
                 </Collapse>
 
-                {error && <Alert severity="error" className="mb-6">{error}</Alert>}
+                {/* Legacy error alerts removed in favor of premium toasts */}
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 w-full">
                     <div className="overflow-x-auto">

@@ -4,6 +4,8 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { verifyOtp, forgotPassword, clearError } from '../../store/slices/authSlice';
 import loginBanner from '../../assets/login_banner.jpg';
 import { CheckCircle } from 'lucide-react';
+import notify from '../../utils/notify';
+import LoadingButton from '../common/LoadingButton';
 
 const VerifyOtp = () => {
   const dispatch = useDispatch();
@@ -21,8 +23,15 @@ const VerifyOtp = () => {
   const [resendMessage, setResendMessage] = useState('');
 
   useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch]);
+    if (error) {
+      notify.error(error);
+      dispatch(clearError());
+    }
+
+    return () => {
+      dispatch(clearError());
+    };
+  }, [error, dispatch]);
 
   if (!email) {
     return <Navigate to="/forgot-password" replace />;
@@ -88,11 +97,10 @@ const VerifyOtp = () => {
 
     const result = await dispatch(verifyOtp({ email, otp }));
     if (verifyOtp.fulfilled.match(result)) {
-      setShowSuccessModal(true);
+      notify.success('OTP Verified Successfully!');
       setTimeout(() => {
-        setShowSuccessModal(false);
         navigate('/reset-password', { state: { email, otp } });
-      }, 2000);
+      }, 1000);
     }
   };
 
@@ -102,27 +110,12 @@ const VerifyOtp = () => {
     const result = await dispatch(forgotPassword(email));
     setIsResending(false);
     if (forgotPassword.fulfilled.match(result)) {
-      setResendMessage('OTP resent successfully!');
-      setTimeout(() => setResendMessage(''), 3000);
+      notify.success('OTP resent successfully!');
     }
   };
 
   return (
     <div className="min-h-screen flex bg-white font-poppins relative">
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center max-w-sm w-full mx-4 transform transition-all">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-500">
-              <CheckCircle className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">OTP Verified</h2>
-            <p className="text-gray-500 text-center text-sm">
-              Your identity has been confirmed. Redirecting to reset password...
-            </p>
-          </div>
-        </div>
-      )}
 
       <div className="w-full lg:w-1/2 flex justify-center items-center p-8 relative">
         <div className="absolute top-8 left-8 flex items-center space-x-2">
@@ -139,12 +132,6 @@ const VerifyOtp = () => {
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold mb-2 text-gray-900">Verify OTP</h1>
           <p className="text-gray-500 mb-8 text-sm">Enter the 6-digit OTP sent to {email}</p>
-
-          {error && (
-            <div className="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-8 mt-6">
             <div className="flex justify-between items-center space-x-1 sm:space-x-2">
@@ -163,32 +150,43 @@ const VerifyOtp = () => {
               ))}
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={loading || otpValues.join('').length < 6}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed"
+              loading={loading && !isResending}
+              loadingText="Verifying..."
+              disabled={otpValues.join('').length < 6}
+              fullWidth
+              sx={{
+                bgcolor: '#6A4E9E',
+                '&:hover': { bgcolor: '#5A3E8E' },
+                mt: 4
+              }}
             >
-              {loading && !isResending ? 'Verifying...' : 'Verify OTP'}
-            </button>
+              Verify OTP
+            </LoadingButton>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500 mb-2">
               Didn't receive OTP?{' '}
-              <button
-                type="button"
+              <LoadingButton
+                variant="text"
+                loading={isResending}
+                loadingText="Resending..."
                 onClick={handleResendOtp}
                 disabled={loading}
-                className="font-medium text-theme hover:text-theme-dark underline decoration-theme/30 hover:decoration-theme disabled:opacity-50 disabled:cursor-not-allowed"
+                sx={{
+                  color: '#6A4E9E',
+                  fontWeight: 600,
+                  textDecoration: 'underline',
+                  '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' },
+                  minWidth: 'auto',
+                  p: 0,
+                  ml: 1
+                }}
               >
-                {isResending ? 'Resending...' : 'Resend OTP'}
-              </button>
+              </LoadingButton>
             </p>
-            {resendMessage && (
-              <p className="text-sm text-green-600 font-medium animate-pulse">
-                {resendMessage}
-              </p>
-            )}
           </div>
         </div>
       </div>

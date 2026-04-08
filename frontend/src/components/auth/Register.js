@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { register, clearError } from '../../store/slices/authSlice';
 import { Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import notify from '../../utils/notify';
+import LoadingButton from '../common/LoadingButton';
 import loginBanner from '../../assets/login_banner.jpg';
 
 const Register = () => {
@@ -24,12 +25,19 @@ const Register = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      notify.success('Account created successfully!');
       navigate('/dashboard');
     }
+
+    if (error) {
+      notify.error(error);
+      dispatch(clearError());
+    }
+
     return () => {
       dispatch(clearError());
     };
-  }, [isAuthenticated, navigate, dispatch]);
+  }, [isAuthenticated, error, navigate, dispatch]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,19 +56,19 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      notify.error('Passwords do not match');
       return;
     }
 
     if (!isPasswordValid) {
-      toast.error('Please ensure all password requirements are met.');
+      notify.error('Please ensure all password requirements are met.');
       return;
     }
 
     const { confirmPassword, ...userData } = formData;
     try {
       await dispatch(register(userData)).unwrap();
-      toast.success('Registration successful! Please login.');
+      notify.success('Registration successful! Please login.');
       navigate('/login');
     } catch (err) {
       // Error handled by Redux state
@@ -87,12 +95,6 @@ const Register = () => {
         <div className="w-full max-w-md mt-10">
           <h1 className="text-4xl font-bold mb-2 text-gray-900">Create account</h1>
           <p className="text-gray-500 mb-8 text-sm">Please register to continue</p>
-
-          {error && (
-            <div className="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -214,13 +216,20 @@ const Register = () => {
               </div>
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={loading || formData.password.length > 0 && !isPasswordValid}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+              loading={loading}
+              loadingText="Registering..."
+              disabled={formData.password.length > 0 && !isPasswordValid}
+              fullWidth
+              className="mt-6 py-2.5 px-4 bg-theme hover:bg-theme-dark text-white rounded-md shadow-sm transition"
+              sx={{
+                bgcolor: '#6A4E9E',
+                '&:hover': { bgcolor: '#5A3E8E' }
+              }}
             >
-              {loading ? 'Registering...' : 'Register'}
-            </button>
+              Register
+            </LoadingButton>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-500">

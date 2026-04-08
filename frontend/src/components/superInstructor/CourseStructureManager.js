@@ -5,9 +5,9 @@ import {
   Box,
   Button,
   Paper,
-  Alert,
   CircularProgress,
 } from '@mui/material';
+import LoadingButton from '../common/LoadingButton';
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -17,10 +17,13 @@ import ModuleDialog from './courseStructure/ModuleDialog';
 import TopicDialog from './courseStructure/TopicDialog';
 import ContentDialog from './courseStructure/ContentDialog';
 import ModuleAccordion from './courseStructure/ModuleAccordion';
+import AssignmentFormDialog from './assignment/AssignmentFormDialog';
 import courseService from '../../services/courseService';
 import moduleService from '../../services/moduleService';
 import topicService from '../../services/topicService';
 import topicContentService from '../../services/topicContentService';
+import assignmentService from '../../services/assignmentService';
+import notify from '../../utils/notify';
 import { useCourseStructure } from '../../hooks/useCourseStructure';
 
 const getContentIcon = (contentType) => {
@@ -42,8 +45,56 @@ const CourseStructureManager = () => {
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [expandedModule, setExpandedModule] = useState(false);
+
+  // ── Assignment dialog state ────────────────────────────────────────────────
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [assignmentTitle, setAssignmentTitle] = useState('');
+  const [assignmentDescription, setAssignmentDescription] = useState('');
+  const [assignmentDueDate, setAssignmentDueDate] = useState('');
+  const [assignmentAttachments, setAssignmentAttachments] = useState([]);
+  const [assignmentSubmitting, setAssignmentSubmitting] = useState(false);
+
+  const handleOpenAssignmentDialog = useCallback(() => {
+    setAssignmentDescription('');
+    setAssignmentDueDate('');
+    setAssignmentAttachments([]);
+    setAssignmentDialogOpen(true);
+  }, []);
+
+  const handleCloseAssignmentDialog = useCallback(() => {
+    setAssignmentDialogOpen(false);
+    setAssignmentTitle('');
+    setAssignmentDescription('');
+    setAssignmentDueDate('');
+    setAssignmentAttachments([]);
+  }, []);
+
+  const handleAssignmentSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    if (!assignmentTitle || !assignmentDescription || !assignmentDueDate) {
+      notify.error('Please fill in all required assignment fields');
+      return;
+    }
+    try {
+      setAssignmentSubmitting(true);
+      await assignmentService.createAssignment(courseId, {
+        title: assignmentTitle,
+        description: assignmentDescription,
+        dueDate: assignmentDueDate,
+        attachments: assignmentAttachments,
+        courseId,
+      });
+      notify.success('Assignment created successfully!');
+      handleCloseAssignmentDialog();
+    } catch (err) {
+      notify.error(err.message || 'Failed to create assignment');
+    } finally {
+      setAssignmentSubmitting(false);
+    }
+  }, [assignmentTitle, assignmentDescription, assignmentDueDate, assignmentAttachments, courseId, handleCloseAssignmentDialog]);
+
+  // ──────────────────────────────────────────────────────────────────────────
 
   const fetchCourseData = useCallback(async () => {
     try {
@@ -69,9 +120,8 @@ const CourseStructureManager = () => {
       );
 
       setModules(modulesWithData);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch course data');
+      notify.error(err.message || 'Failed to fetch course data');
     } finally {
       setLoading(false);
     }
@@ -107,7 +157,8 @@ const CourseStructureManager = () => {
     handleCloseContentDialog,
     handleSaveContent,
     handleDeleteContent,
-  } = useCourseStructure(courseId, fetchCourseData, setError);
+    isSaving,
+  } = useCourseStructure(courseId, fetchCourseData);
 
   useEffect(() => {
     fetchCourseData();
@@ -140,12 +191,6 @@ const CourseStructureManager = () => {
             </Typography>
           </Box>
         </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
 
         <Paper
           elevation={0}
@@ -184,6 +229,7 @@ const CourseStructureManager = () => {
                   onAddContent={handleOpenContentDialog}
                   onEditContent={handleOpenContentDialog}
                   onDeleteContent={handleDeleteContent}
+                  onAddAssignment={handleOpenAssignmentDialog}
                   getContentIcon={getContentIcon}
                 />
               ))}
@@ -192,7 +238,7 @@ const CourseStructureManager = () => {
         </Paper>
 
         <Box sx={{ mt: 3 }}>
-          <Button
+          <LoadingButton
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
@@ -210,7 +256,7 @@ const CourseStructureManager = () => {
             }}
           >
             Add new topic
-          </Button>
+          </LoadingButton>
         </Box>
 
         <ModuleDialog
@@ -220,6 +266,7 @@ const CourseStructureManager = () => {
           formData={moduleForm}
           onFormChange={setModuleForm}
           onSave={handleSaveModule}
+          loading={isSaving}
         />
 
         <TopicDialog
@@ -230,6 +277,7 @@ const CourseStructureManager = () => {
           formData={topicForm}
           onFormChange={setTopicForm}
           onSave={handleSaveTopic}
+          loading={isSaving}
         />
 
         <ContentDialog
@@ -242,7 +290,29 @@ const CourseStructureManager = () => {
           onSave={handleSaveContent}
           uploadingVideo={uploadingVideo}
           setUploadingVideo={setUploadingVideo}
-          onError={setError}
+          loading={isSaving}
+        />
+
+        {/* Assignment creation dialog — course is locked to current course */}
+        <AssignmentFormDialog
+          open={assignmentDialogOpen}
+          onClose={handleCloseAssignmentDialog}
+          courses={course ? [course] : []}
+          selectedCourse={courseId}
+          onCourseChange={() => {}}
+          lockedCourse={course}
+          title={assignmentTitle}
+          onTitleChange={(e) => setAssignmentTitle(e.target.value)}
+          description={assignmentDescription}
+          onDescriptionChange={(e) => setAssignmentDescription(e.target.value)}
+          dueDate={assignmentDueDate}
+          onDueDateChange={(e) => setAssignmentDueDate(e.target.value)}
+          attachments={assignmentAttachments}
+          onAddAttachment={(url, name) => setAssignmentAttachments(prev => [...prev, { fileUrl: url, fileName: name }])}
+          onRemoveAttachment={(i) => setAssignmentAttachments(prev => prev.filter((_, idx) => idx !== i))}
+          onSubmit={handleAssignmentSubmit}
+          submitting={assignmentSubmitting}
+          editing={false}
         />
       </Box>
     </MainLayout>

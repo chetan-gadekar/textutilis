@@ -8,15 +8,15 @@ const { signR2Urls } = require('../utils/r2Client');
 
 // Get full course structure for student
 const getCourseStructureForStudent = async (courseId, studentId) => {
-  // Verify enrollment
-  const enrollment = await Enrollment.findOne({ studentId, courseId }).lean();
+  // Fetch enrollment and course simultaneously - they are independent
+  const [enrollment, course] = await Promise.all([
+    Enrollment.findOne({ studentId, courseId }).lean(),
+    Course.findById(courseId).populate('instructor', 'name email').lean(),
+  ]);
+
   if (!enrollment) {
     throw new Error('Not enrolled in this course');
   }
-
-  const course = await Course.findById(courseId)
-    .populate('instructor', 'name email')
-    .lean();
 
   if (!course || !course.isVisible) {
     throw new Error('Course not found or not visible');

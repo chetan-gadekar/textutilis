@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Box, Tooltip } from '@mui/material'; // Keeping MUI dialog for complex form handling, styling its contents with Tailwind
+import { Dialog, DialogTitle, DialogContent, DialogActions, Tooltip } from '@mui/material'; // Keeping MUI dialog for complex form handling, styling its contents with Tailwind
 import AddIcon from '@mui/icons-material/Add';
 import { LayoutList, Edit3, Trash } from 'lucide-react';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
 import FileUpload from '../common/FileUpload';
+import LoadingButton from '../common/LoadingButton';
+import notify from '../../utils/notify';
 
 const CourseManagement = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ const CourseManagement = () => {
     isVisible: true,
     bannerImage: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -30,9 +32,8 @@ const CourseManagement = () => {
       setLoading(true);
       const response = await courseService.getCourses();
       setCourses(response.data || []);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch courses');
+      notify.error(err.message || 'Failed to fetch courses');
     } finally {
       setLoading(false);
     }
@@ -72,15 +73,19 @@ const CourseManagement = () => {
 
   const handleSubmit = async () => {
     try {
+      setIsSubmitting(true);
       if (editingCourse) {
         await courseService.updateCourse(editingCourse._id, formData);
       } else {
         await courseService.createCourse(formData);
       }
+      notify.success(`Course ${editingCourse ? 'updated' : 'created'} successfully!`);
       fetchCourses();
       handleCloseDialog();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save course');
+      notify.error(err.response?.data?.message || err.message || 'Failed to save course');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -90,9 +95,10 @@ const CourseManagement = () => {
     }
     try {
       await courseService.deleteCourse(courseId);
+      notify.success('Course deleted successfully');
       fetchCourses();
     } catch (err) {
-      setError(err.message || 'Failed to delete course');
+      notify.error(err.message || 'Failed to delete course');
     }
   };
 
@@ -114,35 +120,19 @@ const CourseManagement = () => {
             <h1 className="text-3xl font-medium text-gray-800">Course Management</h1>
             <p className="text-gray-500 mt-1 font-light">Create, edit, and organize your courses</p>
           </div>
-          <button
+          <LoadingButton
             onClick={() => handleOpenDialog()}
-            className="bg-theme hover:bg-theme-dark text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 shadow-sm hover:shadow flex items-center gap-2"
+            startIcon={<AddIcon fontSize="small" />}
+            className="bg-theme hover:bg-theme-dark text-white font-medium py-2 px-5 rounded-lg transition-colors duration-200 shadow-sm"
+            sx={{
+              bgcolor: '#6A4E9E',
+              '&:hover': { bgcolor: '#5A3E8E' },
+              borderRadius: '8px'
+            }}
           >
-            <AddIcon fontSize="small" />
             Create Course
-          </button>
+          </LoadingButton>
         </div>
-
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
@@ -322,12 +312,19 @@ const CourseManagement = () => {
             >
               Cancel
             </button>
-            <button
+            <LoadingButton
               onClick={handleSubmit}
-              className="px-4 py-1.5 text-sm bg-theme hover:bg-theme-dark text-white font-medium rounded-md shadow-sm transition-colors ml-2"
+              loading={isSubmitting}
+              loadingText={editingCourse ? 'Updating...' : 'Creating...'}
+              className="px-4 py-1.5 text-sm bg-theme hover:bg-theme-dark text-white font-medium rounded-md shadow-sm transition ml-2"
+              sx={{
+                bgcolor: '#6A4E9E',
+                '&:hover': { bgcolor: '#5A3E8E' },
+                height: '36px'
+              }}
             >
               {editingCourse ? 'Update Course' : 'Create Course'}
-            </button>
+            </LoadingButton>
           </DialogActions>
         </Dialog>
       </div>

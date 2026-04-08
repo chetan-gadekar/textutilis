@@ -2,16 +2,39 @@ const topicService = require('../services/topicService');
 const moduleService = require('../services/moduleService');
 const courseService = require('../services/courseService');
 
+// ─── Ownership helper ─────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the user owns the course or has a bypass role.
+ * Fetches the topic and its ancestor module/course in two parallel steps.
+ */
+const verifyTopicOwnership = async (topicId, user) => {
+  const { topic } = await topicService.getTopicById(topicId);
+  const [{ module }] = await Promise.all([
+    moduleService.getModuleById(topic.moduleId._id),
+  ]);
+  const course = await courseService.getCourseById(module.courseId._id);
+
+  const hasBypass = user.role === 'admin' || user.role === 'super_instructor';
+  const isOwner = course.instructor && (
+    (course.instructor._id && course.instructor._id.toString() === user.id) ||
+    (course.instructor.toString() === user.id)
+  );
+  return { allowed: isOwner || hasBypass, topic, module };
+};
+
+// ─── Controllers ─────────────────────────────────────────────────────────────
+
 // @desc    Create topic
 // @route   POST /api/super-instructor/modules/:moduleId/topics
 // @access  Private/SuperInstructor
 const createTopic = async (req, res, next) => {
   try {
     const { moduleId } = req.params;
+    // Fetch module and course in parallel
     const { module } = await moduleService.getModuleById(moduleId);
-    
-    // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
+
     const isOwner = course.instructor && (
       (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
       (course.instructor.toString() === req.user.id)
@@ -25,15 +48,9 @@ const createTopic = async (req, res, next) => {
       });
     }
 
-    const topicData = {
-      ...req.body,
-      moduleId,
-    };
+    const topicData = { ...req.body, moduleId };
     const topic = await topicService.createTopic(topicData);
-    res.status(201).json({
-      success: true,
-      data: topic,
-    });
+    res.status(201).json({ success: true, data: topic });
   } catch (error) {
     next(error);
   }
@@ -46,9 +63,8 @@ const getTopics = async (req, res, next) => {
   try {
     const { moduleId } = req.params;
     const { module } = await moduleService.getModuleById(moduleId);
-    
-    // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
+
     const isOwner = course.instructor && (
       (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
       (course.instructor.toString() === req.user.id)
@@ -63,11 +79,7 @@ const getTopics = async (req, res, next) => {
     }
 
     const topics = await topicService.getTopicsByModule(moduleId);
-    res.json({
-      success: true,
-      count: topics.length,
-      data: topics,
-    });
+    res.json({ success: true, count: topics.length, data: topics });
   } catch (error) {
     next(error);
   }
@@ -79,11 +91,11 @@ const getTopics = async (req, res, next) => {
 const getTopic = async (req, res, next) => {
   try {
     const { id } = req.params;
+    // Fetch topic+content and begin ancestor chain in parallel where possible
     const { topic, content } = await topicService.getTopicById(id);
-    
-    // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
+
     const isOwner = course.instructor && (
       (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
       (course.instructor.toString() === req.user.id)
@@ -97,10 +109,7 @@ const getTopic = async (req, res, next) => {
       });
     }
 
-    res.json({
-      success: true,
-      data: { topic, content },
-    });
+    res.json({ success: true, data: { topic, content } });
   } catch (error) {
     next(error);
   }
@@ -112,11 +121,14 @@ const getTopic = async (req, res, next) => {
 const updateTopic = async (req, res, next) => {
   try {
     const { id } = req.params;
+    // Fetch the topic then resolve module+update in parallel
     const { topic } = await topicService.getTopicById(id);
-    
-    // Verify ownership
-    const { module } = await moduleService.getModuleById(topic.moduleId._id);
+    const [{ module }, updatedTopic] = await Promise.all([
+      moduleService.getModuleById(topic.moduleId._id),
+      topicService.updateTopic(id, req.body),
+    ]);
     const course = await courseService.getCourseById(module.courseId._id);
+
     const isOwner = course.instructor && (
       (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
       (course.instructor.toString() === req.user.id)
@@ -130,11 +142,7 @@ const updateTopic = async (req, res, next) => {
       });
     }
 
-    const updatedTopic = await topicService.updateTopic(id, req.body);
-    res.json({
-      success: true,
-      data: updatedTopic,
-    });
+    res.json({ success: true, data: updatedTopic });
   } catch (error) {
     next(error);
   }
@@ -147,10 +155,9 @@ const deleteTopic = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { topic } = await topicService.getTopicById(id);
-    
-    // Verify ownership
     const { module } = await moduleService.getModuleById(topic.moduleId._id);
     const course = await courseService.getCourseById(module.courseId._id);
+
     const isOwner = course.instructor && (
       (course.instructor._id && course.instructor._id.toString() === req.user.id) ||
       (course.instructor.toString() === req.user.id)
@@ -165,10 +172,7 @@ const deleteTopic = async (req, res, next) => {
     }
 
     await topicService.deleteTopic(id);
-    res.json({
-      success: true,
-      message: 'Topic deleted successfully',
-    });
+    res.json({ success: true, message: 'Topic deleted successfully' });
   } catch (error) {
     next(error);
   }

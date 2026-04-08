@@ -12,10 +12,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import VideoPlayer from '../../VideoPlayer';
 import ProtectedPDFViewer from './ProtectedPDFViewer';
 
-const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) => {
+const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onNextContent, hasNextContent }) => {
   const containerRef = React.useRef(null);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -123,28 +124,53 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) =
                 onChange={(e) => onProgressUpdate(e.target.checked ? 1 : 0, true)}
                 size="small"
                 icon={<RadioButtonUncheckedIcon sx={{ fontSize: 20 }} />}
-                checkedIcon={<CheckCircleIcon sx={{ fontSize: 20, color: '#9E9E9E' }} />}
-                sx={{ p: 0.5, py: 0 }}
+                checkedIcon={<CheckCircleIcon sx={{ fontSize: 20, color: '#6A4E9E' }} />}
+                sx={{ 
+                  p: 0.5, 
+                  py: 0,
+                  '&.Mui-checked': { color: '#6A4E9E' }
+                }}
               />
             }
-            label={<Typography variant="caption" sx={{ color: '#78909C', fontWeight: 500 }}>Mark As Complete</Typography>}
+            label={<Typography variant="caption" sx={{ color: '#616161', fontWeight: 600, fontFamily: 'Poppins' }}>Mark As Complete</Typography>}
             sx={{ ml: -0.5, m: 0 }}
           />
         </Box>
-        {content.contentType === 'ppt' && content.contentData && (
-          <Tooltip title={isFullscreen ? "Exit Fullscreen" : "Full Screen"}>
-            <IconButton
-              onClick={toggleFullScreen}
-              sx={{
-                bgcolor: '#1976d2',
-                color: 'white',
-                '&:hover': { bgcolor: '#1565c0' },
-              }}
-            >
-              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-            </IconButton>
-          </Tooltip>
-        )}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {hasNextContent && currentProgress?.isCompleted && (
+            <Tooltip title="Next Lesson">
+              <IconButton
+                onClick={onNextContent}
+                sx={{
+                  bgcolor: '#6A4E9E',
+                  color: 'white',
+                  borderRadius: 2,
+                  '&:hover': { bgcolor: '#5A3E8E', transform: 'translateX(3px)' },
+                  transition: 'all 0.2s',
+                  px: 2,
+                  gap: 1
+                }}
+              >
+                <Typography variant="button" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>Next</Typography>
+                <ArrowForwardIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+          {content.contentType === 'ppt' && content.contentData && (
+            <Tooltip title={isFullscreen ? "Exit Fullscreen" : "Full Screen"}>
+              <IconButton
+                onClick={toggleFullScreen}
+                sx={{
+                  bgcolor: '#1976d2',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#1565c0' },
+                }}
+              >
+                {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       </Box>
 
       {/* Content Area */}
@@ -161,7 +187,13 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate }) =
         {content.contentType === 'video' ? (
           <VideoPlayer
             videoId={content.contentData}
-            onProgress={onProgressUpdate}
+            onProgress={(progress) => {
+              onProgressUpdate(progress);
+              // Auto-transition if video ends
+              if (progress >= 0.99 && hasNextContent) {
+                setTimeout(onNextContent, 1500);
+              }
+            }}
             initialPosition={currentProgress?.videoPosition ? currentProgress.videoPosition / 100 : 0}
           />
         ) : content.contentType === 'ppt' ? (

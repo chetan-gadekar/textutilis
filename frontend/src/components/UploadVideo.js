@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import notify from '../utils/notify';
 
 const UploadVideo = ({ onUploadSuccess }) => {
   const [file, setFile] = useState(null);
@@ -17,12 +16,12 @@ const UploadVideo = ({ onUploadSuccess }) => {
     if (selectedFile) {
       // Check file type
       if (!selectedFile.type.startsWith('video/')) {
-        toast.error('Please select a valid video file');
+        notify.error('Please select a valid video file');
         return;
       }
       // Check file size (3GB limit)
       if (selectedFile.size > 3 * 1024 * 1024 * 1024) {
-        toast.error('File size must be less than 3GB');
+        notify.error('File size must be less than 3GB');
         return;
       }
       setFile(selectedFile);
@@ -34,7 +33,7 @@ const UploadVideo = ({ onUploadSuccess }) => {
 
   const handleUpload = async () => {
     if (!file) {
-      toast.error('Please select a video file');
+      notify.error('Please select a video file');
       return;
     }
 
@@ -77,7 +76,7 @@ const UploadVideo = ({ onUploadSuccess }) => {
         },
       });
 
-      toast.success('Video uploaded successfully!');
+      notify.success('Video uploaded successfully!');
       setFile(null);
       setVideoName('');
       setUploadProgress(0);
@@ -87,7 +86,7 @@ const UploadVideo = ({ onUploadSuccess }) => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error(
+      notify.error(
         error.response?.data?.error || 
         error.response?.data?.details?.errors?.[0]?.message ||
         'Failed to upload video. Please check your Cloudflare credentials.'
@@ -180,7 +179,6 @@ const UploadVideo = ({ onUploadSuccess }) => {
           </div>
         </div>
       </div>
-      <ToastContainer />
     </div>
   );
 };

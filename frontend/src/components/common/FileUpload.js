@@ -6,9 +6,9 @@ import {
     LinearProgress,
     Paper,
     IconButton,
-    Alert,
     Tooltip
 } from '@mui/material';
+import notify from '../../utils/notify';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -17,7 +17,6 @@ import uploadService from '../../services/uploadService';
 const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", folder = "uploads", multiple = false }) => {
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -28,7 +27,7 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
             // Check sizes
             for (let f of selectedFiles) {
                 if (f.size > 10 * 1024 * 1024) { // 10MB limit
-                    setError(`File size too large: ${f.name} (max 10MB)`);
+                    notify.error(`File size too large: ${f.name} (max 10MB)`);
                     return;
                 }
             }
@@ -39,7 +38,6 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
                 setFiles([selectedFiles[0]]);
             }
 
-            setError(null);
             setSuccess(false);
             setUploadProgress(0);
         }
@@ -50,7 +48,6 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
 
         try {
             setUploading(true);
-            setError(null);
             setSuccess(false);
 
             let uploadedCount = 0;
@@ -75,8 +72,9 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
                 setFiles([]);
             }
 
+            notify.success(files.length > 1 ? 'Files uploaded successfully!' : 'File uploaded successfully!');
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "An error occurred during upload");
+            notify.error(err.response?.data?.message || err.message || "An error occurred during upload");
         } finally {
             setUploading(false);
         }
@@ -89,7 +87,7 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
     const reset = () => {
         setFiles([]);
         setUploading(false);
-        setError(null);
+        // Removed orphaned setError(null)
         setSuccess(false);
     };
 
@@ -153,16 +151,7 @@ const FileUpload = ({ onUploadSuccess, accept = "*", label = "Upload File", fold
                     )}
                 </Box>
             )}
-            {error && (
-                <Alert severity="error" sx={{ mt: 1 }} onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
-            {success && (
-                <Alert severity="success" sx={{ mt: 1 }} onClose={() => setSuccess(false)}>
-                    File(s) uploaded successfully!
-                </Alert>
-            )}
+            {/* Legacy alerts removed in favor of premium toasts */}
         </Box>
     );
 };

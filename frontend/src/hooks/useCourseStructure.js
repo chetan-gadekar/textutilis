@@ -2,14 +2,16 @@ import { useState } from 'react';
 import moduleService from '../services/moduleService';
 import topicService from '../services/topicService';
 import topicContentService from '../services/topicContentService';
+import notify from '../utils/notify';
 
-export const useCourseStructure = (courseId, onRefresh, onError) => {
+export const useCourseStructure = (courseId, onRefresh) => {
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
   const [contentDialogOpen, setContentDialogOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [moduleForm, setModuleForm] = useState({ title: '', description: '', order: 0 });
   const [topicForm, setTopicForm] = useState({ title: '', description: '', order: 0 });
@@ -42,15 +44,19 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
 
   const handleSaveModule = async () => {
     try {
+      setIsSaving(true);
       if (selectedModule) {
         await moduleService.updateModule(selectedModule._id, moduleForm);
       } else {
         await moduleService.createModule(courseId, moduleForm);
       }
       onRefresh();
+      notify.success(`Module ${selectedModule ? 'updated' : 'created'} successfully`);
       handleCloseModuleDialog();
     } catch (err) {
-      onError(err.response?.data?.message || err.message || 'Failed to save module');
+      notify.error(err.response?.data?.message || err.message || 'Failed to save module');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -60,9 +66,10 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
     }
     try {
       await moduleService.deleteModule(moduleId);
+      notify.success('Module deleted successfully');
       onRefresh();
     } catch (err) {
-      onError(err.message || 'Failed to delete module');
+      notify.error(err.message || 'Failed to delete module');
     }
   };
 
@@ -89,15 +96,19 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
 
   const handleSaveTopic = async () => {
     try {
+      setIsSaving(true);
       if (selectedTopic) {
         await topicService.updateTopic(selectedTopic._id, topicForm);
       } else {
         await topicService.createTopic(selectedModule._id, topicForm);
       }
       onRefresh();
+      notify.success(`Topic ${selectedTopic ? 'updated' : 'created'} successfully`);
       handleCloseTopicDialog();
     } catch (err) {
-      onError(err.response?.data?.message || err.message || 'Failed to save topic');
+      notify.error(err.response?.data?.message || err.message || 'Failed to save topic');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -107,9 +118,10 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
     }
     try {
       await topicService.deleteTopic(topicId);
+      notify.success('Topic deleted successfully');
       onRefresh();
     } catch (err) {
-      onError(err.message || 'Failed to delete topic');
+      notify.error(err.message || 'Failed to delete topic');
     }
   };
 
@@ -157,10 +169,11 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
   const handleSaveContent = async () => {
     try {
       if (!contentForm.contentData) {
-        onError('Content data is required');
+        notify.error('Content data is required');
         return;
       }
-
+      
+      setIsSaving(true);
       const contentData = { ...contentForm };
       delete contentData._id;
 
@@ -170,9 +183,12 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
         await topicContentService.createContent(selectedTopic._id, contentData);
       }
       onRefresh();
+      notify.success(`Content ${contentForm._id ? 'updated' : 'created'} successfully`);
       handleCloseContentDialog();
     } catch (err) {
-      onError(err.response?.data?.message || err.message || 'Failed to save content');
+      notify.error(err.response?.data?.message || err.message || 'Failed to save content');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -182,9 +198,10 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
     }
     try {
       await topicContentService.deleteContent(contentId);
+      notify.success('Content deleted successfully');
       onRefresh();
     } catch (err) {
-      onError(err.message || 'Failed to delete content');
+      notify.error(err.message || 'Failed to delete content');
     }
   };
 
@@ -197,6 +214,7 @@ export const useCourseStructure = (courseId, onRefresh, onError) => {
     selectedTopic,
     uploadingVideo,
     setUploadingVideo,
+    isSaving,
     // Forms
     moduleForm,
     setModuleForm,

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    CircularProgress,
-    Alert,
-    Snackbar
+    CircularProgress
 } from '@mui/material';
+import notify from '../../../utils/notify';
 import { UserCheck, MessageSquare, BookOpen, ChevronDown } from 'lucide-react';
 import performanceService from '../../../services/performanceService';
 import MainLayout from '../../layout/MainLayout';
@@ -14,7 +13,6 @@ const StudentPerformance = () => {
     const [performances, setPerformances] = useState([]);
     const [selectedCourseId, setSelectedCourseId] = useState('');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchPerformances();
@@ -28,9 +26,9 @@ const StudentPerformance = () => {
             if (response.data && response.data.length > 0) {
                 setSelectedCourseId(response.data[0].courseId._id);
             }
-            setError(null);
+            // Error handling unified via notify
         } catch (err) {
-            setError(err.message || 'Failed to fetch performance data');
+            notify.error(err.message || 'Failed to fetch performance data');
         } finally {
             setLoading(false);
         }
@@ -80,9 +78,7 @@ const StudentPerformance = () => {
                     )}
                 </div>
 
-                {error && (
-                    <Alert severity="error" className="mb-6">{error}</Alert>
-                )}
+                {/* Legacy alerts removed in favor of premium toasts */}
 
                 {performances.length === 0 ? (
                     <div className="bg-white p-12 rounded-xl border border-gray-100 shadow-sm text-center">

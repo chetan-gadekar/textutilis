@@ -1,6 +1,21 @@
 const moduleService = require('../services/moduleService');
 const courseService = require('../services/courseService');
 
+// ─── Ownership helper ─────────────────────────────────────────────────────────
+
+const verifyModuleOwnership = async (moduleId, user) => {
+  const { module } = await moduleService.getModuleById(moduleId);
+  const course = await courseService.getCourseById(module.courseId._id);
+  const hasBypass = user.role === 'admin' || user.role === 'super_instructor';
+  const isOwner = course.instructor && (
+    (course.instructor._id && course.instructor._id.toString() === user.id) ||
+    (course.instructor.toString() === user.id)
+  );
+  return { allowed: isOwner || hasBypass, module, course };
+};
+
+// ─── Controllers ─────────────────────────────────────────────────────────────
+
 // @desc    Create module
 // @route   POST /api/super-instructor/courses/:courseId/modules
 // @access  Private/SuperInstructor
@@ -23,15 +38,9 @@ const createModule = async (req, res, next) => {
       });
     }
 
-    const moduleData = {
-      ...req.body,
-      courseId,
-    };
+    const moduleData = { ...req.body, courseId };
     const module = await moduleService.createModule(moduleData);
-    res.status(201).json({
-      success: true,
-      data: module,
-    });
+    res.status(201).json({ success: true, data: module });
   } catch (error) {
     next(error);
   }
@@ -43,7 +52,11 @@ const createModule = async (req, res, next) => {
 const getModules = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    const course = await courseService.getCourseById(courseId);
+    // Fetch course (for auth check) and modules list in parallel
+    const [course, modules] = await Promise.all([
+      courseService.getCourseById(courseId),
+      moduleService.getModulesByCourse(courseId),
+    ]);
     
     // Verify ownership or bypass
     const isOwner = course.instructor && (
@@ -60,12 +73,7 @@ const getModules = async (req, res, next) => {
       });
     }
 
-    const modules = await moduleService.getModulesByCourse(courseId);
-    res.json({
-      success: true,
-      count: modules.length,
-      data: modules,
-    });
+    res.json({ success: true, count: modules.length, data: modules });
   } catch (error) {
     next(error);
   }
@@ -94,10 +102,7 @@ const getModule = async (req, res, next) => {
       });
     }
 
-    res.json({
-      success: true,
-      data: { module, topics },
-    });
+    res.json({ success: true, data: { module, topics } });
   } catch (error) {
     next(error);
   }
@@ -109,7 +114,11 @@ const getModule = async (req, res, next) => {
 const updateModule = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { module } = await moduleService.getModuleById(id);
+    // Fetch module metadata for auth check and apply update in parallel
+    const [{ module }, updatedModule] = await Promise.all([
+      moduleService.getModuleById(id),
+      moduleService.updateModule(id, req.body),
+    ]);
     
     // Verify ownership
     const course = await courseService.getCourseById(module.courseId._id);
@@ -126,11 +135,7 @@ const updateModule = async (req, res, next) => {
       });
     }
 
-    const updatedModule = await moduleService.updateModule(id, req.body);
-    res.json({
-      success: true,
-      data: updatedModule,
-    });
+    res.json({ success: true, data: updatedModule });
   } catch (error) {
     next(error);
   }
@@ -160,10 +165,7 @@ const deleteModule = async (req, res, next) => {
     }
 
     await moduleService.deleteModule(id);
-    res.json({
-      success: true,
-      message: 'Module deleted successfully',
-    });
+    res.json({ success: true, message: 'Module deleted successfully' });
   } catch (error) {
     next(error);
   }

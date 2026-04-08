@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
+  useMediaQuery,
+  Skeleton,
   Box,
   CircularProgress,
-  Alert,
-  useTheme,
-  useMediaQuery,
+  Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import notify from '../../utils/notify';
 import courseService from '../../services/courseService';
 import studentService from '../../services/studentService';
 import MainLayout from '../layout/MainLayout';
@@ -25,7 +27,6 @@ const CourseDashboard = () => {
   
   const [courseStructure, setCourseStructure] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [expandedModules, setExpandedModules] = useState({});
   const [selectedContent, setSelectedContent] = useState(null);
   const [currentProgress, setCurrentProgress] = useState(null);
@@ -37,10 +38,8 @@ const CourseDashboard = () => {
       setLoading(true);
       const response = await courseService.getStudentCourseStructure(courseId);
       setCourseStructure(response.data);
-
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch course structure');
+      notify.error(err.message || 'Failed to fetch course structure');
     } finally {
       setLoading(false);
     }
@@ -96,7 +95,7 @@ const CourseDashboard = () => {
       setCurrentProgress(response.data.progress);
     } catch (err) {
       console.error('Failed to fetch content details:', err);
-      setError('Failed to load lecture content');
+      notify.error('Failed to load lecture content');
     } finally {
       setContentLoading(false);
     }
@@ -135,6 +134,44 @@ const CourseDashboard = () => {
         isCompleted
       );
 
+      // 🚀 OPTIMIZATION: Update local state instead of full re-fetch
+      setCourseStructure(prev => {
+        if (!prev) return prev;
+        
+        const newModules = prev.modules.map(m => {
+          if (m._id !== module._id) return m;
+          return {
+            ...m,
+            topics: m.topics.map(t => {
+              if (t._id !== topic._id) return t;
+              return {
+                ...t,
+                content: t.content.map(c => {
+                  if (c._id !== selectedContent._id) return c;
+                  return { ...c, progress: { isCompleted, videoPosition } };
+                })
+              };
+            })
+          };
+        });
+
+        // Trigger milestone celebration if module just completed
+        const isModuleNowComplete = newModules.find(m => m._id === module._id)
+          .topics.every(t => t.content.every(c => c.progress?.isCompleted || (c._id === selectedContent._id && isCompleted)));
+        
+        const wasModuleComplete = prev.modules.find(m => m._id === module._id)
+          .topics.every(t => t.content.every(c => c.progress?.isCompleted));
+
+        if (isModuleNowComplete && !wasModuleComplete) {
+          notify.success(`Congratulations! You've completed Module: ${module.title} 🎉`, {
+            duration: 5000,
+            icon: '🏆'
+          });
+        }
+
+        return { ...prev, modules: newModules };
+      });
+
       // Update current progress locally so the checkbox reflects this immediately
       setCurrentProgress((prev) => ({
         ...prev,
@@ -142,11 +179,9 @@ const CourseDashboard = () => {
         videoPosition: videoPosition,
       }));
 
-      // Refresh structure to show updated progress in sidebar
-      const response = await courseService.getStudentCourseStructure(courseId);
-      setCourseStructure(response.data);
     } catch (err) {
       console.error('Failed to save progress:', err);
+      notify.error('Progress sync failed - checking your connection');
     }
   };
 
@@ -158,10 +193,12 @@ const CourseDashboard = () => {
     );
   }
 
-  if (error || !courseStructure) {
+  if (!courseStructure) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || 'Failed to load course'}</Alert>
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <Typography variant="h6" color="text.secondary">
+          Unable to load course structure. Please try again later.
+        </Typography>
       </Box>
     );
   }
@@ -183,7 +220,7 @@ const CourseDashboard = () => {
         sx={{
           position: 'fixed',
           top: 64,
-          left: mainSidebarWidth, // Start after main sidebar
+          left: mainSidebarWidth, 
           right: 0,
           bottom: 0,
           overflow: 'hidden',
@@ -211,12 +248,12 @@ const CourseDashboard = () => {
           onContextMenu={(e) => e.preventDefault()}
           sx={{
             position: 'absolute',
-            left: isMobile ? 0 : `${drawerWidth}px`, // Start after course sidebar
+            left: isMobile ? 0 : `${drawerWidth}px`, 
             top: 0,
             right: 0,
             bottom: 0,
             overflow: 'auto',
-            bgcolor: '#FAFAFA', // Match lighter background
+            bgcolor: '#FAFAFA', 
             p: { xs: 1.5, sm: 2, md: 3 },
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -226,7 +263,7 @@ const CourseDashboard = () => {
         >
           {contentLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-              <CircularProgress />
+              <Skeleton variant="rectangular" width="100%" height="400px" sx={{ borderRadius: 2 }} />
             </Box>
           ) : (
             <ContentViewer
@@ -234,6 +271,21 @@ const CourseDashboard = () => {
               course={course}
               currentProgress={currentProgress}
               onProgressUpdate={handleProgressUpdate}
+              onNextContent={() => {
+                // Flatten all content to find next one
+                const allContent = modules.flatMap(m => m.topics.flatMap(t => t.content));
+                const currentIndex = allContent.findIndex(c => c._id === selectedContent?._id);
+                if (currentIndex !== -1 && currentIndex < allContent.length - 1) {
+                  handleContentClick(allContent[currentIndex + 1]);
+                } else {
+                  notify.success("Great job! You've reached the end of the course content.");
+                }
+              }}
+              hasNextContent={(() => {
+                const allContent = modules.flatMap(m => m.topics.flatMap(t => t.content));
+                const currentIndex = allContent.findIndex(c => c._id === selectedContent?._id);
+                return currentIndex !== -1 && currentIndex < allContent.length - 1;
+              })()}
             />
           )}
           {selectedContent && !contentLoading && <RatingSection />}

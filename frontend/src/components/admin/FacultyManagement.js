@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { TablePagination } from '@mui/material';
 import { Search, Plus } from 'lucide-react';
 import adminService from '../../services/adminService';
+import notify from '../../utils/notify';
 import MainLayout from '../layout/MainLayout';
 import FacultyFormDialog from './faculty/FacultyFormDialog';
 import AssignCoursesDialog from './faculty/AssignCoursesDialog';
@@ -10,8 +11,6 @@ import FacultyTable from './faculty/FacultyTable';
 const FacultyManagement = () => {
   const [faculty, setFaculty] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   // Search and Pagination State
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,9 +59,8 @@ const FacultyManagement = () => {
       const response = await adminService.getAllFaculty(params);
       setFaculty(response.data || []);
       setTotalRecords(response.total || 0);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch faculty');
+      notify.error(err.message || 'Failed to fetch faculty');
     } finally {
       setLoading(false);
     }
@@ -107,7 +105,6 @@ const FacultyManagement = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingFaculty(null);
-    setError(null);
   };
 
   const handleSubmit = async () => {
@@ -120,18 +117,17 @@ const FacultyManagement = () => {
       if (editingFaculty) {
         await adminService.updateFaculty(editingFaculty._id, submitData);
       } else {
-        if (!submitData.password) {
-          setError('Password is required for new faculty');
+        if (!formData.password) {
+          notify.error('Password is required for new faculty');
           return;
         }
         await adminService.createFaculty(submitData);
       }
       fetchFaculty();
       handleCloseDialog();
-      setSuccess(editingFaculty ? 'Faculty updated' : 'Faculty created');
-      setTimeout(() => setSuccess(null), 3000);
+      notify.success(editingFaculty ? 'Faculty updated' : 'Faculty created');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save faculty');
+      notify.error(err.response?.data?.message || err.message || 'Failed to save faculty');
     }
   };
 
@@ -142,10 +138,9 @@ const FacultyManagement = () => {
     try {
       await adminService.deleteFaculty(facultyId);
       fetchFaculty();
-      setSuccess('Faculty deleted');
-      setTimeout(() => setSuccess(null), 3000);
+      notify.success('Faculty deleted');
     } catch (err) {
-      setError(err.message || 'Failed to delete faculty');
+      notify.error(err.message || 'Failed to delete faculty');
     }
   };
 
@@ -156,10 +151,9 @@ const FacultyManagement = () => {
         role: facultyMember.role,
       });
       fetchFaculty();
-      setSuccess(`Faculty ${facultyMember.isActive ? 'deactivated' : 'activated'}`);
-      setTimeout(() => setSuccess(null), 3000);
+      notify.success(`Faculty ${facultyMember.isActive ? 'deactivated' : 'activated'}`);
     } catch (err) {
-      setError(err.message || 'Failed to update status');
+      notify.error(err.message || 'Failed to update status');
     }
   };
 
@@ -167,7 +161,6 @@ const FacultyManagement = () => {
     setSelectedFacultyForAssign(facultyMember);
     setAssignDialogOpen(true);
     setCoursesLoading(true);
-    setError(null);
 
     try {
       const response = await adminService.getAllCourses();
@@ -178,7 +171,7 @@ const FacultyManagement = () => {
         : [];
       setSelectedCourseIds(currentIds);
     } catch (err) {
-      setError('Failed to fetch courses');
+      notify.error('Failed to fetch courses');
     } finally {
       setCoursesLoading(false);
     }
@@ -200,10 +193,9 @@ const FacultyManagement = () => {
       await adminService.assignCoursesToFaculty(selectedFacultyForAssign._id, selectedCourseIds);
       fetchFaculty();
       setAssignDialogOpen(false);
-      setSuccess('Courses assigned successfully');
-      setTimeout(() => setSuccess(null), 3000);
+      notify.success('Courses assigned successfully');
     } catch (err) {
-      setError(err.message || 'Failed to assign courses');
+      notify.error(err.message || 'Failed to assign courses');
     }
   };
 
@@ -248,47 +240,7 @@ const FacultyManagement = () => {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-700">{success}</p>
-              </div>
-            </div>
-            <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
+        {/* Legacy alerts removed in favor of premium toasts */}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4 w-full">
           <FacultyTable

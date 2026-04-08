@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Play, CheckCircle2 } from 'lucide-react';
+import notify from '../../utils/notify';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
 
@@ -8,7 +9,6 @@ const StudentDashboard = () => {
     const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [filter, setFilter] = useState('all');
 
     useEffect(() => {
@@ -28,9 +28,9 @@ const StudentDashboard = () => {
                 },
             }));
             setCourses(extractedCourses);
-            setError(null);
+            // Removed orphaned setError(null)
         } catch (err) {
-            setError(err.message || 'Failed to fetch courses');
+            notify.error(err.message || 'Failed to fetch courses');
         } finally {
             setLoading(false);
         }
@@ -91,17 +91,7 @@ const StudentDashboard = () => {
                     </div>
                 </div>
 
-                {error && (
-                    <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center shadow-sm">
-                        <p className="text-sm text-red-700">{error}</p>
-                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
-                            <span className="sr-only">Close</span>
-                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
+                {/* Legacy error alerts removed in favor of premium toasts */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">

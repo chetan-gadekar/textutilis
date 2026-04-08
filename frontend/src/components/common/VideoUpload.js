@@ -6,9 +6,9 @@ import {
     LinearProgress,
     Paper,
     IconButton,
-    Alert,
     Tooltip
 } from '@mui/material';
+import notify from '../../utils/notify';
 import MovieIcon from '@mui/icons-material/Movie';
 import CloseIcon from '@mui/icons-material/Close';
 import uploadService from '../../services/uploadService';
@@ -17,7 +17,6 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
-    const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [uploadStats, setUploadStats] = useState({ loadedMB: 0, totalMB: 0, speedMBps: "0.00" });
     const startTimeRef = useRef(null);
@@ -27,15 +26,14 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
         if (selectedFile) {
             // 3GB limit for videos (R2 supports larger files)
             if (selectedFile.size > 3 * 1024 * 1024 * 1024) {
-                setError("Video file too large (max 3GB)");
+                notify.error("Video file too large (max 3GB)");
                 return;
             }
             if (!selectedFile.type.startsWith('video/')) {
-                setError("Please select a valid video file");
+                notify.error("Please select a valid video file");
                 return;
             }
             setFile(selectedFile);
-            setError(null);
             setSuccess(false);
             setUploadProgress(0);
         }
@@ -46,7 +44,7 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
 
         try {
             setUploading(true);
-            setError(null);
+            // Removed orphaned setError(null)
             setUploadProgress(0);
             setUploadStats({ loadedMB: 0, totalMB: 0, speedMBps: "0.00" });
             startTimeRef.current = Date.now();
@@ -75,12 +73,13 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
             if (response.success) {
                 setSuccess(true);
                 setUploadProgress(100);
+                notify.success('Video uploaded successfully!');
                 onUploadSuccess(response.data.url, response.data.fileName, 0);
             } else {
-                setError(response.message || "Upload failed");
+                notify.error(response.message || "Upload failed");
             }
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "An error occurred during video upload");
+            notify.error(err.response?.data?.message || err.message || "An error occurred during video upload");
         } finally {
             setUploading(false);
         }
@@ -90,7 +89,7 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
         setFile(null);
         setUploading(false);
         setUploadProgress(0);
-        setError(null);
+        // Removed orphaned setError(null)
         setSuccess(false);
     };
 
@@ -187,16 +186,7 @@ const VideoUpload = ({ onUploadSuccess, label = "Upload Video" }) => {
                     )}
                 </Paper>
             )}
-            {error && (
-                <Alert severity="error" sx={{ mt: 1 }} onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
-            {success && (
-                <Alert severity="success" sx={{ mt: 1 }}>
-                    Video uploaded successfully!
-                </Alert>
-            )}
+            {/* Legacy alerts removed in favor of premium toasts */}
         </Box>
     );
 };

@@ -1,5 +1,8 @@
 const studentService = require('../services/studentService');
+const teachingPointService = require('../services/teachingPointService');
+const courseService = require('../services/courseService');
 const User = require('../schemas/User');
+const Enrollment = require('../schemas/Enrollment');
 
 // @desc    Get all students
 // @route   GET /api/admin/students
@@ -63,13 +66,17 @@ const getAllFaculty = async (req, res, next) => {
       query.name = { $regex: name, $options: 'i' };
     }
 
-    const total = await User.countDocuments(query);
-    const faculty = await User.find(query)
-      .select('-password')
-      .populate('assignedCourses', 'title')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    // Run count and find in parallel
+    const [total, faculty] = await Promise.all([
+      User.countDocuments(query),
+      User.find(query)
+        .select('-password')
+        .populate('assignedCourses', 'title')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+    ]);
 
     res.json({
       success: true,
@@ -98,7 +105,7 @@ const createFaculty = async (req, res, next) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email }).lean();
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -145,7 +152,7 @@ const updateFaculty = async (req, res, next) => {
     }
 
     if (email && email !== faculty.email) {
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email }).lean();
       if (existingUser) {
         return res.status(400).json({
           success: false,
@@ -185,7 +192,7 @@ const deleteFaculty = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const faculty = await User.findById(id);
+    const faculty = await User.findById(id).lean();
     if (!faculty || !['instructor', 'super_instructor'].includes(faculty.role)) {
       return res.status(404).json({
         success: false,
@@ -209,7 +216,6 @@ const deleteFaculty = async (req, res, next) => {
 // @access  Private/Admin
 const getAllTeachingPoints = async (req, res, next) => {
   try {
-    const teachingPointService = require('../services/teachingPointService');
     const { instructorId, name, startDate, endDate, page, limit } = req.query;
 
     const filters = {
@@ -241,7 +247,6 @@ const getAllTeachingPoints = async (req, res, next) => {
 // @access  Private/Admin
 const getAllCourses = async (req, res, next) => {
   try {
-    const courseService = require('../services/courseService');
     const courses = await courseService.getAllCourses({});
     res.json({
       success: true,
@@ -261,11 +266,12 @@ const assignCoursesToStudent = async (req, res, next) => {
     const { id } = req.params;
     const { courseIds } = req.body; // Array of course IDs to assign
 
-    const Enrollment = require('../schemas/Enrollment');
-    const User = require('../schemas/User');
+    // Verify student exists and get current enrollments in parallel
+    const [student, currentEnrollments] = await Promise.all([
+      User.findById(id).lean(),
+      Enrollment.find({ studentId: id }).lean(),
+    ]);
 
-    // Verify student exists
-    const student = await User.findById(id);
     if (!student || student.role !== 'student') {
       return res.status(404).json({
         success: false,
@@ -273,30 +279,21 @@ const assignCoursesToStudent = async (req, res, next) => {
       });
     }
 
-    // Get current enrollments
-    const currentEnrollments = await Enrollment.find({ studentId: id });
     const currentCourseIds = currentEnrollments.map(e => e.courseId.toString());
 
     // Determine courses to add and remove
     const coursesToAdd = courseIds.filter(cid => !currentCourseIds.includes(cid));
     const coursesToRemove = currentCourseIds.filter(cid => !courseIds.includes(cid));
 
-    // Remove enrollments
-    if (coursesToRemove.length > 0) {
-      await Enrollment.deleteMany({
-        studentId: id,
-        courseId: { $in: coursesToRemove },
-      });
-    }
-
-    // Add new enrollments
-    if (coursesToAdd.length > 0) {
-      const newEnrollments = coursesToAdd.map(courseId => ({
-        studentId: id,
-        courseId,
-      }));
-      await Enrollment.insertMany(newEnrollments);
-    }
+    // Run removals and additions in parallel
+    await Promise.all([
+      coursesToRemove.length > 0
+        ? Enrollment.deleteMany({ studentId: id, courseId: { $in: coursesToRemove } })
+        : Promise.resolve(),
+      coursesToAdd.length > 0
+        ? Enrollment.insertMany(coursesToAdd.map(courseId => ({ studentId: id, courseId })))
+        : Promise.resolve(),
+    ]);
 
     res.json({
       success: true,
@@ -317,10 +314,10 @@ const assignCoursesToStudent = async (req, res, next) => {
 const getStudentEnrollments = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const Enrollment = require('../schemas/Enrollment');
 
     const enrollments = await Enrollment.find({ studentId: id })
-      .populate('courseId', 'title description');
+      .populate('courseId', 'title description')
+      .lean();
 
     res.json({
       success: true,
@@ -339,8 +336,6 @@ const assignCoursesToFaculty = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { courseIds } = req.body; // Array of course IDs
-
-    const User = require('../schemas/User');
 
     const faculty = await User.findById(id);
     if (!faculty || !['instructor', 'super_instructor'].includes(faculty.role)) {

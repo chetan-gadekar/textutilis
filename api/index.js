@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const compression = require('compression');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
@@ -24,6 +25,8 @@ const app = express();
 const PORT = process.env.PORT || 5002;
 
 // Middleware
+// Compress all responses >= 1KB with gzip for faster client delivery
+app.use(compression({ threshold: 1024 }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

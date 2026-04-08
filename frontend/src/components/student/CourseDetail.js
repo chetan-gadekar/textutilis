@@ -8,11 +8,11 @@ import {
   ListItem,
   ListItemText,
   Button,
-  Alert,
   CircularProgress,
   Chip,
   LinearProgress,
 } from '@mui/material';
+import notify from '../../utils/notify';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -27,7 +27,6 @@ const CourseDetail = () => {
   const [content, setContent] = useState([]);
   const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedContent, setSelectedContent] = useState(null);
   const fetchCourseData = useCallback(async () => {
     try {
@@ -42,9 +41,8 @@ const CourseDetail = () => {
         progressMap[p.contentId] = p;
       });
       setProgress(progressMap);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch course data');
+      notify.error(err.message || 'Failed to fetch course data');
     } finally {
       setLoading(false);
     }
@@ -155,11 +153,7 @@ const CourseDetail = () => {
           ← Back to My Courses
         </Button>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+        {/* Legacy alerts removed in favor of premium toasts */}
 
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>

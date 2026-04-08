@@ -1,4 +1,5 @@
 const { Assignment, Submission } = require('../schemas/Assignment');
+const Enrollment = require('../schemas/Enrollment');
 const { signR2Urls, stripR2Signature } = require('../utils/r2Client');
 
 // Create assignment
@@ -195,7 +196,8 @@ const getAllSubmissions = async (filters = {}) => {
     })
     .sort({ submittedAt: -1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .lean();
 
   return {
     submissions: await signR2Urls(submissions),
@@ -207,11 +209,10 @@ const getAllSubmissions = async (filters = {}) => {
 
 // Get student assignments with status filter
 const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
-  const Enrollment = require('../schemas/Enrollment');
   const { page = 1, limit = 10, startDate, endDate, status } = filters;
 
   // 1. Get enrolled courses
-  const enrollments = await Enrollment.find({ studentId });
+  const enrollments = await Enrollment.find({ studentId }).lean();
   const courseIds = enrollments.map(e => e.courseId);
 
   // 2. Build assignment query
@@ -227,13 +228,16 @@ const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
     }
   }
 
-  // 3. Fetch all potential assignments (we need all to check submission status)
-  const assignments = await Assignment.find(assignmentQuery)
-    .populate('courseId', 'title')
-    .sort({ dueDate: 1 }); // Sort by due date usually makes sense for students
+  // 3. Fetch assignments and student submissions in parallel (independent queries)
+  const [assignments, submissions] = await Promise.all([
+    Assignment.find(assignmentQuery)
+      .populate('courseId', 'title')
+      .sort({ dueDate: 1 })
+      .lean(),
+    Submission.find({ studentId }).lean(),
+  ]);
 
-  // 4. Fetch all submissions by this student
-  const submissions = await Submission.find({ studentId });
+  // 4. Build submission lookup map
   const submissionMap = {};
   submissions.forEach(sub => {
     submissionMap[sub.assignmentId.toString()] = sub;
@@ -242,7 +246,7 @@ const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
   // 5. Merge and determine status
   let studentAssignments = assignments.map(assignment => {
     const submission = submissionMap[assignment._id.toString()];
-    const status = submission ? 'submitted' : 'pending'; // Simple status logic
+    const status = submission ? 'submitted' : 'pending';
     return {
       _id: assignment._id,
       title: assignment.title,

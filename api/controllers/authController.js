@@ -2,6 +2,7 @@ const authService = require('../services/authService');
 const { generateToken } = require('../middlewares/auth');
 const otpGenerator = require('otp-generator');
 const { sendEmail } = require('../utils/emailService');
+const User = require('../schemas/User');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -69,7 +70,6 @@ const getMe = async (req, res, next) => {
 // @access  Private
 const logout = async (req, res, next) => {
   try {
-    const User = require('../schemas/User');
     const user = await User.findById(req.user.id);
     
     if (user && user.role === 'student') {
@@ -93,7 +93,6 @@ const logout = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
-    const User = require('../schemas/User');
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -135,7 +134,6 @@ const forgotPassword = async (req, res, next) => {
 const verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    const User = require('../schemas/User');
 
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: 'Email and OTP are required' });
@@ -163,7 +161,6 @@ const verifyOtp = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   try {
     const { email, otp, newPassword } = req.body;
-    const User = require('../schemas/User');
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ success: false, message: 'Email, OTP, and new password are required' });

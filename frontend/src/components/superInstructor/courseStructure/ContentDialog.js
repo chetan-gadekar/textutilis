@@ -11,16 +11,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
   CircularProgress,
   Typography,
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
-import videoService from '../../../services/videoService';
+import LoadingButton from '../../common/LoadingButton';
 import FileUpload from '../../common/FileUpload';
 import VideoUpload from '../../common/VideoUpload';
+import notify from '../../../utils/notify';
 
 const ContentDialog = ({
   open,
@@ -32,7 +32,7 @@ const ContentDialog = ({
   onSave,
   uploadingVideo,
   setUploadingVideo,
-  onError,
+  loading,
 }) => {
   const handleVideoUpload = async (event) => {
     const file = event.target.files[0];
@@ -40,11 +40,9 @@ const ContentDialog = ({
 
     try {
       setUploadingVideo(true);
-      const response = await videoService.uploadVideo(file, formData.title || file.name);
-      onFormChange({ ...formData, contentData: response.video.uid });
-      setUploadingVideo(false);
+      // Removed legacy videoService call as it uses VideoUpload component now
     } catch (err) {
-      onError(err.message || 'Failed to upload video');
+      notify.error(err.message || 'Failed to upload video');
       setUploadingVideo(false);
     }
   };
@@ -139,9 +137,11 @@ const ContentDialog = ({
               */}
 
               {formData.contentData && (
-                <Alert severity="info" sx={{ mt: 1 }}>
-                  Content Data: {formData.contentData.substring(0, 50)}...
-                </Alert>
+                <Box sx={{ mt: 1, p: 1, bgcolor: 'action.hover', borderRadius: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Content Identifier: {formData.contentData.substring(0, 30)}...
+                  </Typography>
+                </Box>
               )}
             </Box>
           )}
@@ -207,12 +207,12 @@ const ContentDialog = ({
         >
           CANCEL
         </Button>
-        <Button
+        <LoadingButton
           onClick={onSave}
+          loading={loading || uploadingVideo}
+          loadingText={uploadingVideo ? 'Uploading...' : (content?._id ? 'Updating...' : 'Creating...')}
           variant="contained"
-          color="primary"
-          disabled={uploadingVideo}
-          startIcon={uploadingVideo ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          startIcon={!uploadingVideo && !loading && <SaveIcon />}
           sx={{
             textTransform: 'none',
             fontWeight: 600,
@@ -223,7 +223,7 @@ const ContentDialog = ({
           }}
         >
           {content?._id ? 'Update Content' : 'Create Content'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );

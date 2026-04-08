@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, Collapse } from '@mui/material';
 import { Upload, Download, Filter, FilterX } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import assignmentService from '../../services/assignmentService';
+import notify from '../../utils/notify';
 import MainLayout from '../layout/MainLayout';
 import FileUpload from '../common/FileUpload';
 
 const AssignmentView = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   // Filter State
   const [showFilters, setShowFilters] = useState(false);
@@ -42,9 +44,8 @@ const AssignmentView = () => {
       const response = await assignmentService.getMyAssignments(params);
       setAssignments(response.assignments || []);
       setTotalRecords(response.total || 0);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch assignments');
+      notify.error(err.message || 'Failed to fetch assignments');
       setAssignments([]);
     } finally {
       setLoading(false);
@@ -91,22 +92,19 @@ const AssignmentView = () => {
     setFileName('');
   };
 
-
-
   const handleSubmit = async () => {
     if (!fileUrl || !fileName) {
-      setError('Please select a file');
+      notify.error('Please select a file');
       return;
     }
 
     try {
       setUploading(true);
-      setError(null);
       await assignmentService.submitAssignment(selectedAssignment._id, fileUrl, fileName);
       handleCloseDialog();
       fetchData(); // Refresh list to update status
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to submit assignment');
+      notify.error(err.response?.data?.message || err.message || 'Failed to submit assignment');
     } finally {
       setUploading(false);
     }
@@ -185,17 +183,7 @@ const AssignmentView = () => {
           </div>
         </Collapse>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center shadow-sm">
-            <p className="text-sm text-red-700">{error}</p>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
+        {/* Legacy error alerts removed in favor of premium toasts */}
 
         {loading ? (
           <div className="flex justify-center items-center py-12">

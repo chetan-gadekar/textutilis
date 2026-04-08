@@ -132,7 +132,8 @@ const getStudentCourses = async (studentId) => {
       match: { isVisible: true },
       populate: { path: 'instructor', select: 'name email' },
     })
-    .sort({ enrolledAt: -1 });
+    .sort({ enrolledAt: -1 })
+    .lean();
 
   return enrollments.filter((enrollment) => enrollment.courseId !== null);
 };

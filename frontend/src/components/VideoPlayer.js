@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Alert, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import notify from '../utils/notify';
 import videoService from '../services/videoService';
 
 const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
@@ -71,6 +72,7 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
       setError(null);
     } catch (err) {
       console.error('Error fetching video:', err);
+      notify.error('Failed to load video details');
       setError('Failed to load video details');
     } finally {
       setLoading(false);
@@ -99,10 +101,13 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
 
   if (error || !video) {
     return (
-      <Box sx={containerStyle}>
-        <Alert severity="error">
+      <Box sx={{ ...containerStyle, flexDirection: 'column', gap: 2, p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error.main" sx={{ fontWeight: 600 }}>
           {error || 'Video not found'}
-        </Alert>
+        </Typography>
+        <Typography variant="body2" color="gray">
+          Please check the video source or try again later.
+        </Typography>
       </Box>
     );
   }
@@ -113,13 +118,17 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
   return (
     <Box sx={containerStyle}>
       {!isReady ? (
-        <Alert severity="warning">
-          <Typography variant="h6">Video is processing...</Typography>
-          <Typography variant="body2">
+        <Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>
+          <CircularProgress size={48} sx={{ mb: 3, color: 'white' }} />
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>Video is processing...</Typography>
+          <Typography variant="body2" sx={{ opacity: 0.7 }}>
             Status: {video.status?.state || 'Unknown'}
-            {video.status?.pct && ` (${video.status.pct}% complete)`}
+            {video.status?.pct ? ` (${video.status.pct}% complete)` : ''}
           </Typography>
-        </Alert>
+          <Typography variant="caption" sx={{ mt: 2, display: 'block', fontStyle: 'italic', opacity: 0.5 }}>
+            This usually takes a few minutes depending on file size.
+          </Typography>
+        </Box>
       ) : playbackUrl ? (
         <video
           ref={videoRef}
@@ -142,7 +151,7 @@ const VideoPlayer = ({ videoId, onProgress, initialPosition = 0 }) => {
           Your browser does not support the video tag.
         </video>
       ) : (
-        <Alert severity="error">No playback URL available</Alert>
+        <Typography color="error" variant="body2">No playback URL available</Typography>
       )}
     </Box>
   );

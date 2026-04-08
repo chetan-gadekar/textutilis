@@ -23,7 +23,8 @@ const getAllStudents = async (filters = {}) => {
     .select('-password')
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .lean();
 
   return {
     students,
@@ -69,7 +70,8 @@ const enrollStudent = async (studentId, courseId) => {
 const getStudentEnrollments = async (studentId) => {
   const enrollments = await Enrollment.find({ studentId })
     .populate('courseId')
-    .sort({ enrolledAt: -1 });
+    .sort({ enrolledAt: -1 })
+    .lean();
   return enrollments;
 };
 
@@ -113,13 +115,13 @@ const saveVideoProgress = async (progressData) => {
 
 // Get video progress
 const getVideoProgress = async (studentId, contentId) => {
-  const progress = await Progress.findOne({ studentId, contentId });
+  const progress = await Progress.findOne({ studentId, contentId }).lean();
   return progress;
 };
 
 // Get all progress for student in course
 const getStudentProgressInCourse = async (studentId, courseId) => {
-  const progress = await Progress.find({ studentId, courseId });
+  const progress = await Progress.find({ studentId, courseId }).lean();
   return progress;
 };
 

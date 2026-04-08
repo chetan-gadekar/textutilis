@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { resetPassword, clearError } from '../../store/slices/authSlice';
 import { Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import notify from '../../utils/notify';
+import LoadingButton from '../common/LoadingButton';
 import loginBanner from '../../assets/login_banner.jpg';
 
 const ResetPassword = () => {
@@ -17,8 +18,15 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch]);
+    if (error) {
+      notify.error(error);
+      dispatch(clearError());
+    }
+    
+    return () => {
+      dispatch(clearError());
+    };
+  }, [error, dispatch]);
 
   if (!email || !otp) {
     return <Navigate to="/forgot-password" replace />;
@@ -38,7 +46,7 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (!isPasswordValid) {
-      toast.error('Please ensure all password requirements are met.');
+      notify.error('Please ensure all password requirements are met.');
       return;
     }
 
@@ -66,12 +74,6 @@ const ResetPassword = () => {
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold mb-2 text-gray-900">Reset Password</h1>
           <p className="text-gray-500 mb-8 text-sm">Enter your new password below</p>
-
-          {error && (
-            <div className="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -115,13 +117,20 @@ const ResetPassword = () => {
               </div>
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={loading || newPassword.length > 0 && !isPasswordValid}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+              loading={loading}
+              loadingText="Resetting..."
+              disabled={newPassword.length > 0 && !isPasswordValid}
+              fullWidth
+              sx={{
+                bgcolor: '#6A4E9E',
+                '&:hover': { bgcolor: '#5A3E8E' },
+                mt: 6
+              }}
             >
-              {loading ? 'Resetting...' : 'Reset Password'}
-            </button>
+              Reset Password
+            </LoadingButton>
           </form>
         </div>
       </div>

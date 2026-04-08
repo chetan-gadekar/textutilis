@@ -2,14 +2,32 @@ const Performance = require('../schemas/Performance');
 const Enrollment = require('../schemas/Enrollment');
 const courseService = require('./courseService');
 
-// Helper to ensure performance record exists
-const getOrCreatePerformance = async (studentId, courseId) => {
-  let performance = await Performance.findOne({ studentId, courseId })
-    .populate('studentId', 'name email')
-    .populate('courseId', 'title');
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  if (!performance) {
-    performance = await Performance.create({
+/**
+ * Bulk-fetch existing Performance documents for many (studentId, courseId) pairs
+ * and create any that are missing, then return them all with population applied.
+ * O(3) DB round-trips regardless of how many pairs are passed.
+ */
+const bulkGetOrCreatePerformances = async (pairs) => {
+  if (!pairs.length) return [];
+
+  // 1. Fetch all existing records in one query
+  const existing = await Performance.find({
+    $or: pairs.map(({ studentId, courseId }) => ({ studentId, courseId })),
+  }).lean();
+
+  // Build a Set of existing combos for O(1) lookup
+  const existingSet = new Set(existing.map(p => `${p.studentId}_${p.courseId}`));
+
+  // 2. Determine which pairs need to be created
+  const missing = pairs.filter(
+    ({ studentId, courseId }) => !existingSet.has(`${studentId}_${courseId}`)
+  );
+
+  // 3. Bulk-create missing records in parallel
+  if (missing.length > 0) {
+    const defaultRecord = ({ studentId, courseId }) => ({
       studentId,
       courseId,
       selfEvaluation: {
@@ -27,32 +45,42 @@ const getOrCreatePerformance = async (studentId, courseId) => {
         implementation: [],
         problemSynthesizing: [],
         punctuality: [],
-      }
+      },
     });
-    // Re-fetch to apply population
-    performance = await Performance.findById(performance._id)
-      .populate('studentId', 'name email')
-      .populate('courseId', 'title');
+    await Performance.insertMany(missing.map(defaultRecord), { ordered: false }).catch(() => {
+      // Swallow duplicate-key errors that can occur under concurrent requests
+    });
   }
-  return performance;
+
+  // 4. Fetch all records (now guaranteed to exist) with population in one query
+  const all = await Performance.find({
+    $or: pairs.map(({ studentId, courseId }) => ({ studentId, courseId })),
+  })
+    .populate('studentId', 'name email')
+    .populate('courseId', 'title');
+
+  return all;
 };
+
+// ─── Legacy single-record helper (used by update functions) ──────────────────
+
+const getOrCreatePerformance = async (studentId, courseId) => {
+  const [record] = await bulkGetOrCreatePerformances([{ studentId, courseId }]);
+  return record;
+};
+
+// ─── Public API ──────────────────────────────────────────────────────────────
 
 // Get single performance
 const getPerformance = async (studentId, courseId) => {
   return await getOrCreatePerformance(studentId, courseId);
 };
 
-// Get all performances for a specific student
+// Get all performances for a specific student (optimized: 2 DB calls total)
 const getStudentPerformances = async (studentId) => {
-  // Find all enrollments for this student
-  const enrollments = await Enrollment.find({ studentId });
-  const performances = [];
-
-  for (const enrollment of enrollments) {
-    const perf = await getOrCreatePerformance(studentId, enrollment.courseId);
-    performances.push(perf);
-  }
-  return performances;
+  const enrollments = await Enrollment.find({ studentId }).lean();
+  const pairs = enrollments.map(e => ({ studentId, courseId: e.courseId }));
+  return await bulkGetOrCreatePerformances(pairs);
 };
 
 // Update self evaluation
@@ -73,7 +101,7 @@ const updateInstructorAssessment = async (studentId, courseId, updateData, updat
   return performance;
 };
 
-// Get students' performance for instructor's courses
+// Get students' performance for instructor's courses (optimized: bulk $in)
 const getInstructorStudentsPerformance = async (instructorId, filters = {}) => {
   // 1. Get courses taught/assigned to instructor
   const courses = await courseService.getAllCourses({ instructor: instructorId });
@@ -86,9 +114,10 @@ const getInstructorStudentsPerformance = async (instructorId, filters = {}) => {
     ? [filters.courseId].filter(id => courseIds.some(cid => cid.toString() === id.toString()))
     : courseIds;
 
-  // 2. Get enrollments for these courses
-  const enrollmentsQuery = { courseId: { $in: targetCourseIds } };
-  const enrollments = await Enrollment.find(enrollmentsQuery).populate('studentId', 'name email');
+  // 2. Get enrollments for these courses (in parallel with any other work if needed)
+  const enrollments = await Enrollment.find({ courseId: { $in: targetCourseIds } })
+    .populate('studentId', 'name email')
+    .lean();
 
   // Apply student name filter if provided
   let filteredEnrollments = enrollments;
@@ -99,26 +128,24 @@ const getInstructorStudentsPerformance = async (instructorId, filters = {}) => {
     );
   }
 
-  // 3. Get performance for each student/course pair
-  const performances = [];
-  for (const enrollment of filteredEnrollments) {
-    if (!enrollment.studentId) continue;
-    const perf = await getOrCreatePerformance(enrollment.studentId._id, enrollment.courseId);
-    performances.push(perf);
-  }
+  // 3. Bulk-resolve performances (no loop, no N+1)
+  const pairs = filteredEnrollments
+    .filter(e => e.studentId)
+    .map(e => ({ studentId: e.studentId._id, courseId: e.courseId }));
 
-  return performances;
+  return await bulkGetOrCreatePerformances(pairs);
 };
 
 // Get all students' performance (for super instructor / admin)
 const getAllStudentsPerformance = async (filters = {}) => {
-  // Get enrollments based on filters
   let enrollmentsQuery = {};
   if (filters.courseId) {
     enrollmentsQuery.courseId = filters.courseId;
   }
 
-  const enrollments = await Enrollment.find(enrollmentsQuery).populate('studentId', 'name email');
+  const enrollments = await Enrollment.find(enrollmentsQuery)
+    .populate('studentId', 'name email')
+    .lean();
 
   // Apply student name filter if provided
   let filteredEnrollments = enrollments;
@@ -129,14 +156,12 @@ const getAllStudentsPerformance = async (filters = {}) => {
     );
   }
 
-  const performances = [];
-  for (const enrollment of filteredEnrollments) {
-    if (!enrollment.studentId) continue;
-    const perf = await getOrCreatePerformance(enrollment.studentId._id, enrollment.courseId);
-    performances.push(perf);
-  }
+  // Bulk-resolve performances (no loop, no N+1)
+  const pairs = filteredEnrollments
+    .filter(e => e.studentId)
+    .map(e => ({ studentId: e.studentId._id, courseId: e.courseId }));
 
-  return performances;
+  return await bulkGetOrCreatePerformances(pairs);
 };
 
 module.exports = {

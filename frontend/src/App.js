@@ -10,8 +10,7 @@ import VerifyOtp from './components/auth/VerifyOtp';
 import ResetPassword from './components/auth/ResetPassword';
 import Dashboard from './components/layout/Dashboard';
 import ProtectedRoute from './utils/ProtectedRoute';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 import './App.css';
 
 // Admin components
@@ -55,7 +54,18 @@ const App = () => {
   return (
     <Router>
       <div className="App">
-        <ToastContainer position="top-right" autoClose={3000} />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: 'transparent',
+              boxShadow: 'none',
+              border: 'none',
+              padding: 0
+            }
+          }} 
+        />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

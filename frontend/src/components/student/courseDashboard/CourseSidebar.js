@@ -29,6 +29,7 @@ import {
   Topic as TopicIcon,
   PictureAsPdf as PdfIcon,
   Slideshow as PptIcon,
+  Description as DescriptionIcon,
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 
@@ -147,8 +148,19 @@ const CourseSidebar = ({
                 */}
                 {module.topics.flatMap(chat => chat.content).map((content, index, array) => {
                   const isSelected = selectedContent?._id === content._id;
+                  const isCompleted = content.progress?.isCompleted || false;
                   const isFirst = index === 0;
                   const isLast = index === array.length - 1;
+
+                  const getIcon = () => {
+                    if (isCompleted) return <CheckCircleIcon sx={{ fontSize: 16, color: '#4caf50' }} />;
+                    switch (content.contentType) {
+                      case 'video': return <PlayIcon sx={{ fontSize: 18, color: isSelected ? '#6A4E9E' : '#757575' }} />;
+                      case 'ppt': return <PdfIcon sx={{ fontSize: 18, color: isSelected ? '#6A4E9E' : '#757575' }} />;
+                      case 'text': return <DescriptionIcon sx={{ fontSize: 18, color: isSelected ? '#6A4E9E' : '#757575' }} />;
+                      default: return <DescriptionIcon sx={{ fontSize: 18, color: '#757575' }} />;
+                    }
+                  };
 
                   return (
                     <Box key={content._id} sx={{ position: 'relative' }}>
@@ -161,8 +173,11 @@ const CourseSidebar = ({
                           py: 1.5,
                           position: 'relative',
                           alignItems: 'flex-start',
-                          '&:hover': { bgcolor: 'transparent' },
-                          '&.Mui-selected': { bgcolor: 'transparent' }
+                          borderLeft: isSelected ? '4px solid #6A4E9E' : '4px solid transparent',
+                          bgcolor: isSelected ? alpha('#6A4E9E', 0.05) : 'transparent',
+                          '&:hover': { bgcolor: alpha('#6A4E9E', 0.02) },
+                          '&.Mui-selected': { bgcolor: alpha('#6A4E9E', 0.05) },
+                          transition: 'all 0.2s ease',
                         }}
                       >
                         {/* Per-item Timeline Line */}
@@ -201,15 +216,16 @@ const CourseSidebar = ({
                             width: 28,
                             height: 28,
                             borderRadius: '50%',
-                            bgcolor: '#ffebee',
-                            border: '1px solid #ffcdd2',
+                            bgcolor: isCompleted ? alpha('#4caf50', 0.1) : (isSelected ? alpha('#6A4E9E', 0.1) : '#fafafa'),
+                            border: '1px solid',
+                            borderColor: isCompleted ? alpha('#4caf50', 0.3) : (isSelected ? alpha('#6A4E9E', 0.3) : '#eeeeee'),
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#e57373',
+                            boxShadow: isSelected ? `0 0 10px ${alpha('#6A4E9E', 0.2)}` : 'none',
                           }}
                         >
-                          <SensorsIcon sx={{ fontSize: 16 }} />
+                          {getIcon()}
                         </Box>
 
                         <ListItemText

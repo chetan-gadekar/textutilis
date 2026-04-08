@@ -16,8 +16,9 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import SortIcon from '@mui/icons-material/Sort';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
+import LoadingButton from '../../common/LoadingButton';
 
-const ModuleDialog = ({ open, onClose, module, formData, onFormChange, onSave }) => {
+const ModuleDialog = ({ open, onClose, module, formData, onFormChange, onSave, loading }) => {
   const isFormValid = formData?.title && formData.title.trim() !== '';
 
   return (
@@ -111,10 +112,11 @@ const ModuleDialog = ({ open, onClose, module, formData, onFormChange, onSave })
         >
           CANCEL
         </Button>
-        <Button
+        <LoadingButton
           onClick={onSave}
+          loading={loading}
+          loadingText={module ? 'Updating...' : 'Creating...'}
           variant="contained"
-          color="primary"
           disabled={!isFormValid}
           startIcon={<SaveIcon />}
           sx={{
@@ -127,7 +129,7 @@ const ModuleDialog = ({ open, onClose, module, formData, onFormChange, onSave })
           }}
         >
           {module ? 'Update Module' : 'Create Module'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );

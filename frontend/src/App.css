@@ -52,3 +52,50 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Premium Dynamic Toasts */
+.premium-toast {
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(209, 213, 219, 0.3);
+  border-radius: 14px !important;
+  color: #1a1a1b !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 12px 20px !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 320px !important;
+  max-width: 450px !important;
+}
+
+.premium-toast.success {
+  border-left: 5px solid #10b981 !important;
+}
+
+.premium-toast.error {
+  border-left: 5px solid #ef4444 !important;
+}
+
+.premium-toast.warning {
+  border-left: 5px solid #f59e0b !important;
+}
+
+.premium-toast.info {
+  border-left: 5px solid #3b82f6 !important;
+}
+
+.premium-toast.loading {
+  border-left: 5px solid #6A4E9E !important;
+}
+
+/* Dark mode support if needed */
+.dark-toast {
+  background-color: rgba(30, 41, 59, 0.85);
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

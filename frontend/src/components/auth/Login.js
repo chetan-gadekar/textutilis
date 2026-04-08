@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { login, clearError } from '../../store/slices/authSlice';
-import { FcGoogle } from 'react-icons/fc';
 import { Eye, EyeOff } from 'lucide-react';
+import LoadingButton from '../common/LoadingButton';
+import notify from '../../utils/notify';
 import loginBanner from '../../assets/login_banner.jpg';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
-  const [sessionMessage, setSessionMessage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -19,20 +20,25 @@ const Login = () => {
   });
 
   useEffect(() => {
-    // Check for session invalidation message
     const message = sessionStorage.getItem('sessionMessage');
     if (message) {
-      setSessionMessage(message);
+      notify.info(message);
       sessionStorage.removeItem('sessionMessage');
     }
 
     if (isAuthenticated) {
       navigate('/dashboard');
     }
+
+    if (error) {
+      notify.error(error);
+      dispatch(clearError());
+    }
+
     return () => {
       dispatch(clearError());
     };
-  }, [isAuthenticated, navigate, dispatch]);
+  }, [isAuthenticated, error, navigate, dispatch]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -45,11 +51,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex bg-white font-poppins">
-      {/* Left Column - Form */}
-      <div className="w-full lg:w-1/2 flex justify-center items-center p-8 relative">
-        {/* Logo Area */}
+      {/* Left Column: Form Section */}
+      <div className="w-full lg:w-1/2 flex justify-center items-center py-12 px-8 relative overflow-y-auto">
+        
+        {/* Brand Logo - Matched with Register page */}
         <div className="absolute top-8 left-8 flex items-center space-x-2">
-          {/* Simple CSS logo mimicking TheCubeFactory */}
           <div className="flex gap-[2px]">
             <div className="w-4 h-4 bg-[#6A4E9E]"></div>
             <div className="w-4 h-4 bg-[#8E7CC3]"></div>
@@ -58,24 +64,17 @@ const Login = () => {
             <div className="w-4 h-4 bg-[#8E7CC3]"></div>
             <div className="w-4 h-4 bg-[#6A4E9E]"></div>
           </div>
-
         </div>
 
-        <div className="w-full max-w-md">
+        {/* Content Wrapper - Grouped for stability */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md mt-10"
+        >
           <h1 className="text-4xl font-bold mb-2 text-gray-900">Welcome back</h1>
-          <p className="text-gray-500 mb-8 text-sm">Please enter your details</p>
-
-          {sessionMessage && (
-            <div className="mb-4 p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-              {sessionMessage}
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-              {error}
-            </div>
-          )}
+          <p className="text-gray-500 mb-8 text-sm">Please register to continue</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -135,27 +134,25 @@ const Login = () => {
               </div>
 
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-theme hover:text-theme-dark underline decoration-theme/30 hover:decoration-theme">
+                <Link to="/forgot-password" size="sm" className="font-medium text-theme hover:text-theme-dark underline decoration-theme/30 hover:decoration-theme">
                   Forgot password
                 </Link>
               </div>
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+              loading={loading}
+              loadingText="Logging in..."
+              fullWidth
+              className="mt-6 py-2.5 px-4 bg-theme hover:bg-theme-dark text-white rounded-md shadow-sm transition"
+              sx={{
+                bgcolor: '#6A4E9E',
+                '&:hover': { bgcolor: '#5A3E8E' }
+              }}
             >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-
-            {/* <button
-              type="button"
-              className="w-full flex justify-center items-center py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition mt-4"
-            >
-              <FcGoogle className="h-5 w-5 mr-2" />
-              Sign in with Google
-            </button> */}
+              Login
+            </LoadingButton>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-500">
@@ -164,10 +161,10 @@ const Login = () => {
               Sign up
             </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Right Column - Illustration */}
+      {/* Right Column: Visual Section */}
       <div className="hidden lg:block lg:w-1/2 relative bg-theme-dark overflow-hidden">
         <img
           src={loginBanner}

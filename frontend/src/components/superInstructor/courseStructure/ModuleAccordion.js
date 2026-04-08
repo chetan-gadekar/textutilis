@@ -50,6 +50,7 @@ const ModuleAccordion = ({
   onAddContent,
   onEditContent,
   onDeleteContent,
+  onAddAssignment,
   getContentIcon,
   expanded,
   onChange,
@@ -171,6 +172,7 @@ const ModuleAccordion = ({
             size="small"
             variant="outlined"
             startIcon={ADD_ICON_BOX}
+            onClick={() => onAddAssignment && onAddAssignment(module)}
             sx={ACTION_BUTTON_SX}
           >
             Assignments

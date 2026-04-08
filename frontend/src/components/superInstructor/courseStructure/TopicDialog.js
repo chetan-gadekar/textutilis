@@ -16,6 +16,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import SortIcon from '@mui/icons-material/Sort';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
+import LoadingButton from '../../common/LoadingButton';
 
 const ADORNMENTS = {
   title: (
@@ -35,7 +36,7 @@ const ADORNMENTS = {
   )
 };
 
-const TopicDialog = ({ open, onClose, topic, module, formData, onFormChange, onSave }) => {
+const TopicDialog = ({ open, onClose, topic, module, formData, onFormChange, onSave, loading }) => {
   const isFormValid = formData?.title && formData.title.trim() !== '';
 
   return (
@@ -117,10 +118,11 @@ const TopicDialog = ({ open, onClose, topic, module, formData, onFormChange, onS
         >
           CANCEL
         </Button>
-        <Button
+        <LoadingButton
           onClick={onSave}
+          loading={loading}
+          loadingText={topic ? 'Updating...' : 'Creating...'}
           variant="contained"
-          color="primary"
           disabled={!isFormValid}
           startIcon={<SaveIcon />}
           sx={{
@@ -133,7 +135,7 @@ const TopicDialog = ({ open, onClose, topic, module, formData, onFormChange, onS
           }}
         >
           {topic ? 'Update Topic' : 'Create Topic'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );

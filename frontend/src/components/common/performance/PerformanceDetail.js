@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-    CircularProgress,
-    Alert,
-    Snackbar,
-    Breadcrumbs,
-    Link,
-    Typography
-} from '@mui/material';
+import { CircularProgress } from '@mui/material';
+import notify from '../../../utils/notify';
 import { Save, ArrowLeft, Plus, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import performanceService from '../../../services/performanceService';
@@ -31,19 +25,13 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
-    const [successMsg, setSuccessMsg] = useState('');
 
     const handlePrint = useReactToPrint({
         contentRef,
         documentTitle: `Performance_Report_${performance?.studentId?.name || 'Student'}`,
     });
 
-    useEffect(() => {
-        fetchData();
-    }, [studentId, courseId]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             let response;
@@ -67,11 +55,15 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                 setData(perf ? JSON.parse(JSON.stringify(evalSource)) : null);
             }
         } catch (err) {
-            setError(err.message || 'Failed to fetch data');
+            notify.error(err.message || 'Failed to fetch data');
         } finally {
             setLoading(false);
         }
-    };
+    }, [studentId, courseId, type]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const getNumRows = (evalData) => {
         if (!evalData) return 0;
@@ -112,9 +104,9 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                 // Check if we use instructor or super save based on path or simplified service
                 await performanceService.saveInstructorAssessment(studentId, courseId, data);
             }
-            setSuccessMsg('Saved successfully!');
+            notify.success('Saved successfully!');
         } catch (err) {
-            setError(err.message || 'Error saving');
+            notify.error(err.message || 'Error saving');
         } finally {
             setSaving(false);
         }
@@ -304,9 +296,7 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                 </div>
                 {/* Printable Content End */}
             </div>
-            <Snackbar open={!!successMsg} autoHideDuration={3000} onClose={() => setSuccessMsg('')}>
-                <Alert severity="success">{successMsg}</Alert>
-            </Snackbar>
+            {/* Legacy snackbar removed in favor of premium toasts */}
         </MainLayout>
     );
 };

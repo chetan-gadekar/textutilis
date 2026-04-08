@@ -3,6 +3,7 @@ const topicContentService = require('../services/topicContentService');
 const assignmentService = require('../services/assignmentService');
 const moduleService = require('../services/moduleService');
 const topicService = require('../services/topicService');
+const Topic = require('../schemas/Topic');
 
 // Helper to check if user has access to course (Owner or Assigned)
 const checkAccess = (course, user) => {
@@ -169,7 +170,6 @@ const getContent = async (req, res, next) => {
     const modules = await moduleService.getModulesByCourse(courseId);
     const moduleIds = modules.map(m => m._id);
     // Find all topics for these modules
-    const Topic = require('../schemas/Topic');
     const topics = await Topic.find({ moduleId: { $in: moduleIds } });
     const topicIds = topics.map(t => t._id);
     
@@ -188,10 +188,22 @@ const getContent = async (req, res, next) => {
 const updateContent = async (req, res, next) => {
   try {
     const { id } = req.params;
+    
+    // Fetch content with full path to course in one go for access check
     const content = await topicContentService.getContentById(id);
-    const { topic } = await topicService.getTopicById(content.topicId);
-    const { module } = await moduleService.getModuleById(topic.moduleId._id);
-    const course = await courseService.getCourseById(module.courseId._id);
+    const topic = await Topic.findById(content.topicId)
+      .populate({
+        path: 'moduleId',
+        select: 'courseId',
+        populate: { path: 'courseId' }
+      })
+      .lean();
+
+    if (!topic || !topic.moduleId || !topic.moduleId.courseId) {
+      return res.status(404).json({ success: false, message: 'Content hierarchy not found' });
+    }
+
+    const course = topic.moduleId.courseId;
 
     // Verify ownership or assignment
     if (!checkAccess(course, req.user)) {
@@ -214,10 +226,22 @@ const updateContent = async (req, res, next) => {
 const deleteContent = async (req, res, next) => {
   try {
     const { id } = req.params;
+    
+    // Fetch content with full path to course in one go for access check
     const content = await topicContentService.getContentById(id);
-    const { topic } = await topicService.getTopicById(content.topicId);
-    const { module } = await moduleService.getModuleById(topic.moduleId._id);
-    const course = await courseService.getCourseById(module.courseId._id);
+    const topic = await Topic.findById(content.topicId)
+      .populate({
+        path: 'moduleId',
+        select: 'courseId',
+        populate: { path: 'courseId' }
+      })
+      .lean();
+
+    if (!topic || !topic.moduleId || !topic.moduleId.courseId) {
+      return res.status(404).json({ success: false, message: 'Content hierarchy not found' });
+    }
+
+    const course = topic.moduleId.courseId;
 
     // Verify ownership or assignment
     if (!checkAccess(course, req.user)) {

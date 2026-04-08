@@ -4,7 +4,6 @@ import {
   Typography,
   Grid,
   Box,
-  Alert,
   CircularProgress,
   Container,
   Tab,
@@ -14,6 +13,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
+import notify from '../../utils/notify';
 import { Search as SearchIcon, FilterList as FilterListIcon } from '@mui/icons-material';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
@@ -23,7 +23,6 @@ const CourseView = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [tabValue, setTabValue] = useState(0); // 0: All, 1: In Progress, 2: Completed
 
   useEffect(() => {
@@ -44,9 +43,8 @@ const CourseView = () => {
         },
       }));
       setCourses(extractedCourses);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch courses');
+      notify.error(err.message || 'Failed to fetch courses');
     } finally {
       setLoading(false);
     }
@@ -120,11 +118,7 @@ const CourseView = () => {
           </Box>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3, borderRadius: '8px' }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+        {/* Legacy alerts removed in favor of premium toasts */}
 
         {filteredCourses.length === 0 ? (
           <Box

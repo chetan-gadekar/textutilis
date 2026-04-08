@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import notify from '../utils/notify';
 
 const VideoList = ({ onSelectVideo }) => {
   const navigate = useNavigate();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchVideos();
@@ -19,11 +17,10 @@ const VideoList = ({ onSelectVideo }) => {
       setLoading(true);
       const response = await axios.get('/api/videos');
       setVideos(response.data.videos || []);
-      setError(null);
+      // Error handling unified via notify
     } catch (err) {
       console.error('Error fetching videos:', err);
-      setError('Failed to load videos');
-      toast.error('Failed to load videos. Please check your Cloudflare credentials.');
+      notify.error('Failed to load videos. Please check your Cloudflare credentials.');
     } finally {
       setLoading(false);
     }
@@ -39,13 +36,7 @@ const VideoList = ({ onSelectVideo }) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        {error}
-      </div>
-    );
-  }
+  {/* Legacy error alerts removed in favor of premium toasts */}
 
   return (
     <div className="container mt-5">
@@ -110,7 +101,7 @@ const VideoList = ({ onSelectVideo }) => {
           )}
         </div>
       </div>
-      <ToastContainer />
+      </div>
     </div>
   );
 };

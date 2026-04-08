@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Box,
-  Alert,
   CircularProgress,
   Button,
   TextField,
@@ -13,6 +12,7 @@ import {
   Paper,
   TablePagination,
 } from '@mui/material';
+import notify from '../../utils/notify';
 import { Plus, Filter, FilterX } from 'lucide-react';
 import courseService from '../../services/courseService';
 import assignmentService from '../../services/assignmentService';
@@ -29,8 +29,6 @@ const CreateAssignment = () => {
   const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [editAssignment, setEditAssignment] = useState(null);
@@ -64,9 +62,9 @@ const CreateAssignment = () => {
       setLoading(true);
       const response = await courseService.getCourses();
       setCourses(response.data || []);
-      setError(null);
+      // Removed orphaned setError(null)
     } catch (err) {
-      setError(err.message || 'Failed to fetch courses');
+      notify.error(err.message || 'Failed to fetch courses');
     } finally {
       setLoading(false);
     }
@@ -93,10 +91,10 @@ const CreateAssignment = () => {
 
       setAssignments(assignmentsWithCourse);
       setTotalRecords(response.total || 0);
-      setError(null);
+      // Removed orphaned setError(null)
     } catch (err) {
       console.error('Failed to fetch assignments:', err);
-      setError('Failed to fetch assignments');
+      notify.error('Failed to fetch assignments');
     } finally {
       setLoading(false);
     }
@@ -149,22 +147,20 @@ const CreateAssignment = () => {
     setTitle('');
     setDescription('');
     setDueDate('');
-    setSelectedCourse('');
     setAttachments([]);
-    setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedCourse || !title || !description || !dueDate) {
-      setError('Please fill in all required fields');
+      notify.error('Please fill in all required fields');
       return;
     }
 
     try {
       setSubmitting(true);
-      setError(null);
+      // Removed orphaned setError(null)
 
       const assignmentData = {
         title,
@@ -176,17 +172,16 @@ const CreateAssignment = () => {
 
       if (editAssignment) {
         await assignmentService.updateAssignment(editAssignment._id, assignmentData);
-        setSuccess('Assignment updated successfully!');
+        notify.success('Assignment updated successfully!');
       } else {
         await assignmentService.createAssignment(selectedCourse, assignmentData);
-        setSuccess('Assignment created successfully!');
+        notify.success('Assignment created successfully!');
       }
 
       handleCloseDialog();
       fetchAllAssignments();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.message || `Failed to ${editAssignment ? 'update' : 'create'} assignment`);
+      notify.error(err.message || `Failed to ${editAssignment ? 'update' : 'create'} assignment`);
     } finally {
       setSubmitting(false);
     }
@@ -199,11 +194,10 @@ const CreateAssignment = () => {
 
     try {
       await assignmentService.deleteAssignment(assignmentId);
-      setSuccess('Assignment deleted successfully!');
+      notify.success('Assignment deleted successfully!');
       fetchAllAssignments();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to delete assignment');
+      notify.error(err.message || 'Failed to delete assignment');
     }
   };
 
@@ -292,47 +286,7 @@ const CreateAssignment = () => {
             </div>
           </div>
         </Collapse>
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-700">{success}</p>
-              </div>
-            </div>
-            <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
+        {/* Legacy alerts removed in favor of premium toasts */}
 
         <AssignmentTable
           assignments={assignments}

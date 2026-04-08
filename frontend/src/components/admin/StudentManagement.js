@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Filter, FilterX } from 'lucide-react';
 import adminService from '../../services/adminService';
+import notify from '../../utils/notify';
 import MainLayout from '../layout/MainLayout';
 import AssignCoursesDialog from './student/AssignCoursesDialog';
 import StudentTable from './student/StudentTable';
@@ -14,13 +15,10 @@ const StudentManagement = () => {
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [filter, setFilter] = useState('all');
-  const [openDialog, setOpenDialog] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [assignedCourses, setAssignedCourses] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   // Search and Pagination State
   const [showFilters, setShowFilters] = useState(false);
@@ -29,6 +27,7 @@ const StudentManagement = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [filter, setFilter] = useState('all');
 
   // Debounce search term
   useEffect(() => {
@@ -55,9 +54,8 @@ const StudentManagement = () => {
       const response = await adminService.getAllStudents(params);
       setStudents(response.data || []);
       setTotalRecords(response.total || 0);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch students');
+      notify.error(err.message || 'Failed to fetch students');
     } finally {
       setLoading(false);
     }
@@ -69,7 +67,7 @@ const StudentManagement = () => {
       setCourses(response.data || []);
     } catch (err) {
       console.error('Failed to fetch courses:', err);
-      setError('Failed to load courses. Please try again.');
+      notify.error('Failed to load courses. Please try again.');
     }
   }, []);
 
@@ -100,10 +98,9 @@ const StudentManagement = () => {
     try {
       await adminService.toggleStudentStatus(studentId);
       fetchStudents();
-      setSuccess('Student status updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      notify.success('Student status updated successfully!');
     } catch (err) {
-      setError(err.message || 'Failed to toggle student status');
+      notify.error(err.message || 'Failed to toggle student status');
     }
   };
 
@@ -145,11 +142,10 @@ const StudentManagement = () => {
       const courseIds = Array.from(assignedCourses);
       await adminService.assignCoursesToStudent(selectedStudent._id, courseIds);
 
-      setSuccess('Courses assigned successfully!');
+      notify.success('Courses assigned successfully!');
       handleCloseDialog();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to assign courses');
+      notify.error(err.message || 'Failed to assign courses');
     } finally {
       setSubmitting(false);
     }
@@ -221,47 +217,7 @@ const StudentManagement = () => {
           </div>
         </Collapse>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-700">{success}</p>
-              </div>
-            </div>
-            <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-500">
-              <span className="sr-only">Close</span>
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
+        {/* Legacy alerts removed in favor of premium toasts */}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 w-full">
           <StudentTable

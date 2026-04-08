@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { forgotPassword, clearError } from '../../store/slices/authSlice';
+import LoadingButton from '../common/LoadingButton';
+import notify from '../../utils/notify';
 import loginBanner from '../../assets/login_banner.jpg';
 
 const ForgotPassword = () => {
@@ -11,13 +13,21 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
 
   useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch]);
+    if (error) {
+      notify.error(error);
+      dispatch(clearError());
+    }
+
+    return () => {
+      dispatch(clearError());
+    };
+  }, [error, dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await dispatch(forgotPassword(email));
     if (forgotPassword.fulfilled.match(result)) {
+      notify.success('OTP sent successfully!');
       navigate('/verify-otp', { state: { email } });
     }
   };
@@ -40,12 +50,6 @@ const ForgotPassword = () => {
           <h1 className="text-4xl font-bold mb-2 text-gray-900">Forgot Password</h1>
           <p className="text-gray-500 mb-8 text-sm">Enter your email to receive an OTP</p>
 
-          {error && (
-            <div className="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-              {error}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
@@ -62,13 +66,19 @@ const ForgotPassword = () => {
               />
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme hover:bg-theme-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme transition disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+              loading={loading}
+              loadingText="Sending..."
+              fullWidth
+              className="mt-6 py-2.5 px-4 bg-theme hover:bg-theme-dark text-white rounded-md shadow-sm transition"
+              sx={{
+                bgcolor: '#6A4E9E',
+                '&:hover': { bgcolor: '#5A3E8E' }
+              }}
             >
-              {loading ? 'Sending...' : 'Send OTP'}
-            </button>
+              Send OTP
+            </LoadingButton>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-500">

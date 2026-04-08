@@ -27,6 +27,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
+import LoadingButton from '../../common/LoadingButton';
 
 const AssignmentFormDialog = ({
   open,
@@ -34,6 +35,7 @@ const AssignmentFormDialog = ({
   courses,
   selectedCourse,
   onCourseChange,
+  lockedCourse,
   title,
   onTitleChange,
   description,
@@ -64,7 +66,15 @@ const AssignmentFormDialog = ({
         <DialogContent className="font-poppins overflow-y-auto px-5 py-3" style={{ paddingBottom: '0.5rem', paddingTop: '0.5rem' }}>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">Select Course *</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">Course</label>
+            {lockedCourse ? (
+              // Read-only badge when launched from Course Builder
+              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">✓</span>
+                <span className="text-sm font-medium text-blue-800">{lockedCourse.title}</span>
+                <span className="ml-auto text-xs text-blue-500 italic">Auto-assigned</span>
+              </div>
+            ) : (
               <select
                 className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-theme/20 focus:border-theme outline-none transition-all disabled:opacity-50"
                 value={selectedCourse}
@@ -79,7 +89,8 @@ const AssignmentFormDialog = ({
                   </option>
                 ))}
               </select>
-            </div>
+            )}
+          </div>
 
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">Assignment Title *</label>
@@ -167,13 +178,19 @@ const AssignmentFormDialog = ({
           >
             Cancel
           </button>
-          <button
+          <LoadingButton
             type="submit"
-            disabled={submitting}
-            className="px-4 py-1.5 text-sm bg-theme hover:bg-theme-dark text-white font-medium rounded-md shadow-sm transition-colors ml-2 disabled:opacity-50"
+            loading={submitting}
+            loadingText={editing ? 'Updating...' : 'Creating...'}
+            className="px-4 py-1.5 text-sm bg-theme hover:bg-theme-dark text-white font-medium rounded-md shadow-sm transition ml-2"
+            sx={{
+              bgcolor: '#6A4E9E',
+              '&:hover': { bgcolor: '#5A3E8E' },
+              height: '36px' // matching standard button height roughly
+            }}
           >
-            {submitting ? (editing ? 'Updating...' : 'Creating...') : (editing ? 'Update Assignment' : 'Create Assignment')}
-          </button>
+            {editing ? 'Update Assignment' : 'Create Assignment'}
+          </LoadingButton>
         </DialogActions>
       </form>
     </Dialog>

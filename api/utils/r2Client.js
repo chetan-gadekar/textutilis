@@ -125,13 +125,16 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
         const match = url.match(/lms_videos\/.*$/);
         if (match) {
             const fileKey = match[0];
-            const signedUrl = await getSignedGetUrl(fileKey, 30); // 2 minutes for video playback
+            const signedUrl = await getSignedGetUrl(fileKey, 3600); // 1 hour for video playback
             if (signedUrl) data.contentData = signedUrl;
         }
     }
 
-    // Handle all other fields recursively
-    for (const key in data) {
+    // Handle all other fields recursively — parallelize signing for performance
+    const signingPromises = [];
+    const keys = Object.keys(data);
+
+    for (const key of keys) {
         // Skip internal Mongoose keys if any leaked through
         if (key.startsWith('$') || key.startsWith('_')) {
             if (key !== '_id') continue;
@@ -143,12 +146,21 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
             const match = url.match(/lms_videos\/.*$/);
             if (match) {
                 const fileKey = match[0];
-                const signedUrl = await getSignedGetUrl(fileKey, 14400); // 4 hours for video playback
-                if (signedUrl) data[key] = signedUrl;
+                signingPromises.push(
+                    getSignedGetUrl(fileKey, 3600).then(signedUrl => {
+                        if (signedUrl) data[key] = signedUrl;
+                    })
+                );
             }
         } else if (typeof value === 'object' && value !== null) {
-            data[key] = await signR2Urls(value, visited);
+            signingPromises.push(
+                signR2Urls(value, visited)
+            );
         }
+    }
+
+    if (signingPromises.length > 0) {
+        await Promise.all(signingPromises);
     }
 
     return data;
