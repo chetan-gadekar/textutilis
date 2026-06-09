@@ -59,8 +59,9 @@ app.get("/", (req, res) => {
   res.send("Backend running on Vercel 🚀");
 });
 
-app.get('http://textutilis-two.vercel.app/loaderio-330c220b6bdce8700353ecf107dfd645.txt',(req,res)=>
+app.get('/loaderio-330c220b6bdce8700353ecf107dfd645.txt',(req,res)=>
   {
+    res.type('text/plain');
     res.send('loaderio-330c220b6bdce8700353ecf107dfd645');
   });
 
