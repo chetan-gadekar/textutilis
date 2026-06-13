@@ -68,7 +68,7 @@ const Register = () => {
     const { confirmPassword, ...userData } = formData;
     try {
       await dispatch(register(userData)).unwrap();
-      notify.success('Registration successful! Please login.');
+      notify.success('Registration successful! Your account is pending activation by an admin.');
       navigate('/login');
     } catch (err) {
       // Error handled by Redux state

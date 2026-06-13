@@ -118,6 +118,15 @@ const deleteAssignment = async (assignmentId) => {
 
 // Submit assignment
 const submitAssignment = async (submissionData) => {
+  const assignment = await Assignment.findById(submissionData.assignmentId);
+  if (!assignment) {
+    throw new Error('Assignment not found');
+  }
+
+  if (assignment.dueDate && new Date() > new Date(assignment.dueDate)) {
+    throw new Error('The due date for this assignment has passed. Submissions are closed.');
+  }
+
   // Sanitize R2 URL
   submissionData.fileUrl = stripR2Signature(submissionData.fileUrl);
 

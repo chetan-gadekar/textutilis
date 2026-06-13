@@ -118,6 +118,7 @@ const createFaculty = async (req, res, next) => {
       email,
       password,
       role,
+      isActive: true,
     });
 
     res.status(201).json({

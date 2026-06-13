@@ -63,11 +63,11 @@ const StudentDashboard = () => {
             <div className="container mx-auto px-4 py-6 font-poppins">
                 {/* Student Profile Banner */}
                 <div className="mb-8 p-6 bg-gradient-to-r from-theme/10 via-theme/5 to-white rounded-2xl border border-theme/10 flex items-center gap-5">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-theme/20 shadow-sm flex-shrink-0">
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-theme/20 shadow-sm flex-shrink-0">
                         {user?.profilePhoto ? (
                             <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full bg-theme/10 text-theme flex items-center justify-center text-2xl font-bold">
+                            <div className="w-full h-full bg-theme/10 text-theme flex items-center justify-center text-4xl font-bold">
                                 {user?.name?.charAt(0).toUpperCase() || 'S'}
                             </div>
                         )}

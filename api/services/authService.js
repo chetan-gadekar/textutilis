@@ -78,7 +78,10 @@ const loginUser = async (email, password) => {
 
   // Check if account is active
   if (!user.isActive) {
-    throw new Error('Account is deactivated. Please contact admin.');
+    const errorMsg = user.role === 'student'
+      ? 'Your account is pending activation by an admin.'
+      : 'Account is deactivated. Please contact admin.';
+    throw new Error(errorMsg);
   }
 
   // Check password
@@ -108,6 +111,7 @@ const loginUser = async (email, password) => {
     isActive: user.isActive,
     sessionToken: user.role === 'student' ? user.sessionToken : null,
     currentStreak: user.currentStreak || 0,
+    profilePhoto: user.profilePhoto || null,
   };
 };
 

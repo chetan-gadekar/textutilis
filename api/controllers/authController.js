@@ -43,6 +43,7 @@ const login = async (req, res, next) => {
         role: user.role,
         isActive: user.isActive,
         currentStreak: user.currentStreak,
+        profilePhoto: user.profilePhoto || null,
       },
     });
   } catch (error) {

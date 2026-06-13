@@ -47,10 +47,10 @@ const App = () => {
   const { token, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (token && !isAuthenticated) {
+    if (token) {
       dispatch(getMe());
     }
-  }, [token, isAuthenticated, dispatch]);
+  }, [token, dispatch]);
 
   return (
     <Router>

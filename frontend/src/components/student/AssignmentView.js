@@ -91,6 +91,11 @@ const AssignmentView = () => {
   };
 
   const handleOpenDialog = (assignment) => {
+    const isExpired = assignment.dueDate && new Date() > new Date(assignment.dueDate);
+    if (isExpired) {
+      notify.error('The due date for this assignment has passed.');
+      return;
+    }
     setSelectedAssignment(assignment);
     const existingSubmission = assignment.submission;
     if (existingSubmission) {
@@ -113,6 +118,12 @@ const AssignmentView = () => {
   const handleSubmit = async () => {
     if (!fileUrl || !fileName) {
       notify.error('Please select a file');
+      return;
+    }
+
+    const isExpired = selectedAssignment?.dueDate && new Date() > new Date(selectedAssignment.dueDate);
+    if (isExpired) {
+      notify.error('The due date for this assignment has passed.');
       return;
     }
 
@@ -311,13 +322,23 @@ const AssignmentView = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleOpenDialog(assignment)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-theme text-white text-xs font-semibold rounded-lg hover:bg-theme/90 transition-colors shadow-sm"
-                        >
-                          <Upload size={14} />
-                          {assignment.submission ? 'Update' : 'Submit'}
-                        </button>
+                        {(() => {
+                          const isExpired = assignment.dueDate && new Date() > new Date(assignment.dueDate);
+                          return (
+                            <button
+                              disabled={isExpired}
+                              onClick={() => handleOpenDialog(assignment)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors shadow-sm ${
+                                isExpired
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 shadow-none'
+                                  : 'bg-theme text-white hover:bg-theme/90'
+                              }`}
+                            >
+                              <Upload size={14} />
+                              {assignment.submission ? 'Update' : 'Submit'}
+                            </button>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))}
