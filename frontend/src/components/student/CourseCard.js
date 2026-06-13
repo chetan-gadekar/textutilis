@@ -46,6 +46,8 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                 p: { xs: 2, md: 2 }, // Reduced internal padding
                 gap: { xs: 2, md: 2.5 }, // Reduced gap
                 alignItems: { xs: 'stretch', md: 'stretch' },
+                width: '100%',
+                maxWidth: { md: 720, lg: 780 },
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
                     transform: 'translateY(-2px)',
@@ -57,17 +59,32 @@ const CourseCard = ({ course, onStart, onContinue }) => {
             {/* Cover Area - Left Side */}
             <Box
                 sx={{
-                    width: { xs: '100%', md: 220 }, // Reduced width
-                    minWidth: { xs: '100%', md: 220 },
-                    height: { xs: 150, md: 125 }, // Reduced height
-                    background: course.bannerImage ? `url(${course.bannerImage})` : bgGradient,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    width: { xs: '100%', md: 180 }, // Reduced width
+                    minWidth: { xs: '100%', md: 180 },
+                    height: { xs: 150, md: 110 }, // Reduced height
                     borderRadius: '8px',
                     position: 'relative',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    overflow: 'hidden',
                 }}
             >
+                <Box
+                    sx={{
+                        width: '100%',
+                        height: '100%',
+                        background: course.bannerImage ? `url(${course.bannerImage})` : bgGradient,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        transition: 'transform 0.5s ease-out',
+                        '&:hover': {
+                            transform: 'scale(1.05)',
+                        },
+                        // Scale on parent hover
+                        '.MuiPaper-root:hover &': {
+                            transform: 'scale(1.05)',
+                        }
+                    }}
+                />
             </Box>
 
             {/* Content Area - Right Side */}
@@ -77,7 +94,7 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    minHeight: { md: 125 }, // Match image height constraint
+                    minHeight: { md: 110 }, // Match image height constraint
                     py: 0,
                 }}
             >
@@ -105,7 +122,7 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                                 lineHeight: 1.3,
                             }}
                         >
-                            {description && description.length > 5 ? description : `Lecture: Introduction to ${title}`}
+                            {description && description.length > 5 ? description : `Master the essentials of ${title} through structured, hands-on learning.`}
                         </Typography>
                     </Box>
 
@@ -120,20 +137,20 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                         </Box>
                     ) : (
                         <Box sx={{ flexShrink: 0, mt: -0.5, mr: -0.5 }}>
-                             <CircularProgressVariant value={0} size={26} thickness={2.5} color="#eaeaea" />
+                            <CircularProgressVariant value={0} size={26} thickness={2.5} color="#eaeaea" />
                         </Box>
                     )}
                 </Box>
 
                 {/* Footer Row: Progress Text and Action Button */}
-                <Box sx={{ 
-                    mt: 'auto', 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', sm: 'row' }, 
-                    justifyContent: 'space-between', 
-                    alignItems: { xs: 'stretch', sm: 'flex-end' }, 
+                <Box sx={{
+                    mt: 'auto',
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'stretch', sm: 'flex-end' },
                     gap: { xs: 1.5, sm: 0 },
-                    pt: 1.5 
+                    pt: 1.5
                 }}>
                     <Typography variant="body2" sx={{ color: '#7a7a7a', fontWeight: 500, fontSize: '0.8rem', mb: { xs: 0, sm: 0.5 }, whiteSpace: 'nowrap' }}>
                         {progress > 0 ? `${progress}% Completed` : '0/17 Modules Completed'}
@@ -143,12 +160,12 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                         variant={!isStarted ? "outlined" : "contained"}
                         color="primary"
                         onClick={() => (isStarted ? onContinue(course._id) : onStart(course._id))}
-                        endIcon={progress === 100 ? <ThinCheckCircle color="#ffffff" tickColor={theme.palette.primary.main} size={18} /> : (isStarted ? <ArrowForwardRounded sx={{ fontSize: '18px' }}/> : null)}
+                        endIcon={progress === 100 ? <ThinCheckCircle color="#ffffff" tickColor={theme.palette.primary.main} size={18} /> : (isStarted ? <ArrowForwardRounded sx={{ fontSize: '18px' }} /> : null)}
                         sx={{
-                            borderRadius: '4px',
+                            borderRadius: '10px',
                             textTransform: 'none',
                             fontWeight: 600,
-                            width: { xs: '100%', sm: 200 }, // Ensure it fits the longest button text smoothly
+                            width: { xs: '100%', sm: 180 }, // Ensure it fits the longest button text smoothly
                             whiteSpace: 'nowrap',
                             py: 0.8,
                             fontSize: '0.85rem',

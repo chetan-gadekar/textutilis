@@ -137,40 +137,41 @@ const StudentDashboard = () => {
                             return (
                                 <div
                                     key={course._id}
-                                    className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group cursor-pointer"
+                                    className="bg-white rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group cursor-pointer w-full max-w-[350px]"
                                     onClick={() => navigate(`/student/courses/${course._id}`)}
                                 >
                                     {/* Card Banner Image */}
-                                    <div
-                                        className="relative h-44 w-full bg-gray-100 overflow-hidden"
-                                        style={{
-                                            backgroundImage: course.bannerImage
-                                                ? `url(${course.bannerImage})`
-                                                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center',
-                                        }}
-                                    >
+                                    <div className="relative h-44 w-full bg-gray-100 overflow-hidden">
+                                        <div
+                                            className="w-full h-full transform group-hover:scale-105 transition-transform duration-500 ease-out"
+                                            style={{
+                                                backgroundImage: course.bannerImage
+                                                    ? `url(${course.bannerImage})`
+                                                    : 'linear-gradient(135deg, #6A4E9E 0%, #8E2DE2 100%)',
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                            }}
+                                        />
                                         {/* SKILLS badge */}
-                                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
-                                            <span className="text-[10px] font-bold text-blue-600 tracking-wider">SKILLS</span>
+                                        <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/40 shadow-sm">
+                                            <span className="text-[9px] font-bold text-theme tracking-wider uppercase">SKILLS</span>
                                         </div>
 
                                         {/* Progress/Completed badge */}
                                         {isCompleted ? (
-                                            <div className="absolute top-3 right-3 bg-green-500 text-white px-2.5 py-1 rounded-md flex items-center gap-1 shadow-sm">
-                                                <CheckCircle2 size={12} />
-                                                <span className="text-[10px] font-bold tracking-wide">DONE</span>
+                                            <div className="absolute top-3 right-3 bg-emerald-500/95 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                                                <CheckCircle2 size={11} />
+                                                <span className="text-[9px] font-bold tracking-wide">DONE</span>
                                             </div>
                                         ) : isStarted ? (
-                                            <div className="absolute top-3 right-3 bg-orange-500 text-white px-2.5 py-1 rounded-md shadow-sm">
-                                                <span className="text-[10px] font-bold tracking-wide">{progress}%</span>
+                                            <div className="absolute top-3 right-3 bg-amber-500/95 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-full shadow-sm">
+                                                <span className="text-[9px] font-bold tracking-wide">{progress}%</span>
                                             </div>
                                         ) : null}
 
                                         {/* Hover overlay */}
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 text-white text-sm font-semibold">
+                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                            <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-2 text-white text-sm font-semibold transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                                                 <Play size={14} className="fill-white" />
                                                 {isCompleted ? 'Review' : isStarted ? 'Continue' : 'Start'}
                                             </div>
@@ -179,22 +180,26 @@ const StudentDashboard = () => {
 
                                     {/* Card Body */}
                                     <div className="flex flex-col flex-grow p-5">
-                                        <h2 className="text-base font-semibold text-gray-800 line-clamp-2 mb-2 group-hover:text-theme transition-colors">
+                                        <h2 className="text-base font-semibold text-gray-800 line-clamp-2 mb-2 group-hover:text-theme transition-colors duration-200">
                                             {course.title}
                                         </h2>
-                                        <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">
-                                            {course.description || 'No description available'}
+                                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-4">
+                                            {course.description || `Master the essentials of ${course.title} through structured, hands-on learning.`}
                                         </p>
 
                                         {/* Progress Bar */}
                                         <div className="mt-auto">
                                             <div className="flex justify-between items-center mb-1.5">
-                                                <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Progress</span>
-                                                <span className="text-[10px] font-bold text-gray-600">{progress}%</span>
+                                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Progress</span>
+                                                <span className="text-[10px] font-bold text-gray-700">{progress}%</span>
                                             </div>
-                                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden border border-gray-100/50">
                                                 <div
-                                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isCompleted ? 'bg-green-500' : 'bg-theme'}`}
+                                                    className={`h-full rounded-full transition-all duration-700 ease-out ${
+                                                        isCompleted 
+                                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500' 
+                                                            : 'bg-gradient-to-r from-theme to-purple-500'
+                                                    }`}
                                                     style={{ width: `${progress}%` }}
                                                 />
                                             </div>
@@ -202,12 +207,12 @@ const StudentDashboard = () => {
                                             {/* Action Button */}
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); navigate(`/student/courses/${course._id}`); }}
-                                                className={`mt-4 w-full inline-flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 ${
+                                                className={`mt-4 w-full inline-flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all duration-300 transform active:scale-[0.98] ${
                                                     isCompleted
-                                                        ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-100'
+                                                        ? 'bg-green-50 text-green-600 hover:bg-green-500 hover:text-white border border-green-200/60 shadow-sm hover:shadow-green-100 hover:shadow-lg'
                                                         : isStarted
-                                                        ? 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent'
-                                                        : 'bg-theme text-white hover:bg-theme-dark border border-transparent'
+                                                        ? 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent shadow-sm hover:shadow-theme/20 hover:shadow-lg'
+                                                        : 'bg-theme text-white hover:bg-theme-dark border border-transparent shadow-md hover:shadow-theme/35 hover:shadow-lg hover:-translate-y-0.5'
                                                 }`}
                                             >
                                                 {isCompleted ? (
