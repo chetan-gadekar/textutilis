@@ -59,6 +59,12 @@ app.get("/", (req, res) => {
   res.send("Backend running on Vercel 🚀");
 });
 
+app.get('/loaderio-330c220b6bdce8700353ecf107dfd645.txt',(req,res)=>
+  {
+    res.type('text/plain');
+    res.send('loaderio-330c220b6bdce8700353ecf107dfd645');
+  });
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
