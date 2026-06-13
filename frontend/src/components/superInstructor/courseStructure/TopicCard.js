@@ -15,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ContentListItem from './ContentListItem';
 import MenuIcon from '@mui/icons-material/Menu';
+import PopConfirm from '../../common/PopConfirm';
 
 const PAPER_SX = {
   mb: 2,
@@ -65,15 +66,19 @@ const TopicCard = ({
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete Lesson">
-            <IconButton
-              size="small"
-              onClick={() => onDeleteTopic(topic._id)}
-              sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <PopConfirm
+            title="Are you sure you want to delete this lesson? This will delete all contents inside."
+            onConfirm={() => onDeleteTopic(topic._id)}
+          >
+            <Tooltip title="Delete Lesson">
+              <IconButton
+                size="small"
+                sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PopConfirm>
         </Box>
       </Box>
 

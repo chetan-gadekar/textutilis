@@ -42,3 +42,27 @@ body {
   background: rgba(107, 114, 128, 0.8);
   /* Tailwind gray-500 */
 }
+
+/* Print optimizations */
+@media print {
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+  
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

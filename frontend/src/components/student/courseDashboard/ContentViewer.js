@@ -27,25 +27,35 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onN
   const toggleFullScreen = () => {
     if (!containerRef.current) return;
 
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-      });
+    if (!isFullscreen) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen().catch((err) => {
+          console.warn(`Native fullscreen request ignored/blocked: ${err.message}`);
+        });
+      }
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen();
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => {
+          console.warn(`Error exiting native fullscreen: ${err.message}`);
+        });
+      }
       setIsFullscreen(false);
     }
   };
 
-  // Listen for escape key or other ways fullscreen exits
+  // Listen for escape key or other ways native fullscreen exits
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      if (document.fullscreenElement) {
+        setIsFullscreen(true);
+      } else if (isFullscreen) {
+        setIsFullscreen(false);
+      }
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+  }, [isFullscreen]);
 
   if (!content) {
     return (
@@ -55,8 +65,8 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onN
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '83vh',          // 👈 Full viewport height
-          overflow: 'hidden',       // 👈 Prevent scroll
+          height: '83vh',
+          overflow: 'hidden',
           bgcolor: 'white',
           borderRadius: 2,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -91,6 +101,65 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onN
       </Box>
     );
   }
+
+  // Helper: detect file type from URL and render the right viewer
+  // PDF  → ProtectedPDFViewer (same as before, download/print stripped)
+  // PPT  → Office Online iframe (sandboxed, no download link, context-menu blocked)
+  const renderPptContent = () => {
+    const urlPath = (content.contentData || '').split('?')[0].toLowerCase();
+    const isPDF = urlPath.endsWith('.pdf');
+    const isPPT = urlPath.endsWith('.ppt') || urlPath.endsWith('.pptx');
+
+    const viewerHeight = isFullscreen ? '100vh' : '750px';
+
+    return (
+      <Box sx={{ p: isFullscreen ? 0 : 3, height: isFullscreen ? '100vh' : 'auto' }}>
+        {!isFullscreen && content.description && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {content.description}
+          </Typography>
+        )}
+        {content.contentData && isPDF ? (
+          <ProtectedPDFViewer
+            fileUrl={content.contentData}
+            title={content.title}
+            height={viewerHeight}
+          />
+        ) : content.contentData && isPPT ? (
+          <Box
+            onContextMenu={(e) => e.preventDefault()}
+            sx={{
+              border: isFullscreen ? 'none' : '1px solid rgba(0, 0, 0, 0.3)',
+              borderRadius: isFullscreen ? '0px' : '8px',
+              overflow: 'hidden',
+              height: viewerHeight,
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              msUserSelect: 'none',
+              MozUserSelect: 'none',
+            }}
+          >
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(content.contentData)}`}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              title={content.title || 'Presentation'}
+              style={{ border: 'none' }}
+              sandbox="allow-scripts allow-same-origin allow-forms"
+              allowFullScreen
+            />
+          </Box>
+        ) : content.contentData ? (
+          <ProtectedPDFViewer
+            fileUrl={content.contentData}
+            title={content.title}
+            height={viewerHeight}
+          />
+        ) : null}
+      </Box>
+    );
+  };
 
   return (
     <Box
@@ -176,14 +245,43 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onN
       {/* Content Area */}
       <Paper
         ref={containerRef}
-        elevation={2}
-        sx={{
+        elevation={isFullscreen ? 0 : 2}
+        sx={isFullscreen ? {
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 9999,
+          borderRadius: 0,
+          overflow: 'hidden',
+          bgcolor: 'white',
+        } : {
           borderRadius: 2,
           overflow: 'hidden',
           bgcolor: 'white',
-          height: isFullscreen ? '100vh' : 'auto',
+          position: 'relative',
         }}
       >
+        {isFullscreen && (
+          <Tooltip title="Exit Fullscreen">
+            <IconButton
+              onClick={toggleFullScreen}
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                zIndex: 10000,
+                bgcolor: 'rgba(0, 0, 0, 0.6)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' },
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}
+            >
+              <FullscreenExitIcon />
+            </IconButton>
+          </Tooltip>
+        )}
         {content.contentType === 'video' ? (
           <VideoPlayer
             videoId={content.contentData}
@@ -197,19 +295,7 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onN
             initialPosition={currentProgress?.videoPosition ? currentProgress.videoPosition / 100 : 0}
           />
         ) : content.contentType === 'ppt' ? (
-          <Box sx={{ p: 3 }}>
-            {content.description && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {content.description}
-              </Typography>
-            )}
-            {content.contentData && (
-              <ProtectedPDFViewer
-                fileUrl={content.contentData}
-                title={content.title}
-              />
-            )}
-          </Box>
+          renderPptContent()
         ) : (
           <Box sx={{ p: 3 }}>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>

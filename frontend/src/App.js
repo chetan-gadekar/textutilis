@@ -27,6 +27,7 @@ import CreateAssignment from './components/superInstructor/CreateAssignment';
 import TeachingPointsUpdate from './components/instructor/TeachingPointsUpdate';
 import AssignmentReview from './components/instructor/AssignmentReview';
 import InstructorCourses from './components/instructor/InstructorCourses';
+import InstructorCourseDashboard from './components/instructor/InstructorCourseDashboard';
 
 // Student components
 import CourseView from './components/student/CourseView';
@@ -160,6 +161,14 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={['instructor', 'super_instructor']}>
                 <InstructorCourses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/courses/:courseId"
+            element={
+              <ProtectedRoute allowedRoles={['instructor', 'super_instructor']}>
+                <InstructorCourseDashboard />
               </ProtectedRoute>
             }
           />

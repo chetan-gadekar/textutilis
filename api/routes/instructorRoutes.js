@@ -13,10 +13,18 @@ router.put('/teaching-points/today', validateTeachingPoint, instructorController
 router.get('/teaching-points/today', instructorController.getTodayTeachingPoints);
 router.get('/assignments/:assignmentId/submissions', instructorController.getSubmissions);
 router.get('/submissions', instructorController.getAllSubmissions);
+router.put('/submissions/:submissionId/remark', instructorController.addRemark);
 router.get('/students', instructorController.getStudents);
+
+// Course viewing routes (same access as student, no enrollment required)
+router.get('/courses', instructorController.getMyCourses);
+router.get('/courses/:courseId/structure', instructorController.getCourseStructure);
+router.get('/courses/:courseId/assignments', instructorController.getCourseAssignments);
+router.get('/content/:contentId', instructorController.getContent);
 
 // Performance routes
 router.get('/performance', performanceController.getInstructorStudentsPerformance);
 router.put('/performance/:studentId/:courseId', performanceController.saveInstructorAssessment);
 
 module.exports = router;
+

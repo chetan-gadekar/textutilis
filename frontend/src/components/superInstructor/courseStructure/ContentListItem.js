@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PopConfirm from '../../common/PopConfirm';
 
 const CONTENT_BOX_SX = {
   display: 'flex',
@@ -36,11 +37,16 @@ const ContentListItem = ({ content, onEdit, onDelete, getContentIcon }) => {
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete Content">
-            <IconButton size="small" onClick={onDelete} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <PopConfirm
+            title="Are you sure you want to delete this content?"
+            onConfirm={onDelete}
+          >
+            <Tooltip title="Delete Content">
+              <IconButton size="small" sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PopConfirm>
         </Box>
       }
     >

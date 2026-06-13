@@ -97,7 +97,7 @@ const InstructorPerformance = () => {
                 <div className="mb-8 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-medium text-gray-800">Student Performance</h1>
-                        <p className="text-gray-500 mt-1 font-light">Manage and assess student performance across your courses</p>
+                        <p className="text-gray-500 mt-1 font-light">Instructor Portal — Monitor and assess students in your assigned courses</p>
                     </div>
                     <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"} placement="left">
                         <button

@@ -16,6 +16,113 @@ const criteriaList = [
     { key: 'punctuality', label: 'Punctuality' },
 ];
 
+const getCriteriaAverages = (evalData) => {
+    if (!evalData) return criteriaList.map(c => ({ ...c, avg: 0 }));
+    return criteriaList.map(c => {
+        const values = evalData[c.key] || [];
+        const sum = values.reduce((a, b) => a + (b || 0), 0);
+        const avg = values.length > 0 ? sum / values.length : 0;
+        return {
+            ...c,
+            avg: parseFloat(avg.toFixed(2))
+        };
+    });
+};
+
+const getOverallAverage = (averages) => {
+    const sum = averages.reduce((acc, curr) => acc + curr.avg, 0);
+    return averages.length > 0 ? (sum / averages.length).toFixed(2) : '0.00';
+};
+
+const DonutChart = ({ title, evalData }) => {
+    const averages = getCriteriaAverages(evalData);
+    const overallAvg = getOverallAverage(averages);
+    const totalAvgSum = averages.reduce((sum, item) => sum + item.avg, 0);
+
+    const colors = [
+        '#6A4E9E', // Problem Identification
+        '#00B0FF', // Potential Solution
+        '#00E676', // Detailing
+        '#FF8F00', // Implementation
+        '#FF1744', // Problem Synthesizing
+        '#E040FB', // Punctuality
+    ];
+
+    let accumulatedLength = 0;
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col items-center flex-1 shadow-sm">
+            <h4 className="text-lg font-semibold text-gray-700 mb-6">{title}</h4>
+            
+            {totalAvgSum === 0 ? (
+                <div className="h-48 flex flex-col items-center justify-center text-gray-400">
+                    <p className="text-sm">No evaluation data available yet.</p>
+                </div>
+            ) : (
+                <div className="w-full flex flex-col md:flex-row items-center justify-center gap-8">
+                    {/* SVG Donut */}
+                    <div className="relative w-40 h-40 flex-shrink-0">
+                        <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90">
+                            <circle
+                                cx="60"
+                                cy="60"
+                                r="50"
+                                fill="transparent"
+                                stroke="#f3f4f6"
+                                strokeWidth="12"
+                            />
+                            {averages.map((item, index) => {
+                                if (item.avg === 0) return null;
+                                const percentage = item.avg / totalAvgSum;
+                                const strokeLength = percentage * 314.16;
+                                const strokeOffset = -accumulatedLength;
+                                accumulatedLength += strokeLength;
+
+                                return (
+                                    <circle
+                                        key={item.key}
+                                        cx="60"
+                                        cy="60"
+                                        r="50"
+                                        fill="transparent"
+                                        stroke={colors[index % colors.length]}
+                                        strokeWidth="12"
+                                        strokeDasharray={`${strokeLength} 314.16`}
+                                        strokeDashoffset={strokeOffset}
+                                        className="transition-all duration-500 ease-out"
+                                    />
+                                );
+                            })}
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Overall</span>
+                            <span className="text-2xl font-black text-gray-800">{overallAvg}</span>
+                            <span className="text-[9px] text-gray-400 font-medium">out of 5.0</span>
+                        </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex-grow flex flex-col gap-2 w-full">
+                        {averages.map((item, index) => (
+                            <div key={item.key} className="flex justify-between items-center text-xs">
+                                <div className="flex items-center gap-2">
+                                    <span 
+                                        className="w-2.5 h-2.5 rounded-full shrink-0" 
+                                        style={{ backgroundColor: colors[index % colors.length] }} 
+                                    />
+                                    <span className="text-gray-600 font-medium line-clamp-1">{item.label}</span>
+                                </div>
+                                <span className="text-gray-800 font-bold ml-2">{item.avg.toFixed(2)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
     const { studentId, courseId } = useParams();
     const navigate = useNavigate();
@@ -65,6 +172,7 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
         if (!evalData) return 0;
         return Math.max(
             ...criteriaList.map(c => (evalData[c.key] && evalData[c.key].length) || 0),
+            (evalData.topics && evalData.topics.length) || 0,
             0
         );
     };
@@ -76,18 +184,24 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
             if (!newData[c.key]) newData[c.key] = [];
             while (newData[c.key].length <= numRows) newData[c.key].push(0);
         });
+        if (!newData.topics) newData.topics = [];
+        while (newData.topics.length <= numRows) newData.topics.push('');
         setData(newData);
     };
 
     const handleCellChange = (rowIndex, criterionKey, value) => {
-        let numVal = parseInt(value, 10);
-        if (isNaN(numVal)) numVal = 0;
-        if (numVal > 5) numVal = 5;
-        if (numVal < 0) numVal = 0;
+        let finalValue = value;
+        if (criterionKey !== 'topics') {
+            let numVal = parseInt(value, 10);
+            if (isNaN(numVal)) numVal = 0;
+            if (numVal > 5) numVal = 5;
+            if (numVal < 0) numVal = 0;
+            finalValue = numVal;
+        }
 
         const newData = { ...data };
         if (!newData[criterionKey]) newData[criterionKey] = [];
-        newData[criterionKey][rowIndex] = numVal;
+        newData[criterionKey][rowIndex] = finalValue;
         setData(newData);
     };
 
@@ -163,12 +277,13 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                             <h3 className="font-semibold text-gray-700">Assessment Matrix</h3>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-sm">
+                            <table className="w-full border-collapse text-sm print:table-fixed">
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-100 print:bg-gray-50">
-                                        <th className="border-r border-gray-100 p-4 w-16 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">No.</th>
+                                        <th className="border-r border-gray-100 p-4 w-16 text-center text-xs font-bold text-gray-500 uppercase tracking-wider print:p-2 print:w-10">No.</th>
+                                        <th className="border-r border-gray-100 p-4 w-32 text-center align-middle font-bold text-gray-500 uppercase tracking-wider text-[10px] leading-tight print:px-1 print:py-2 print:text-[8px]">Topic</th>
                                         {criteriaList.map(c => (
-                                            <th key={c.key} className="border-r border-gray-100 p-4 text-center align-middle font-bold text-gray-500 uppercase tracking-wider text-[10px] leading-tight last:border-r-0">
+                                            <th key={c.key} className="border-r border-gray-100 p-4 text-center align-middle font-bold text-gray-500 uppercase tracking-wider text-[10px] leading-tight last:border-r-0 print:px-1 print:py-2 print:text-[8px]">
                                                 {c.label}
                                             </th>
                                         ))}
@@ -177,7 +292,20 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                                 <tbody className="divide-y divide-gray-100">
                                     {rows.map(idx => (
                                         <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="border-r border-gray-100 p-3 text-center font-bold text-gray-400 bg-gray-50/30">{idx + 1}</td>
+                                            <td className="border-r border-gray-100 p-3 text-center font-bold text-gray-400 bg-gray-50/30 print:p-1">{idx + 1}</td>
+                                            <td className="border-r border-gray-100 p-0 text-center">
+                                                {mode === 'edit' ? (
+                                                    <input
+                                                        type="text"
+                                                        value={(data && data.topics && data.topics[idx]) || ''}
+                                                        placeholder="Topic Name"
+                                                        onChange={(e) => handleCellChange(idx, 'topics', e.target.value)}
+                                                        className="w-full h-full p-3 text-center bg-transparent focus:bg-theme/5 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-theme transition-colors font-semibold text-gray-800 border-0 print:p-1 print:text-xs"
+                                                    />
+                                                ) : (
+                                                    <span className="font-semibold text-gray-700 p-3 block print:p-1 print:text-xs">{(data && data.topics && data.topics[idx]) || '-'}</span>
+                                                )}
+                                            </td>
                                             {criteriaList.map(c => {
                                                 const val = (data && data[c.key] && data[c.key][idx]) || 0;
                                                 return (
@@ -189,10 +317,10 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                                                                 value={val || ''}
                                                                 placeholder="-"
                                                                 onChange={(e) => handleCellChange(idx, c.key, e.target.value)}
-                                                                className="w-full h-full p-3 text-center bg-transparent focus:bg-theme/5 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-theme transition-colors font-semibold text-gray-800 border-0"
+                                                                className="w-full h-full p-3 text-center bg-transparent focus:bg-theme/5 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-theme transition-colors font-semibold text-gray-800 border-0 print:p-1 print:text-xs"
                                                             />
                                                         ) : (
-                                                            <span className="font-semibold text-gray-700 p-3 block">{val || '-'}</span>
+                                                            <span className="font-semibold text-gray-700 p-3 block print:p-1 print:text-xs">{val || '-'}</span>
                                                         )}
                                                     </td>
                                                 );
@@ -201,7 +329,7 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                                     ))}
                                     {mode === 'edit' && (
                                         <tr className="no-print">
-                                            <td colSpan={criteriaList.length + 1} className="p-0">
+                                            <td colSpan={criteriaList.length + 2} className="p-0">
                                                 <button
                                                     onClick={handleAddRow}
                                                     className="w-full py-4 bg-gray-50/50 hover:bg-gray-100 text-theme font-semibold flex items-center justify-center gap-2 transition-colors uppercase tracking-widest text-xs"
@@ -214,13 +342,14 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                                 </tbody>
                                 <tfoot className="border-t-2 border-theme/10">
                                     <tr className="bg-theme/5 font-bold print:bg-theme/5">
-                                        <td className="border-r border-gray-100 p-4 text-center uppercase tracking-widest text-[10px] text-theme">AVG</td>
+                                        <td className="border-r border-gray-100 p-4 text-center uppercase tracking-widest text-[10px] text-theme print:p-2">AVG</td>
+                                        <td className="border-r border-gray-100 p-4 text-center print:p-2"></td>
                                         {criteriaList.map(c => {
                                             const values = (data && data[c.key]) || [];
                                             const sum = values.reduce((a, b) => a + (b || 0), 0);
                                             const avg = values.length > 0 ? (sum / values.length).toFixed(2) : '0.00';
                                             return (
-                                                <td key={c.key} className="border-r border-gray-100 p-4 text-center text-theme-dark font-black last:border-r-0">
+                                                <td key={c.key} className="border-r border-gray-100 p-4 text-center text-theme-dark font-black last:border-r-0 print:p-2 print:text-xs">
                                                     {avg}
                                                 </td>
                                             );
@@ -229,6 +358,11 @@ const PerformanceDetail = ({ mode = 'view', type = 'self' }) => {
                                 </tfoot>
                             </table>
                         </div>
+                    </div>
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                        <DonutChart title="Self Evaluation Overview" evalData={performance?.selfEvaluation} />
+                        <DonutChart title="Instructor Assessment Overview" evalData={performance?.instructorAssessment} />
                     </div>
                 </div>
                 {/* Printable Content End */}

@@ -132,9 +132,6 @@ const FacultyManagement = () => {
   };
 
   const handleDelete = async (facultyId) => {
-    if (!window.confirm('Are you sure you want to delete this faculty member?')) {
-      return;
-    }
     try {
       await adminService.deleteFaculty(facultyId);
       fetchFaculty();

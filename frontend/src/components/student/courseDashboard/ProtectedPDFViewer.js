@@ -4,7 +4,7 @@ import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/toolbar/lib/styles/index.css';
 
-const ProtectedPDFViewer = ({ fileUrl, title }) => {
+const ProtectedPDFViewer = ({ fileUrl, title, height = '750px' }) => {
     // Initialize toolbar plugin with custom configuration
     const toolbarPluginInstance = toolbarPlugin({
         // Transform toolbar to remove download and print buttons
@@ -38,7 +38,7 @@ const ProtectedPDFViewer = ({ fileUrl, title }) => {
                     WebkitUserSelect: 'none',
                     msUserSelect: 'none',
                     MozUserSelect: 'none',
-                    height: '750px',
+                    height: height,
                     border: '1px solid rgba(0, 0, 0, 0.3)',
                     borderRadius: '8px',
                     overflow: 'hidden',

@@ -1,5 +1,6 @@
 import { Tooltip } from '@mui/material';
 import { Copy, FileText, Edit3, Trash } from 'lucide-react';
+import PopConfirm from '../../common/PopConfirm';
 
 const TeachingPointTable = ({ points, onEdit, onDelete, onDuplicate }) => {
   return (
@@ -71,14 +72,18 @@ const TeachingPointTable = ({ points, onEdit, onDelete, onDuplicate }) => {
                           <Edit3 size={18} strokeWidth={2} />
                         </button>
                       </Tooltip>
-                      <Tooltip title="Delete" placement="top">
-                        <button
-                          onClick={() => onDelete(point)}
-                          className="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl transition-colors"
-                        >
-                          <Trash size={18} strokeWidth={2} />
-                        </button>
-                      </Tooltip>
+                      <PopConfirm
+                        title="Are you sure you want to delete this topic?"
+                        onConfirm={() => onDelete(point)}
+                      >
+                        <Tooltip title="Delete" placement="top">
+                          <button
+                            className="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl transition-colors"
+                          >
+                            <Trash size={18} strokeWidth={2} />
+                          </button>
+                        </Tooltip>
+                      </PopConfirm>
                     </div>
                   </td>
                 </tr>

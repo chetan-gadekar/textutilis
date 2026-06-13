@@ -10,33 +10,29 @@ import {
 import { useTheme } from '@mui/material/styles';
 import notify from '../../utils/notify';
 import courseService from '../../services/courseService';
-import studentService from '../../services/studentService';
 import MainLayout from '../layout/MainLayout';
-import CourseSidebar from './courseDashboard/CourseSidebar';
-import ContentViewer from './courseDashboard/ContentViewer';
-import RatingSection from './courseDashboard/RatingSection';
+import CourseSidebar from '../student/courseDashboard/CourseSidebar';
+import ContentViewer from '../student/courseDashboard/ContentViewer';
 
 const DRAWER_WIDTH = 320;
 
-const CourseDashboard = () => {
+const InstructorCourseDashboard = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  
+
   const [courseStructure, setCourseStructure] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
   const [selectedContent, setSelectedContent] = useState(null);
-  const [currentProgress, setCurrentProgress] = useState(null);
   const [contentLoading, setContentLoading] = useState(false);
-  const [loadingModules, setLoadingModules] = useState({});
 
   const fetchCourseStructure = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await courseService.getStudentCourseStructure(courseId);
+      const response = await courseService.getInstructorCourseStructure(courseId);
       setCourseStructure(response.data);
     } catch (err) {
       notify.error(err.message || 'Failed to fetch course structure');
@@ -44,17 +40,6 @@ const CourseDashboard = () => {
       setLoading(false);
     }
   }, [courseId]);
-
-  const fetchContentProgress = useCallback(async () => {
-    if (!selectedContent) return;
-
-    try {
-      const response = await studentService.getVideoProgress(selectedContent._id);
-      setCurrentProgress(response.data);
-    } catch (err) {
-      console.error('Failed to fetch progress:', err);
-    }
-  }, [selectedContent]);
 
   useEffect(() => {
     fetchCourseStructure();
@@ -70,12 +55,6 @@ const CourseDashboard = () => {
     };
   }, [fetchCourseStructure]);
 
-  useEffect(() => {
-    if (selectedContent) {
-      fetchContentProgress();
-    }
-  }, [selectedContent, fetchContentProgress]);
-
   const handleModuleToggle = (moduleId) => {
     setExpandedModules((prev) => ({
       ...prev,
@@ -90,9 +69,8 @@ const CourseDashboard = () => {
         setMobileOpen(false);
       }
       // Fetch full content details (including contentData/description) on demand
-      const response = await courseService.getStudentContent(content._id);
+      const response = await courseService.getInstructorContent(content._id);
       setSelectedContent(response.data.content);
-      setCurrentProgress(response.data.progress);
     } catch (err) {
       console.error('Failed to fetch content details:', err);
       notify.error('Failed to load lecture content');
@@ -101,89 +79,8 @@ const CourseDashboard = () => {
     }
   };
 
-  const handleProgressUpdate = async (progress, isManualToggle = false) => {
-    if (!selectedContent) return;
-
-    let isCompleted = progress > 0.95;
-    let videoPosition = progress * 100;
-
-    if (!isManualToggle && currentProgress) {
-      // Don't downgrade progress or completion status during normal video playback
-      if (currentProgress.isCompleted) {
-        isCompleted = true;
-      }
-      if (currentProgress.videoPosition > videoPosition) {
-        videoPosition = currentProgress.videoPosition;
-      }
-    }
-
-    const module = courseStructure.modules.find((m) =>
-      m.topics.some((t) => t.content.some((c) => c._id === selectedContent._id))
-    );
-    const topic = module?.topics.find((t) =>
-      t.content.some((c) => c._id === selectedContent._id)
-    );
-
-    try {
-      await studentService.saveContentProgress(
-        selectedContent._id,
-        topic?._id,
-        module?._id,
-        courseId,
-        videoPosition,
-        isCompleted
-      );
-
-      // 🚀 OPTIMIZATION: Update local state instead of full re-fetch
-      setCourseStructure(prev => {
-        if (!prev) return prev;
-        
-        const newModules = prev.modules.map(m => {
-          if (m._id !== module._id) return m;
-          return {
-            ...m,
-            topics: m.topics.map(t => {
-              if (t._id !== topic._id) return t;
-              return {
-                ...t,
-                content: t.content.map(c => {
-                  if (c._id !== selectedContent._id) return c;
-                  return { ...c, progress: { isCompleted, videoPosition } };
-                })
-              };
-            })
-          };
-        });
-
-        // Trigger milestone celebration if module just completed
-        const isModuleNowComplete = newModules.find(m => m._id === module._id)
-          .topics.every(t => t.content.every(c => c.progress?.isCompleted || (c._id === selectedContent._id && isCompleted)));
-        
-        const wasModuleComplete = prev.modules.find(m => m._id === module._id)
-          .topics.every(t => t.content.every(c => c.progress?.isCompleted));
-
-        if (isModuleNowComplete && !wasModuleComplete) {
-          notify.success(`Congratulations! You've completed Module: ${module.title} 🎉`, {
-            duration: 5000,
-            icon: '🏆'
-          });
-        }
-
-        return { ...prev, modules: newModules };
-      });
-
-      // Update current progress locally so the checkbox reflects this immediately
-      setCurrentProgress((prev) => ({
-        ...prev,
-        isCompleted: isCompleted,
-        videoPosition: videoPosition,
-      }));
-
-    } catch (err) {
-      console.error('Failed to save progress:', err);
-      notify.error('Progress sync failed - checking your connection');
-    }
-  };
+  // Instructors are read-only — no progress saving
+  const handleProgressUpdate = () => {};
 
   if (loading) {
     return (
@@ -204,15 +101,14 @@ const CourseDashboard = () => {
   }
 
   const { course, modules } = courseStructure;
-  const drawerWidth = 320;
+  const drawerWidth = DRAWER_WIDTH;
   const mainSidebarWidth = isMobile ? 0 : 80;
 
   return (
     <MainLayout
       courseTitle={course?.title}
-      onBack={() => navigate('/student/courses')}
-      showProgress={true}
-      progress={course?.progress || 0}
+      onBack={() => navigate('/instructor/courses')}
+      showProgress={false}
       initialCollapsed={true}
       onCourseMenuToggle={() => setMobileOpen(true)}
     >
@@ -220,7 +116,7 @@ const CourseDashboard = () => {
         sx={{
           position: 'fixed',
           top: 64,
-          left: mainSidebarWidth, 
+          left: mainSidebarWidth,
           right: 0,
           bottom: 0,
           overflow: 'hidden',
@@ -231,7 +127,7 @@ const CourseDashboard = () => {
           course={course}
           modules={modules}
           expandedModules={expandedModules}
-          loadingModules={loadingModules}
+          loadingModules={{}}
           selectedContent={selectedContent}
           onModuleToggle={handleModuleToggle}
           onContentClick={handleContentClick}
@@ -242,18 +138,18 @@ const CourseDashboard = () => {
           isMobile={isMobile}
         />
 
-        {/* Main Content Area - positioned to the right of sidebar */}
+        {/* Main Content Area */}
         <Box
           component="main"
           onContextMenu={(e) => e.preventDefault()}
           sx={{
             position: 'absolute',
-            left: isMobile ? 0 : `${drawerWidth}px`, 
+            left: isMobile ? 0 : `${drawerWidth}px`,
             top: 0,
             right: 0,
             bottom: 0,
             overflow: 'auto',
-            bgcolor: '#FAFAFA', 
+            bgcolor: '#FAFAFA',
             p: { xs: 1.5, sm: 2, md: 3 },
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -269,16 +165,15 @@ const CourseDashboard = () => {
             <ContentViewer
               content={selectedContent}
               course={course}
-              currentProgress={currentProgress}
+              currentProgress={null}
               onProgressUpdate={handleProgressUpdate}
               onNextContent={() => {
-                // Flatten all content to find next one
                 const allContent = modules.flatMap(m => m.topics.flatMap(t => t.content));
                 const currentIndex = allContent.findIndex(c => c._id === selectedContent?._id);
                 if (currentIndex !== -1 && currentIndex < allContent.length - 1) {
                   handleContentClick(allContent[currentIndex + 1]);
                 } else {
-                  notify.success("Great job! You've reached the end of the course content.");
+                  notify.success("You've reached the end of the course content.");
                 }
               }}
               hasNextContent={(() => {
@@ -288,11 +183,10 @@ const CourseDashboard = () => {
               })()}
             />
           )}
-          {selectedContent && !contentLoading && <RatingSection contentId={selectedContent._id} />}
         </Box>
       </Box>
     </MainLayout>
   );
 };
 
-export default CourseDashboard;
+export default InstructorCourseDashboard;

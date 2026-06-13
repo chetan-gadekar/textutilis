@@ -31,6 +31,7 @@ const CreateAssignment = () => {
   const [submitting, setSubmitting] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [attachments, setAttachments] = useState([]);
+  const [answerDoc, setAnswerDoc] = useState(null);
   const [editAssignment, setEditAssignment] = useState(null);
 
   // Search and Pagination State
@@ -138,6 +139,7 @@ const CreateAssignment = () => {
     }
 
     setAttachments(assignment.attachments || []);
+    setAnswerDoc(assignment.answerDoc?.fileUrl ? assignment.answerDoc : null);
     setOpenDialog(true);
   };
 
@@ -148,6 +150,7 @@ const CreateAssignment = () => {
     setDescription('');
     setDueDate('');
     setAttachments([]);
+    setAnswerDoc(null);
   };
 
   const handleSubmit = async (e) => {
@@ -167,6 +170,7 @@ const CreateAssignment = () => {
         description,
         dueDate,
         attachments,
+        answerDoc: answerDoc || { fileUrl: null, fileName: null },
         courseId: selectedCourse,
       };
 
@@ -188,10 +192,6 @@ const CreateAssignment = () => {
   };
 
   const handleDeleteAssignment = async (assignmentId) => {
-    if (!window.confirm('Are you sure you want to delete this assignment?')) {
-      return;
-    }
-
     try {
       await assignmentService.deleteAssignment(assignmentId);
       notify.success('Assignment deleted successfully!');
@@ -338,6 +338,9 @@ const CreateAssignment = () => {
           attachments={attachments}
           onAddAttachment={handleAddAttachment}
           onRemoveAttachment={handleRemoveAttachment}
+          answerDoc={answerDoc}
+          onAnswerDocChange={(url, name) => setAnswerDoc({ fileUrl: url, fileName: name })}
+          onRemoveAnswerDoc={() => setAnswerDoc(null)}
           onSubmit={handleSubmit}
           submitting={submitting}
           editing={!!editAssignment}

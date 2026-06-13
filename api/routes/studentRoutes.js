@@ -23,6 +23,7 @@ router.get('/my-assignments', studentController.getMyAssignments);
 router.post('/assignments/:assignmentId/submit', studentController.submitAssignment);
 
 router.get('/profile', studentController.getMyProfile);
+router.put('/profile', studentController.updateMyProfile);
 
 // Performance routes
 router.get('/performance', performanceController.getMyPerformance);

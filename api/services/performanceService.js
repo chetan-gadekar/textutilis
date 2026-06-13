@@ -1,6 +1,7 @@
 const Performance = require('../schemas/Performance');
 const Enrollment = require('../schemas/Enrollment');
 const courseService = require('./courseService');
+const User = require('../schemas/User');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -101,20 +102,27 @@ const updateInstructorAssessment = async (studentId, courseId, updateData, updat
   return performance;
 };
 
-// Get students' performance for instructor's courses (optimized: bulk $in)
+// Get students' performance for instructor's courses (owned + assigned)
 const getInstructorStudentsPerformance = async (instructorId, filters = {}) => {
-  // 1. Get courses taught/assigned to instructor
-  const courses = await courseService.getAllCourses({ instructor: instructorId });
+  // 1. Get instructor's assignedCourses from User document
+  const instructor = await User.findById(instructorId).select('assignedCourses').lean();
+  const assignedCourses = instructor?.assignedCourses || [];
+
+  // 2. Get all courses owned by or assigned to instructor
+  const courses = await courseService.getAllCourses({
+    instructor: instructorId,
+    assignedCourses,
+  });
   const courseIds = courses.map(c => c._id);
 
   if (courseIds.length === 0) return [];
 
-  // Filter by specific course if provided
+  // Filter by specific course if provided (validate it belongs to this instructor)
   const targetCourseIds = filters.courseId
     ? [filters.courseId].filter(id => courseIds.some(cid => cid.toString() === id.toString()))
     : courseIds;
 
-  // 2. Get enrollments for these courses (in parallel with any other work if needed)
+  // 3. Get enrollments for these courses
   const enrollments = await Enrollment.find({ courseId: { $in: targetCourseIds } })
     .populate('studentId', 'name email')
     .lean();
@@ -128,7 +136,7 @@ const getInstructorStudentsPerformance = async (instructorId, filters = {}) => {
     );
   }
 
-  // 3. Bulk-resolve performances (no loop, no N+1)
+  // 4. Bulk-resolve performances (no loop, no N+1)
   const pairs = filteredEnrollments
     .filter(e => e.studentId)
     .map(e => ({ studentId: e.studentId._id, courseId: e.courseId }));

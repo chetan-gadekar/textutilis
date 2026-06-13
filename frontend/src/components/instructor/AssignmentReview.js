@@ -1,29 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Typography,
-  Paper,
-  Box,
   CircularProgress,
-  TextField,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  Autocomplete,
-  Stack,
-  IconButton,
   Tooltip,
   Collapse,
   TablePagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
-import { Filter, FilterX, ExternalLink } from 'lucide-react';
+import { Filter, FilterX, ExternalLink, MessageSquarePlus, CheckCircle2 } from 'lucide-react';
 import assignmentService from '../../services/assignmentService';
 import notify from '../../utils/notify';
 import MainLayout from '../layout/MainLayout';
+import { downloadFile } from '../../utils/cloudinaryUtils';
 
 const AssignmentReview = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -42,6 +32,11 @@ const AssignmentReview = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
+
+  // Remark Modal State
+  const [remarkModal, setRemarkModal] = useState({ open: false, submission: null });
+  const [remarkText, setRemarkText] = useState('');
+  const [remarkSaving, setRemarkSaving] = useState(false);
 
   // Debounce assignment title
   useEffect(() => {
@@ -91,10 +86,7 @@ const AssignmentReview = () => {
     fetchSubmissions();
   }, [fetchSubmissions]);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
+  const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -108,12 +100,48 @@ const AssignmentReview = () => {
     setPage(0);
   };
 
+  // --- Remark Modal Handlers ---
+  const openRemarkModal = (submission) => {
+    setRemarkModal({ open: true, submission });
+    setRemarkText(submission.remark || '');
+  };
+
+  const closeRemarkModal = () => {
+    setRemarkModal({ open: false, submission: null });
+    setRemarkText('');
+  };
+
+  const handleSaveRemark = async () => {
+    if (!remarkText.trim()) {
+      notify.error('Please enter a remark before saving.');
+      return;
+    }
+    try {
+      setRemarkSaving(true);
+      await assignmentService.addRemark(remarkModal.submission._id, remarkText.trim());
+      notify.success('Remark saved successfully!');
+      // Update local state to reflect the remark immediately
+      setSubmissions(prev =>
+        prev.map(s =>
+          s._id === remarkModal.submission._id
+            ? { ...s, remark: remarkText.trim(), status: 'reviewed' }
+            : s
+        )
+      );
+      closeRemarkModal();
+    } catch (err) {
+      notify.error(err.message || 'Failed to save remark');
+    } finally {
+      setRemarkSaving(false);
+    }
+  };
+
   if (loading && submissions.length === 0 && !showFilters) {
     return (
       <MainLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <div className="flex justify-center items-center min-h-[50vh]">
           <CircularProgress />
-        </Box>
+        </div>
       </MainLayout>
     );
   }
@@ -124,9 +152,9 @@ const AssignmentReview = () => {
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-medium text-gray-800">Review Assignments</h1>
-            <p className="text-gray-500 mt-1 font-light">Monitor and grade student assignment submissions</p>
+            <p className="text-gray-500 mt-1 font-light">Monitor, download, and remark on student submissions</p>
           </div>
-          <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"} placement="top">
+          <Tooltip title={showFilters ? 'Hide Filters' : 'Show Filters'} placement="top">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2.5 rounded-xl transition-colors ${showFilters ? 'bg-theme/10 text-theme' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'}`}
@@ -188,7 +216,7 @@ const AssignmentReview = () => {
               </div>
               <button
                 onClick={handleClearFilters}
-                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-theme/20 transition-colors shadow-sm whitespace-nowrap"
+                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm whitespace-nowrap"
               >
                 Clear Filters
               </button>
@@ -196,26 +224,24 @@ const AssignmentReview = () => {
           </div>
         </Collapse>
 
-        {/* Legacy alerts removed in favor of premium toasts */}
-
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 w-full">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignment</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">File</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Submitted At</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignment</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">File</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Submitted At</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="7" className="px-6 py-12 text-center">
                       <div className="flex justify-center items-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme"></div>
                       </div>
@@ -245,11 +271,15 @@ const AssignmentReview = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-800">{submission.assignmentId?.title || 'N/A'}</div>
+                        {submission.remark && (
+                          <div className="text-xs text-green-600 mt-0.5 flex items-center gap-1">
+                            <CheckCircle2 size={11} />
+                            <span className="truncate max-w-[160px]">{submission.remark}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 hidden md:table-cell">
-                        <div className="text-sm text-gray-500 max-w-xs truncate">
-                          {submission.fileName}
-                        </div>
+                        <div className="text-sm text-gray-500 max-w-xs truncate">{submission.fileName}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
                         {new Date(submission.submittedAt).toLocaleString()}
@@ -262,17 +292,27 @@ const AssignmentReview = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2 items-center">
                           {submission.fileUrl && (
-                            <Tooltip title="View Submission" placement="top">
-                              <a
-                                href={submission.fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Tooltip title="Download Submission" placement="top">
+                              <button
+                                onClick={() => downloadFile(submission.fileUrl, submission.fileName)}
                                 className="p-2.5 bg-theme/5 hover:bg-theme/10 text-theme hover:text-theme-dark rounded-xl transition-colors flex items-center justify-center"
                               >
-                                <ExternalLink size={20} strokeWidth={2} />
-                              </a>
+                                <ExternalLink size={18} strokeWidth={2} />
+                              </button>
                             </Tooltip>
                           )}
+                          <Tooltip title={submission.remark ? 'Edit Remark' : 'Add Remark'} placement="top">
+                            <button
+                              onClick={() => openRemarkModal(submission)}
+                              className={`p-2.5 rounded-xl transition-colors flex items-center justify-center ${
+                                submission.remark
+                                  ? 'bg-green-50 hover:bg-green-100 text-green-600'
+                                  : 'bg-gray-50 hover:bg-gray-100 text-gray-500'
+                              }`}
+                            >
+                              <MessageSquarePlus size={18} strokeWidth={2} />
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>
@@ -306,12 +346,72 @@ const AssignmentReview = () => {
                 },
                 '.MuiTablePagination-actions .MuiIconButton-root': {
                   color: '#6b7280',
-                }
+                },
               }}
             />
           </div>
         </div>
       </div>
+
+      {/* Remark Modal */}
+      <Dialog
+        open={remarkModal.open}
+        onClose={closeRemarkModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            fontFamily: 'Poppins, sans-serif',
+            p: 1,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '1.1rem', pb: 1 }}>
+          <div className="flex items-center gap-2 text-gray-800">
+            <MessageSquarePlus size={20} className="text-theme" />
+            {remarkModal.submission?.remark ? 'Edit Remark' : 'Add Remark'}
+          </div>
+          {remarkModal.submission && (
+            <p className="text-xs font-normal text-gray-400 mt-1">
+              {remarkModal.submission.studentId?.name} — {remarkModal.submission.assignmentId?.title}
+            </p>
+          )}
+        </DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <textarea
+            autoFocus
+            rows={5}
+            placeholder="Write your remark for the student here..."
+            value={remarkText}
+            onChange={(e) => setRemarkText(e.target.value)}
+            className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-theme/20 focus:border-theme transition-all resize-none font-poppins text-gray-700 placeholder-gray-400"
+          />
+          <p className="text-xs text-gray-400 mt-2">This remark will be visible to the student in their assignment view.</p>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+          <button
+            onClick={closeRemarkModal}
+            className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSaveRemark}
+            disabled={remarkSaving || !remarkText.trim()}
+            className="px-6 py-2 text-sm font-semibold text-white bg-theme hover:bg-theme-dark rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+          >
+            {remarkSaving ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                Saving...
+              </>
+            ) : (
+              'Save Remark'
+            )}
+          </button>
+        </DialogActions>
+      </Dialog>
     </MainLayout>
   );
 };

@@ -4,8 +4,10 @@ import { BookOpen, Play, CheckCircle2 } from 'lucide-react';
 import notify from '../../utils/notify';
 import courseService from '../../services/courseService';
 import MainLayout from '../layout/MainLayout';
+import { useAuth } from '../../hooks/useAuth';
 
 const StudentDashboard = () => {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,6 +61,27 @@ const StudentDashboard = () => {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 py-6 font-poppins">
+                {/* Student Profile Banner */}
+                <div className="mb-8 p-6 bg-gradient-to-r from-theme/10 via-theme/5 to-white rounded-2xl border border-theme/10 flex items-center gap-5">
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-theme/20 shadow-sm flex-shrink-0">
+                        {user?.profilePhoto ? (
+                            <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full bg-theme/10 text-theme flex items-center justify-center text-2xl font-bold">
+                                {user?.name?.charAt(0).toUpperCase() || 'S'}
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Welcome back, <span className="text-theme font-medium">{user?.name || 'Student'}</span>!
+                        </h2>
+                        <p className="text-xs text-gray-500 mt-1 font-light">
+                            Ready to continue your learning journey? Explore your courses below.
+                        </p>
+                    </div>
+                </div>
+
                 {/* Header Section */}
                 <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -93,163 +116,115 @@ const StudentDashboard = () => {
 
                 {/* Legacy error alerts removed in favor of premium toasts */}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                        {filteredCourses.length === 0 ? (
-                            <div className="bg-white p-16 text-center rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
-                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                                    <BookOpen className="text-gray-300" size={32} />
-                                </div>
-                                <h3 className="text-lg font-medium text-gray-800 mb-2">No Courses Found</h3>
-                                <p className="text-gray-500 text-sm">
-                                    {filter === 'all' ? 'You are not enrolled in any courses yet.' : 'There are no courses currently in progress.'}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-6">
-                                {filteredCourses.map((course) => {
-                                    const progress = course.enrollment?.progress || 0;
-                                    const isStarted = progress > 0;
+                {/* Courses Grid */}
+                {filteredCourses.length === 0 ? (
+                    <div className="bg-white p-16 text-center rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <BookOpen className="text-gray-300" size={36} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">No Courses Found</h3>
+                        <p className="text-gray-400 text-sm">
+                            {filter === 'all' ? 'You are not enrolled in any courses yet.' : 'There are no courses currently in progress.'}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredCourses.map((course) => {
+                            const progress = course.enrollment?.progress || 0;
+                            const isStarted = progress > 0;
+                            const isCompleted = progress === 100;
 
-                                    return (
-                                        <div key={course._id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-[180px]">
-                                            {/* Card Media Section */}
-                                            <div className="relative w-full sm:w-[220px] h-48 sm:h-full bg-gray-50 shrink-0">
-                                                <div
-                                                    className="w-full h-full flex items-center justify-center bg-gray-50 bg-cover bg-center relative"
-                                                    style={{ backgroundImage: course.bannerImage ? `url(${course.bannerImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-                                                >
-                                                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
-                                                        <span className="text-[10px] font-bold text-blue-600 tracking-wider">SKILLS</span>
-                                                    </div>
+                            return (
+                                <div
+                                    key={course._id}
+                                    className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group cursor-pointer"
+                                    onClick={() => navigate(`/student/courses/${course._id}`)}
+                                >
+                                    {/* Card Banner Image */}
+                                    <div
+                                        className="relative h-44 w-full bg-gray-100 overflow-hidden"
+                                        style={{
+                                            backgroundImage: course.bannerImage
+                                                ? `url(${course.bannerImage})`
+                                                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                        }}
+                                    >
+                                        {/* SKILLS badge */}
+                                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
+                                            <span className="text-[10px] font-bold text-blue-600 tracking-wider">SKILLS</span>
+                                        </div>
 
-
-                                                </div>
+                                        {/* Progress/Completed badge */}
+                                        {isCompleted ? (
+                                            <div className="absolute top-3 right-3 bg-green-500 text-white px-2.5 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                                                <CheckCircle2 size={12} />
+                                                <span className="text-[10px] font-bold tracking-wide">DONE</span>
                                             </div>
+                                        ) : isStarted ? (
+                                            <div className="absolute top-3 right-3 bg-orange-500 text-white px-2.5 py-1 rounded-md shadow-sm">
+                                                <span className="text-[10px] font-bold tracking-wide">{progress}%</span>
+                                            </div>
+                                        ) : null}
 
-                                            {/* Card Content Section */}
-                                            <div className="flex-grow flex flex-col p-5">
-                                                <div className="flex justify-between items-start mb-2 gap-4">
-                                                    <h2 className="text-lg font-semibold text-gray-800 line-clamp-1">
-                                                        {course.title}
-                                                    </h2>
-
-                                                    {/* Circular Progress SVG or CheckCircle */}
-                                                    {progress === 100 ? (
-                                                        <CheckCircle2 className="w-10 h-10 text-green-500 shrink-0" />
-                                                    ) : (
-                                                        <div className="relative w-10 h-10 shrink-0">
-                                                            <svg className="w-10 h-10 transform -rotate-90">
-                                                                <circle
-                                                                    cx="20" cy="20" r="18"
-                                                                    fill="none"
-                                                                    className="stroke-gray-200"
-                                                                    strokeWidth="3"
-                                                                />
-                                                                <circle
-                                                                    cx="20" cy="20" r="18"
-                                                                    fill="none"
-                                                                    className={progress > 0 ? "stroke-green-500" : "stroke-gray-200"}
-                                                                    strokeWidth="3"
-                                                                    strokeDasharray={`${2 * Math.PI * 18}`}
-                                                                    strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
-                                                                    strokeLinecap="round"
-                                                                    style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
-                                                                />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
-                                                    {course.description || 'No description available'}
-                                                </p>
-
-                                                {/* Linear Progress Bar */}
-                                                {isStarted && (
-                                                    <div className="mb-4 mt-auto">
-                                                        <div className="flex justify-between items-center mb-1.5">
-                                                            <span className="text-xs font-medium text-gray-500">Progress</span>
-                                                            <span className="text-xs font-bold text-gray-700">{progress}%</span>
-                                                        </div>
-                                                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                                                            <div
-                                                                className="bg-green-500 h-1.5 rounded-full transition-all duration-500 ease-out"
-                                                                style={{ width: `${progress}%` }}
-                                                            ></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Action Area */}
-                                                <div className={isStarted ? "" : "mt-auto"}>
-                                                    <button
-                                                        onClick={() => navigate(`/student/courses/${course._id}`)}
-                                                        className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${isStarted
-                                                            ? progress === 100
-                                                                ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-100'
-                                                                : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
-                                                            : 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent'
-                                                            }`}
-                                                    >
-                                                        {isStarted ? (
-                                                            progress === 100 ? (
-                                                                <>
-                                                                    Completed
-                                                                    <CheckCircle2 size={16} />
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    Continue Learning
-                                                                    <Play size={16} className="fill-current" />
-                                                                </>
-                                                            )
-                                                        ) : (
-                                                            'Start Learning'
-                                                        )}
-                                                    </button>
-                                                </div>
+                                        {/* Hover overlay */}
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 text-white text-sm font-semibold">
+                                                <Play size={14} className="fill-white" />
+                                                {isCompleted ? 'Review' : isStarted ? 'Continue' : 'Start'}
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-[84px] bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                            <h2 className="text-xl font-bold text-gray-800 mb-6">
-                                Skills Report
-                            </h2>
-
-                            <div className="bg-gray-50 rounded-xl p-6 relative overflow-hidden group">
-                                {/* Simulated content with blur */}
-                                <div className="filter blur-[2px] transition-all duration-300 group-hover:blur-sm opacity-60">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div className="h-2 w-20 bg-gray-300 rounded"></div>
-                                        <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
                                     </div>
-                                    <div className="space-y-3">
-                                        <div className="h-2 w-full bg-gray-300 rounded"></div>
-                                        <div className="h-2 w-5/6 bg-gray-300 rounded"></div>
-                                        <div className="h-2 w-4/6 bg-gray-300 rounded"></div>
+
+                                    {/* Card Body */}
+                                    <div className="flex flex-col flex-grow p-5">
+                                        <h2 className="text-base font-semibold text-gray-800 line-clamp-2 mb-2 group-hover:text-theme transition-colors">
+                                            {course.title}
+                                        </h2>
+                                        <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">
+                                            {course.description || 'No description available'}
+                                        </p>
+
+                                        {/* Progress Bar */}
+                                        <div className="mt-auto">
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Progress</span>
+                                                <span className="text-[10px] font-bold text-gray-600">{progress}%</span>
+                                            </div>
+                                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isCompleted ? 'bg-green-500' : 'bg-theme'}`}
+                                                    style={{ width: `${progress}%` }}
+                                                />
+                                            </div>
+
+                                            {/* Action Button */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); navigate(`/student/courses/${course._id}`); }}
+                                                className={`mt-4 w-full inline-flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 ${
+                                                    isCompleted
+                                                        ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-100'
+                                                        : isStarted
+                                                        ? 'bg-theme/10 text-theme hover:bg-theme hover:text-white border border-transparent'
+                                                        : 'bg-theme text-white hover:bg-theme-dark border border-transparent'
+                                                }`}
+                                            >
+                                                {isCompleted ? (
+                                                    <><CheckCircle2 size={15} /> Completed</>
+                                                ) : isStarted ? (
+                                                    <><Play size={15} className="fill-current" /> Continue Learning</>
+                                                ) : (
+                                                    'Start Learning'
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Coming Soon Overlay */}
-                                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white/40 backdrop-blur-[1px]">
-                                    <span className="text-4xl mb-3">🚀</span>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-1 tracking-wide">
-                                        COMING SOON
-                                    </h3>
-                                    <p className="text-sm font-medium text-gray-600">
-                                        Your skills portfolio is being prepared
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })}
                     </div>
-                </div>
+                )}
             </div>
         </MainLayout>
     );

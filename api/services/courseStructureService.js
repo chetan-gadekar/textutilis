@@ -154,7 +154,98 @@ const getContentForStudent = async (contentId, studentId) => {
   };
 };
 
+// Get full course structure for instructor (no enrollment check, no progress)
+const getCourseStructureForInstructor = async (courseId) => {
+  const course = await Course.findById(courseId)
+    .populate('instructor', 'name email')
+    .lean();
+
+  if (!course) {
+    throw new Error('Course not found');
+  }
+
+  const modules = await Module.find({ courseId })
+    .sort({ order: 1, createdAt: 1 })
+    .lean();
+
+  const moduleIds = modules.map(m => m._id);
+  const topics = await Topic.find({ moduleId: { $in: moduleIds } })
+    .sort({ order: 1, createdAt: 1 })
+    .lean();
+
+  const topicIds = topics.map(t => t._id);
+  const contentMetadata = await TopicContent.find({ topicId: { $in: topicIds } })
+    .select('-contentData -description')
+    .sort({ order: 1, createdAt: 1 })
+    .lean();
+
+  const contentByTopic = new Map();
+  contentMetadata.forEach(c => {
+    const tid = c.topicId.toString();
+    if (!contentByTopic.has(tid)) contentByTopic.set(tid, []);
+    contentByTopic.get(tid).push(c);
+  });
+
+  const topicsByModule = new Map();
+  topics.forEach(t => {
+    const mid = t.moduleId.toString();
+    if (!topicsByModule.has(mid)) topicsByModule.set(mid, []);
+    const topicContent = contentByTopic.get(t._id.toString()) || [];
+    topicsByModule.get(mid).push({
+      ...t,
+      content: topicContent,
+      totalCount: topicContent.length,
+    });
+  });
+
+  const structuredModules = modules.map(module => {
+    const moduleTopics = topicsByModule.get(module._id.toString()) || [];
+    const totalCount = moduleTopics.reduce((sum, t) => sum + t.totalCount, 0);
+    return {
+      ...module,
+      topics: moduleTopics,
+      totalCount,
+    };
+  });
+
+  const totalContentCount = contentMetadata.length;
+
+  return {
+    course: {
+      ...course,
+      totalCount: totalContentCount,
+    },
+    modules: structuredModules,
+  };
+};
+
+// Get specific content for instructor (no enrollment check)
+const getContentForInstructor = async (contentId) => {
+  const content = await TopicContent.findById(contentId)
+    .populate({
+      path: 'topicId',
+      populate: {
+        path: 'moduleId',
+        populate: {
+          path: 'courseId',
+        },
+      },
+    })
+    .lean();
+
+  if (!content) {
+    throw new Error('Content not found');
+  }
+
+  return {
+    content: await signR2Urls(content),
+    progress: null,
+  };
+};
+
 module.exports = {
   getCourseStructureForStudent,
   getContentForStudent,
+  getCourseStructureForInstructor,
+  getContentForInstructor,
 };

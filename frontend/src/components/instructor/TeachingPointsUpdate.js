@@ -124,8 +124,6 @@ const TeachingPointsUpdate = () => {
   };
 
   const handleDelete = async (pointToDelete) => {
-    if (!window.confirm('Are you sure you want to delete this topic?')) return;
-
     const updatedPoints = points.filter((p) => p !== pointToDelete);
     await savePoints(updatedPoints, 'Topic deleted successfully!');
   };

@@ -65,6 +65,20 @@
     object-fit: cover;
 }
 
+.sidebar-profile-placeholder {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.375rem;
+    background-color: #9366ec;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
 .sidebar-user-info {
     display: flex;
     justify-content: space-between;

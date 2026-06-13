@@ -8,6 +8,7 @@ import MainLayout from '../layout/MainLayout';
 import FileUpload from '../common/FileUpload';
 import LoadingButton from '../common/LoadingButton';
 import notify from '../../utils/notify';
+import PopConfirm from '../common/PopConfirm';
 
 const CourseManagement = () => {
   const navigate = useNavigate();
@@ -90,9 +91,6 @@ const CourseManagement = () => {
   };
 
   const handleDelete = async (courseId) => {
-    if (!window.confirm('Are you sure you want to delete this course? All content and assignments will be deleted.')) {
-      return;
-    }
     try {
       await courseService.deleteCourse(courseId);
       notify.success('Course deleted successfully');
@@ -224,14 +222,18 @@ const CourseManagement = () => {
                               <Edit3 size={20} strokeWidth={2} />
                             </button>
                           </Tooltip>
-                          <Tooltip title="Delete Course" placement="top">
-                            <button
-                              onClick={() => handleDelete(course._id)}
-                              className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl transition-colors"
-                            >
-                              <Trash size={20} strokeWidth={2} />
-                            </button>
-                          </Tooltip>
+                          <PopConfirm
+                            title="Are you sure you want to delete this course? All content and assignments will be deleted."
+                            onConfirm={() => handleDelete(course._id)}
+                          >
+                            <Tooltip title="Delete Course" placement="top">
+                              <button
+                                className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl transition-colors"
+                              >
+                                <Trash size={20} strokeWidth={2} />
+                              </button>
+                            </Tooltip>
+                          </PopConfirm>
                         </div>
                       </td>
                     </tr>

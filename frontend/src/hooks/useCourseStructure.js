@@ -61,9 +61,6 @@ export const useCourseStructure = (courseId, onRefresh) => {
   };
 
   const handleDeleteModule = async (moduleId) => {
-    if (!window.confirm('Are you sure? This will delete all topics and content in this module.')) {
-      return;
-    }
     try {
       await moduleService.deleteModule(moduleId);
       notify.success('Module deleted successfully');
@@ -113,9 +110,6 @@ export const useCourseStructure = (courseId, onRefresh) => {
   };
 
   const handleDeleteTopic = async (topicId) => {
-    if (!window.confirm('Are you sure? This will delete all content in this topic.')) {
-      return;
-    }
     try {
       await topicService.deleteTopic(topicId);
       notify.success('Topic deleted successfully');
@@ -193,9 +187,6 @@ export const useCourseStructure = (courseId, onRefresh) => {
   };
 
   const handleDeleteContent = async (contentId) => {
-    if (!window.confirm('Are you sure you want to delete this content?')) {
-      return;
-    }
     try {
       await topicContentService.deleteContent(contentId);
       notify.success('Content deleted successfully');

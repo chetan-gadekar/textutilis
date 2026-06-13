@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { FileText, Copy, Edit3, Trash } from 'lucide-react';
+import PopConfirm from '../../common/PopConfirm';
 
 const AssignmentTable = ({ assignments, onDelete, onEdit, pagination }) => {
   return (
@@ -70,14 +71,18 @@ const AssignmentTable = ({ assignments, onDelete, onEdit, pagination }) => {
                           <Edit3 size={20} strokeWidth={2} />
                         </button>
                       </Tooltip>
-                      <Tooltip title="Delete" placement="top">
-                        <button
-                          onClick={() => onDelete(assignment._id)}
-                          className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl transition-colors"
-                        >
-                          <Trash size={20} strokeWidth={2} />
-                        </button>
-                      </Tooltip>
+                      <PopConfirm
+                        title="Are you sure you want to delete this assignment?"
+                        onConfirm={() => onDelete(assignment._id)}
+                      >
+                        <Tooltip title="Delete" placement="top">
+                          <button
+                            className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl transition-colors"
+                          >
+                            <Trash size={20} strokeWidth={2} />
+                          </button>
+                        </Tooltip>
+                      </PopConfirm>
                     </div>
                   </td>
                 </tr>

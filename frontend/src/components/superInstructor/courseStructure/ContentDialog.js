@@ -180,7 +180,7 @@ const ContentDialog = ({
             />
           )}
 
-          {formData.contentType === 'video' && (
+          {/* {formData.contentType === 'video' && (
             <TextField
               label="Duration (seconds)"
               type="number"
@@ -188,7 +188,7 @@ const ContentDialog = ({
               value={formData.duration}
               onChange={(e) => onFormChange({ ...formData, duration: parseInt(e.target.value) || 0 })}
             />
-          )}
+          )} */}
 
           <TextField
             label="Order"

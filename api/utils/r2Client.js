@@ -98,13 +98,15 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
         return await signR2Urls(plainData, visited);
     }
 
-    // Handle TopicContent pattern (specific optimization)
-    if (data.contentType === 'video' && data.contentData && typeof data.contentData === 'string' && data.contentData.includes('r2.cloudflarestorage.com')) {
+    // Handle TopicContent/CourseContent pattern — sign contentData if it's an R2 URL
+    if (data.contentData && typeof data.contentData === 'string' && data.contentData.includes('r2.cloudflarestorage.com')) {
         const url = stripR2Signature(data.contentData);
-        const match = url.match(/lms_videos\/.*$/);
+        const match = url.match(/(lms_videos|lms_documents)\/.*$/);
         if (match) {
             const fileKey = match[0];
-            const signedUrl = await getSignedGetUrl(fileKey, 3600); // 1 hour for video playback
+            // Videos get 1h signed URLs, documents get 8h for comfortable reading
+            const ttl = data.contentType === 'video' ? 3600 : 28800;
+            const signedUrl = await getSignedGetUrl(fileKey, ttl);
             if (signedUrl) data.contentData = signedUrl;
         }
     }
@@ -122,11 +124,13 @@ const signR2Urls = async (data, visited = new WeakSet()) => {
         const value = data[key];
         if (typeof value === 'string' && value.includes('r2.cloudflarestorage.com')) {
             const url = stripR2Signature(value);
-            const match = url.match(/lms_videos\/.*$/);
+            const match = url.match(/(lms_videos|lms_documents)\/.*$/);
             if (match) {
                 const fileKey = match[0];
+                // Longer TTL for documents so they don't expire mid-read
+                const ttl = fileKey.startsWith('lms_videos/') ? 3600 : 28800;
                 signingPromises.push(
-                    getSignedGetUrl(fileKey, 3600).then(signedUrl => {
+                    getSignedGetUrl(fileKey, ttl).then(signedUrl => {
                         if (signedUrl) data[key] = signedUrl;
                     })
                 );

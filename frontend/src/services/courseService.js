@@ -60,6 +60,23 @@ const courseService = {
     const response = await api.get(`/student/content/${contentId}`);
     return response.data;
   },
+  // Instructor - Course Viewing (same structure as student, no enrollment needed)
+  getInstructorCourses: async () => {
+    const response = await api.get('/instructor/courses');
+    return response.data;
+  },
+  getInstructorCourseStructure: async (courseId) => {
+    const response = await api.get(`/instructor/courses/${courseId}/structure`);
+    return response.data;
+  },
+  getInstructorContent: async (contentId) => {
+    const response = await api.get(`/instructor/content/${contentId}`);
+    return response.data;
+  },
+  getInstructorCourseAssignments: async (courseId) => {
+    const response = await api.get(`/instructor/courses/${courseId}/assignments`);
+    return response.data;
+  },
 };
 
 export default courseService;

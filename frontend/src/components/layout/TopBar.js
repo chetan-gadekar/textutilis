@@ -268,6 +268,7 @@ const TopBar = ({ courseTitle, onBack, showProgress, progress, onSidebarToggle, 
             }}
           >
             <Avatar
+              src={user?.profilePhoto || undefined}
               sx={{
                 bgcolor: 'primary.main',
                 width: 38,

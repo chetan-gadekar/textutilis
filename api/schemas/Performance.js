@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 
 const assessmentFields = {
-  problemIdentification: [{ type: Number, min: 1, max: 5 }],
-  potentialSolution: [{ type: Number, min: 1, max: 5 }],
-  detailing: [{ type: Number, min: 1, max: 5 }],
-  implementation: [{ type: Number, min: 1, max: 5 }],
-  problemSynthesizing: [{ type: Number, min: 1, max: 5 }],
-  punctuality: [{ type: Number, min: 1, max: 5 }],
+  topics: [{ type: String }],
+  problemIdentification: [{ type: Number, min: 0, max: 5 }],
+  potentialSolution: [{ type: Number, min: 0, max: 5 }],
+  detailing: [{ type: Number, min: 0, max: 5 }],
+  implementation: [{ type: Number, min: 0, max: 5 }],
+  problemSynthesizing: [{ type: Number, min: 0, max: 5 }],
+  punctuality: [{ type: Number, min: 0, max: 5 }],
 };
 
 const performanceSchema = new mongoose.Schema({

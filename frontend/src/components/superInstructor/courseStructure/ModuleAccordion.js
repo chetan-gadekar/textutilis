@@ -19,6 +19,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import TopicCard from './TopicCard';
+import PopConfirm from '../../common/PopConfirm';
 
 const ACTION_BUTTON_SX = {
   textTransform: 'none',
@@ -103,15 +104,19 @@ const ModuleAccordion = ({
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete Module">
-              <IconButton
-                size="small"
-                onClick={() => onDeleteModule(module._id)}
-                sx={{ color: 'text.secondary' }}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            <PopConfirm
+              title="Are you sure you want to delete this module? This will delete all topics and contents inside."
+              onConfirm={() => onDeleteModule(module._id)}
+            >
+              <Tooltip title="Delete Module">
+                <IconButton
+                  size="small"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </PopConfirm>
           </Box>
         </Box>
       </AccordionSummary>

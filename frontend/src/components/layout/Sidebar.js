@@ -63,11 +63,17 @@ export default function Sidebar({ open: expanded, onToggle }) {
         </SidebarContext.Provider>
 
         <div className="sidebar-footer">
-          <img
-            src={profile}
-            className="sidebar-profile-img"
-            alt="Profile"
-          />
+          {user?.profilePhoto ? (
+            <img
+              src={user.profilePhoto}
+              className="sidebar-profile-img"
+              alt="Profile"
+            />
+          ) : (
+            <div className="sidebar-profile-placeholder">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
           <div className={`sidebar-user-info ${expanded ? "w-52 ml-3" : "w-0"}`}>
             <div className="sidebar-user-details">
               <h4 className="sidebar-user-name">{user?.name || "User"}</h4>

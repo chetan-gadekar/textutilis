@@ -35,6 +35,10 @@ const assignmentService = {
     const response = await api.get('/instructor/students', { params });
     return response.data;
   },
+  addRemark: async (submissionId, remark) => {
+    const response = await api.put(`/instructor/submissions/${submissionId}/remark`, { remark });
+    return response.data;
+  },
   // Student - Assignments
   getStudentAssignments: async (courseId) => {
     const response = await api.get(`/student/courses/${courseId}/assignments`);

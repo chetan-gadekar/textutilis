@@ -22,6 +22,10 @@ const assignmentSchema = new mongoose.Schema({
     fileUrl: String,
     fileName: String,
   }],
+  answerDoc: {
+    fileUrl: { type: String, default: null },
+    fileName: { type: String, default: null },
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -72,6 +76,19 @@ const submissionSchema = new mongoose.Schema({
   feedback: {
     type: String,
     default: '',
+  },
+  remark: {
+    type: String,
+    default: '',
+  },
+  remarkAddedAt: {
+    type: Date,
+    default: null,
+  },
+  remarkAddedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
   },
 });
 

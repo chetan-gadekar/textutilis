@@ -29,21 +29,26 @@ const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, ini
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <TopBar
-        courseTitle={courseTitle}
-        onBack={onBack}
-        showProgress={showProgress}
-        progress={progress}
-        onSidebarToggle={handleSidebarToggle}
-        onCourseMenuToggle={onCourseMenuToggle}
-        rightActions={rightActions}
-      />
-      <Sidebar open={sidebarOpen} onToggle={handleSidebarToggle} />
+      <div className="no-print">
+        <TopBar
+          courseTitle={courseTitle}
+          onBack={onBack}
+          showProgress={showProgress}
+          progress={progress}
+          onSidebarToggle={handleSidebarToggle}
+          onCourseMenuToggle={onCourseMenuToggle}
+          rightActions={rightActions}
+        />
+      </div>
+      <div className="no-print">
+        <Sidebar open={sidebarOpen} onToggle={handleSidebarToggle} />
+      </div>
 
       {/* Dark overlay backdrop for mobile sidebar */}
       <Backdrop
         open={isMobile && sidebarOpen}
         onClick={handleSidebarToggle}
+        className="no-print"
         sx={{
           zIndex: 1199, // Just below Sidebar z-index: 1200
           bgcolor: 'rgba(0, 0, 0, 0.6)',
@@ -59,6 +64,11 @@ const MainLayout = ({ children, courseTitle, onBack, showProgress, progress, ini
           mt: { xs: 7, sm: 8 },
           bgcolor: '#fafafa',
           minHeight: 'calc(100vh - 64px)',
+          '@media print': {
+            mt: '0 !important',
+            p: '0 !important',
+            bgcolor: '#ffffff !important',
+          },
           transition: (theme) =>
             theme.transitions.create('margin', {
               easing: theme.transitions.easing.sharp,

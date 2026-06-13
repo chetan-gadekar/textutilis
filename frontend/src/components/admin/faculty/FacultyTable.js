@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tooltip } from '@mui/material';
 import { Edit3, Trash, BookOpen } from 'lucide-react';
+import PopConfirm from '../../common/PopConfirm';
 
 const FacultyTable = ({
   faculty,
@@ -98,14 +99,18 @@ const FacultyTable = ({
                         <Edit3 size={20} strokeWidth={2} />
                       </button>
                     </Tooltip>
-                    <Tooltip title="Delete Faculty" placement="top">
-                      <button
-                        onClick={() => onDelete(facultyMember._id)}
-                        className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl transition-colors"
-                      >
-                        <Trash size={20} strokeWidth={2} />
-                      </button>
-                    </Tooltip>
+                    <PopConfirm
+                      title="Are you sure you want to delete this faculty member?"
+                      onConfirm={() => onDelete(facultyMember._id)}
+                    >
+                      <Tooltip title="Delete Faculty" placement="top">
+                        <button
+                          className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl transition-colors"
+                        >
+                          <Trash size={20} strokeWidth={2} />
+                        </button>
+                      </Tooltip>
+                    </PopConfirm>
                   </div>
                 </td>
               </tr>

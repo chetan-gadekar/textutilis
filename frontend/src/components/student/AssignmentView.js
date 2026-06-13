@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, Collapse } from '@mui/material';
-import { Upload, Download, Filter, FilterX } from 'lucide-react';
+import { Upload, Download, Filter, FilterX, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import assignmentService from '../../services/assignmentService';
 import notify from '../../utils/notify';
 import MainLayout from '../layout/MainLayout';
 import FileUpload from '../common/FileUpload';
+import { downloadFile } from '../../utils/cloudinaryUtils';
 
 const AssignmentView = () => {
   const [assignments, setAssignments] = useState([]);
@@ -29,6 +30,23 @@ const AssignmentView = () => {
   const [fileUrl, setFileUrl] = useState('');
   const [fileName, setFileName] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  // Remark Dialog State
+  const [remarkDialogOpen, setRemarkDialogOpen] = useState(false);
+  const [activeRemark, setActiveRemark] = useState('');
+  const [activeRemarkTitle, setActiveRemarkTitle] = useState('');
+
+  const handleOpenRemarkDialog = (remark, title) => {
+    setActiveRemark(remark);
+    setActiveRemarkTitle(title);
+    setRemarkDialogOpen(true);
+  };
+
+  const handleCloseRemarkDialog = () => {
+    setRemarkDialogOpen(false);
+    setActiveRemark('');
+    setActiveRemarkTitle('');
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -207,6 +225,7 @@ const AssignmentView = () => {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignment File</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Answer Doc</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">My Submission</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -238,20 +257,36 @@ const AssignmentView = () => {
                         {assignment.attachments && assignment.attachments.length > 0 ? (
                           <div className="flex flex-col gap-2">
                             {assignment.attachments.map((file, index) => (
-                              <a
+                              <button
                                 key={index}
-                                href={file.fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                onClick={() => downloadFile(file.fileUrl, file.fileName)}
                                 className="inline-flex items-center gap-1.5 text-theme hover:text-theme/80 transition-colors bg-theme/5 hover:bg-theme/10 px-2 py-1 rounded text-xs font-medium"
                               >
                                 <Download size={14} />
                                 <span className="truncate max-w-[120px]">{file.fileName || `File ${index + 1}`}</span>
-                              </a>
+                              </button>
                             ))}
                           </div>
                         ) : (
                           <span className="text-gray-400 italic">None</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {/* Answer doc: only shown by API after deadline */}
+                        {assignment.answerDoc && assignment.answerDoc.fileUrl ? (
+                          <button
+                            onClick={() => downloadFile(assignment.answerDoc.fileUrl, assignment.answerDoc.fileName)}
+                            className="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-900 transition-colors bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded text-xs font-medium border border-amber-200"
+                          >
+                            <Download size={14} />
+                            <span className="truncate max-w-[120px]">{assignment.answerDoc.fileName || 'Answer Doc'}</span>
+                          </button>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">
+                            {assignment.dueDate && new Date() < new Date(assignment.dueDate)
+                              ? 'Available after deadline'
+                              : 'Not provided'}
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -260,6 +295,15 @@ const AssignmentView = () => {
                             <p className="font-medium text-gray-900">{new Date(assignment.submission.submittedAt).toLocaleDateString()}</p>
                             {assignment.submission.fileName && (
                               <p className="text-xs text-gray-500 max-w-[120px] truncate">{assignment.submission.fileName}</p>
+                            )}
+                            {assignment.submission.remark && (
+                              <button
+                                onClick={() => handleOpenRemarkDialog(assignment.submission.remark, assignment.title)}
+                                className="mt-1 inline-flex items-center gap-1.5 text-green-700 hover:text-green-900 transition-colors bg-green-50 hover:bg-green-100 px-2 py-0.5 rounded text-xs font-medium border border-green-200"
+                              >
+                                <MessageSquare size={12} />
+                                View Remark
+                              </button>
                             )}
                           </div>
                         ) : (
@@ -371,6 +415,30 @@ const AssignmentView = () => {
                 <Upload size={16} />
               )}
               {uploading ? 'Submitting...' : 'Confirm Submission'}
+            </button>
+          </div>
+        </Dialog>
+
+        {/* Dialog for View Remark */}
+        <Dialog open={remarkDialogOpen} onClose={handleCloseRemarkDialog} maxWidth="sm" fullWidth PaperProps={{ className: "rounded-xl" }}>
+          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <MessageSquare className="text-theme" size={20} />
+              Instructor's Remark
+            </h2>
+          </div>
+          <div className="p-6">
+            <p className="text-xs font-medium text-gray-400 mb-2">Assignment: {activeRemarkTitle}</p>
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 whitespace-pre-wrap font-poppins">
+              {activeRemark || 'No remark provided.'}
+            </div>
+          </div>
+          <div className="px-6 py-4 bg-gray-50 flex justify-end items-center rounded-b-xl border-t border-gray-100">
+            <button
+              onClick={handleCloseRemarkDialog}
+              className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Close
             </button>
           </div>
         </Dialog>

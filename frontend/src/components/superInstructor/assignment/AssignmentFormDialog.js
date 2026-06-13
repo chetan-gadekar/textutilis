@@ -45,6 +45,9 @@ const AssignmentFormDialog = ({
   attachments = [],
   onAddAttachment,
   onRemoveAttachment,
+  answerDoc,
+  onAnswerDocChange,
+  onRemoveAnswerDoc,
   onSubmit,
   submitting,
   editing,
@@ -167,6 +170,35 @@ const AssignmentFormDialog = ({
               <p className="text-xs text-gray-500 mt-2">
                 You can upload multiple files including documents, spreadsheets (Excel/CSV), and presentations.
               </p>
+            </div>
+
+            {/* Answer Document Section */}
+            <div className="p-3 bg-amber-50 rounded border border-amber-200">
+              <label className="block text-xs font-semibold text-amber-800 mb-1">
+                📄 Answer Document
+              </label>
+              <p className="text-xs text-amber-600 mb-2">
+                This document will only be visible to students <strong>after the assignment deadline</strong>.
+              </p>
+
+              {answerDoc && answerDoc.fileUrl ? (
+                <div className="flex items-center justify-between bg-white border border-amber-200 rounded px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <AttachmentIcon fontSize="small" sx={{ color: '#d97706' }} />
+                    <span className="text-sm text-gray-700 truncate max-w-[200px]">{answerDoc.fileName}</span>
+                    <span className="text-xs text-amber-600 italic whitespace-nowrap">• Uploaded</span>
+                  </div>
+                  <IconButton size="small" color="error" onClick={onRemoveAnswerDoc} aria-label="remove answer doc">
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              ) : (
+                <FileUpload
+                  label="Upload Answer Document"
+                  accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.csv,.zip,.rar"
+                  onUploadSuccess={(url, name) => onAnswerDocChange(url, name)}
+                />
+              )}
             </div>
           </div>
         </DialogContent>

@@ -11,6 +11,10 @@ const createAssignment = async (assignmentData) => {
       fileUrl: stripR2Signature(att.fileUrl)
     }));
   }
+  // Sanitize R2 URL in answerDoc
+  if (assignmentData.answerDoc && assignmentData.answerDoc.fileUrl) {
+    assignmentData.answerDoc.fileUrl = stripR2Signature(assignmentData.answerDoc.fileUrl);
+  }
   const assignment = await Assignment.create(assignmentData);
   return assignment;
 };
@@ -83,6 +87,10 @@ const updateAssignment = async (assignmentId, updateData) => {
       ...att,
       fileUrl: stripR2Signature(att.fileUrl)
     }));
+  }
+  // Sanitize R2 URL in answerDoc
+  if (updateData.answerDoc && updateData.answerDoc.fileUrl) {
+    updateData.answerDoc.fileUrl = stripR2Signature(updateData.answerDoc.fileUrl);
   }
   const assignment = await Assignment.findByIdAndUpdate(
     assignmentId,
@@ -244,15 +252,21 @@ const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
   });
 
   // 5. Merge and determine status
+  const now = new Date();
   let studentAssignments = assignments.map(assignment => {
     const submission = submissionMap[assignment._id.toString()];
     const status = submission ? 'submitted' : 'pending';
+    // Only expose the answerDoc after the deadline has passed
+    const deadlinePassed = assignment.dueDate && now > new Date(assignment.dueDate);
     return {
       _id: assignment._id,
       title: assignment.title,
       description: assignment.description,
       dueDate: assignment.dueDate,
       attachments: assignment.attachments || [],
+      answerDoc: deadlinePassed && assignment.answerDoc && assignment.answerDoc.fileUrl
+        ? assignment.answerDoc
+        : null,
       course: assignment.courseId,
       status: status,
       submission: submission || null
@@ -282,6 +296,21 @@ const getStudentAssignmentsWithStatus = async (studentId, filters = {}) => {
   };
 };
 
+// Add remark to a submission (by instructor / super_instructor)
+const addRemark = async (submissionId, remark, instructorId) => {
+  const submission = await Submission.findById(submissionId);
+  if (!submission) {
+    throw new Error('Submission not found');
+  }
+  submission.remark = remark;
+  submission.remarkAddedAt = new Date();
+  submission.remarkAddedBy = instructorId;
+  submission.status = 'reviewed';
+  submission.reviewedAt = new Date();
+  await submission.save();
+  return submission;
+};
+
 module.exports = {
   createAssignment,
   getAssignmentsByCourse,
@@ -294,4 +323,5 @@ module.exports = {
   getSubmissionsByStudent,
   getAllSubmissions,
   getStudentAssignmentsWithStatus,
+  addRemark,
 };

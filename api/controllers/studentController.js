@@ -5,6 +5,7 @@ const studentService = require('../services/studentService');
 const performanceService = require('../services/performanceService');
 const courseStructureService = require('../services/courseStructureService');
 const Enrollment = require('../schemas/Enrollment');
+const User = require('../schemas/User');
 // Pre-loaded schemas for saveVideoProgress (avoids repeated require() on every call)
 const TopicContent = require('../schemas/TopicContent');
 const ModuleSchema = require('../schemas/Module');
@@ -279,12 +280,80 @@ const getMyProfile = async (req, res, next) => {
   try {
     const student = await studentService.getStudentById(req.user.id);
     const performance = await performanceService.getStudentPerformances(req.user.id);
+    const enrollments = await studentService.getStudentEnrollments(req.user.id);
+    
+    // Extract course titles
+    const courses = enrollments
+      .filter(e => e.courseId)
+      .map(e => ({
+        id: e.courseId._id,
+        title: e.courseId.title
+      }));
+
     res.json({
       success: true,
       data: {
-        student,
+        student: {
+          ...student.toObject(),
+          courses
+        },
         performance,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update student profile
+// @route   PUT /api/student/profile
+// @access  Private/Student
+const updateMyProfile = async (req, res, next) => {
+  try {
+    const { name, profilePhoto, oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (name) {
+      user.name = name;
+    }
+
+    if (profilePhoto !== undefined) {
+      user.profilePhoto = profilePhoto;
+    }
+
+    if (newPassword) {
+      if (!oldPassword) {
+        return res.status(400).json({ success: false, message: 'Old password is required to change password' });
+      }
+      const isMatch = await user.comparePassword(oldPassword);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: 'Incorrect old password' });
+      }
+
+      // Password pattern validation
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+        });
+      }
+
+      user.password = newPassword;
+    }
+
+    await user.save();
+
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: updatedUser,
     });
   } catch (error) {
     next(error);
@@ -319,6 +388,7 @@ module.exports = {
   getAssignments,
   submitAssignment,
   getMyProfile,
+  updateMyProfile,
   getMyAssignments,
   getMySubmissions,
 };
