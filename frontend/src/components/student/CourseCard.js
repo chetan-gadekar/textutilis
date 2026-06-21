@@ -153,7 +153,7 @@ const CourseCard = ({ course, onStart, onContinue }) => {
                     pt: 1.5
                 }}>
                     <Typography variant="body2" sx={{ color: '#7a7a7a', fontWeight: 500, fontSize: '0.8rem', mb: { xs: 0, sm: 0.5 }, whiteSpace: 'nowrap' }}>
-                        {progress > 0 ? `${progress}% Completed` : '0/17 Modules Completed'}
+                        {progress}% Completed
                     </Typography>
 
                     <Button

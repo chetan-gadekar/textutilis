@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Popover, Box, Typography, Button } from '@mui/material';
+import LoadingButton from './LoadingButton';
 
 const PopConfirm = ({ title, onConfirm, children, okText = "Yes", cancelText = "No" }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleClick = (event) => {
     event.stopPropagation();
@@ -18,13 +20,19 @@ const PopConfirm = ({ title, onConfirm, children, okText = "Yes", cancelText = "
     setAnchorEl(null);
   };
 
-  const handleConfirm = (event) => {
+  const handleConfirm = async (event) => {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
-    onConfirm();
-    handleClose();
+    
+    try {
+      setLoading(true);
+      await onConfirm();
+    } finally {
+      setLoading(false);
+      handleClose();
+    }
   };
 
   const open = Boolean(anchorEl);
@@ -70,15 +78,16 @@ const PopConfirm = ({ title, onConfirm, children, okText = "Yes", cancelText = "
             >
               {cancelText}
             </Button>
-            <Button 
+            <LoadingButton 
               size="small" 
               variant="contained" 
               color="error" 
               onClick={handleConfirm}
+              loading={loading}
               sx={{ textTransform: 'none', borderRadius: 1 }}
             >
               {okText}
-            </Button>
+            </LoadingButton>
           </Box>
         </Box>
       </Popover>

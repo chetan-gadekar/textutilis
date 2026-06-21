@@ -96,9 +96,9 @@ const CourseStructureManager = () => {
 
   // ──────────────────────────────────────────────────────────────────────────
 
-  const fetchCourseData = useCallback(async () => {
+  const fetchCourseData = useCallback(async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const [courseResponse, modulesResponse] = await Promise.all([
         courseService.getCourse(courseId),
         moduleService.getModules(courseId),
@@ -123,7 +123,7 @@ const CourseStructureManager = () => {
     } catch (err) {
       notify.error(err.message || 'Failed to fetch course data');
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, [courseId]);
 

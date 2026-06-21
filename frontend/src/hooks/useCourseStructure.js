@@ -50,7 +50,7 @@ export const useCourseStructure = (courseId, onRefresh) => {
       } else {
         await moduleService.createModule(courseId, moduleForm);
       }
-      onRefresh();
+      await onRefresh(false);
       notify.success(`Module ${selectedModule ? 'updated' : 'created'} successfully`);
       handleCloseModuleDialog();
     } catch (err) {
@@ -63,8 +63,8 @@ export const useCourseStructure = (courseId, onRefresh) => {
   const handleDeleteModule = async (moduleId) => {
     try {
       await moduleService.deleteModule(moduleId);
+      await onRefresh(false);
       notify.success('Module deleted successfully');
-      onRefresh();
     } catch (err) {
       notify.error(err.message || 'Failed to delete module');
     }
@@ -99,7 +99,7 @@ export const useCourseStructure = (courseId, onRefresh) => {
       } else {
         await topicService.createTopic(selectedModule._id, topicForm);
       }
-      onRefresh();
+      await onRefresh(false);
       notify.success(`Topic ${selectedTopic ? 'updated' : 'created'} successfully`);
       handleCloseTopicDialog();
     } catch (err) {
@@ -112,8 +112,8 @@ export const useCourseStructure = (courseId, onRefresh) => {
   const handleDeleteTopic = async (topicId) => {
     try {
       await topicService.deleteTopic(topicId);
+      await onRefresh(false);
       notify.success('Topic deleted successfully');
-      onRefresh();
     } catch (err) {
       notify.error(err.message || 'Failed to delete topic');
     }
@@ -176,7 +176,7 @@ export const useCourseStructure = (courseId, onRefresh) => {
       } else {
         await topicContentService.createContent(selectedTopic._id, contentData);
       }
-      onRefresh();
+      await onRefresh(false);
       notify.success(`Content ${contentForm._id ? 'updated' : 'created'} successfully`);
       handleCloseContentDialog();
     } catch (err) {
@@ -189,8 +189,8 @@ export const useCourseStructure = (courseId, onRefresh) => {
   const handleDeleteContent = async (contentId) => {
     try {
       await topicContentService.deleteContent(contentId);
+      await onRefresh(false);
       notify.success('Content deleted successfully');
-      onRefresh();
     } catch (err) {
       notify.error(err.message || 'Failed to delete content');
     }

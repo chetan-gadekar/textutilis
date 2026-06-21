@@ -28,15 +28,15 @@ const CourseManagement = () => {
     fetchCourses();
   }, []);
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const response = await courseService.getCourses();
       setCourses(response.data || []);
     } catch (err) {
       notify.error(err.message || 'Failed to fetch courses');
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
@@ -80,8 +80,8 @@ const CourseManagement = () => {
       } else {
         await courseService.createCourse(formData);
       }
+      await fetchCourses(false);
       notify.success(`Course ${editingCourse ? 'updated' : 'created'} successfully!`);
-      fetchCourses();
       handleCloseDialog();
     } catch (err) {
       notify.error(err.response?.data?.message || err.message || 'Failed to save course');
@@ -93,8 +93,8 @@ const CourseManagement = () => {
   const handleDelete = async (courseId) => {
     try {
       await courseService.deleteCourse(courseId);
+      await fetchCourses(false);
       notify.success('Course deleted successfully');
-      fetchCourses();
     } catch (err) {
       notify.error(err.message || 'Failed to delete course');
     }

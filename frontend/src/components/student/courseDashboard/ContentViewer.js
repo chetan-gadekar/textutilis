@@ -292,7 +292,7 @@ const ContentViewer = ({ content, course, currentProgress, onProgressUpdate, onN
                 setTimeout(onNextContent, 1500);
               }
             }}
-            initialPosition={currentProgress?.videoPosition ? currentProgress.videoPosition / 100 : 0}
+            initialPosition={currentProgress?.videoPosition && currentProgress.videoPosition < 99 ? currentProgress.videoPosition / 100 : 0}
           />
         ) : content.contentType === 'ppt' ? (
           renderPptContent()

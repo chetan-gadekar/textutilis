@@ -132,10 +132,11 @@ const saveVideoProgress = async (req, res, next) => {
       isCompleted,
     };
 
-    // Save the progress record and fetch existing records in parallel
-    // We only need the total counts and completed count to update the enrollment percentage
-    const [progress, modules, allProgress] = await Promise.all([
-      studentService.saveVideoProgress(progressData),
+    // First save the progress record
+    const progress = await studentService.saveVideoProgress(progressData);
+
+    // Then fetch existing records in parallel to calculate overall progress
+    const [modules, allProgress] = await Promise.all([
       ModuleSchema.find({ courseId }, '_id').lean(),
       Progress.find({ studentId: req.user.id, courseId, isCompleted: true }, 'contentId').lean(),
     ]);
