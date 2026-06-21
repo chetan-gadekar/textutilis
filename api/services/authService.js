@@ -100,7 +100,16 @@ const loginUser = async (email, password) => {
     // Update streak on login
     updateUserStreak(user);
 
-    await user.save();
+    await User.updateOne(
+      { _id: user._id },
+      { 
+        $set: { 
+          sessionToken: user.sessionToken,
+          currentStreak: user.currentStreak,
+          lastActivityDate: user.lastActivityDate
+        } 
+      }
+    );
   }
 
   return {

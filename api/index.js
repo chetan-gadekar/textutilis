@@ -1,3 +1,6 @@
+const os = require('os');
+process.env.UV_THREADPOOL_SIZE = os.cpus().length;
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');

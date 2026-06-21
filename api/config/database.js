@@ -5,6 +5,8 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lms', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      maxPoolSize: 500,
+      minPoolSize: 50,
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
